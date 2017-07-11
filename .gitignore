@@ -1,4 +1,5 @@
 # Directory trees to ignore
+/.gradle/
 backups/
 build/
 dist/

@@ -1,0 +1,13 @@
+apply plugin: 'base'
+apply plugin: 'idea'
+
+ant.importBuild('build.xml') { antTargetName ->
+    'ant-' + antTargetName
+}
+
+ant.properties['jmeter.version'] = '3.2-ETN2'
+
+build.dependsOn 'ant-download_jars'
+build.dependsOn 'ant-install' // builds to lib
+build.dependsOn 'ant-_dist_maven' // builds to dist/maven + creates POM
+build.dependsOn 'ant-maven_upload' // builds to target/deploy + works as local maven repo
