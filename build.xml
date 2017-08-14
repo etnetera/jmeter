@@ -564,7 +564,7 @@
     <property name="jmeter.version" value="3.2"/>
     <!-- Remember to change "docversion" below if necessary -->
     <condition property="implementation.version"
-          value="${jmeter.version} r${svn.revision}" else="${jmeter.version}.${DSTAMP}">
+          value="${jmeter.version} r${svn.revision}" else="${jmeter.version} r${DSTAMP}">
       <isset property="svn.revision"/>
     </condition>
     <property name="display.version" value="${implementation.version}"/>
