@@ -1,8 +1,11 @@
 package org.apache.jmeter.spi;
 
+import org.apache.jorphan.collections.HashTree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+import java.util.Properties;
 import java.util.ServiceLoader;
 
 /**
@@ -22,6 +25,14 @@ public class JMeterEventService {
 
     public static void initialized() {
         serviceLoader.forEach(JMeterEventListener::initialized);
+    }
+
+    public static void initializeDistributedTest(List<String> addresses, HashTree tree, Properties props) {
+        serviceLoader.forEach(listener -> listener.initializeDistributedTest(addresses, tree, props));
+    }
+
+    public static void configureEngine(String host, HashTree tree) {
+        serviceLoader.forEach(listener -> listener.configureEngine(host, tree));
     }
 
 }

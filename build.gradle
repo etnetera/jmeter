@@ -5,7 +5,7 @@ ant.importBuild('build.xml') { antTargetName ->
     'ant-' + antTargetName
 }
 
-ant.properties['jmeter.version'] = '3.2-ETN3'
+ant.properties['jmeter.version'] = '3.2-ETN4'
 
 // run Gradle build
 

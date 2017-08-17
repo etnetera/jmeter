@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.jmeter.spi.JMeterEventService;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.collections.HashTree;
 import org.slf4j.Logger;
@@ -72,6 +73,9 @@ public class DistributedRunner {
     }
 
     public void init(List<String> addresses, HashTree tree) {
+
+        JMeterEventService.initializeDistributedTest(addresses, tree, remoteProps);
+
         // converting list into mutable version
         List<String> addrs = new LinkedList<>(addresses);
 

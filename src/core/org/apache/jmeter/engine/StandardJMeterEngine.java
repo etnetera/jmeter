@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.jmeter.JMeter;
 import org.apache.jmeter.samplers.SampleEvent;
+import org.apache.jmeter.spi.JMeterEventService;
 import org.apache.jmeter.testbeans.TestBean;
 import org.apache.jmeter.testbeans.TestBeanHelper;
 import org.apache.jmeter.testelement.TestElement;
@@ -168,6 +169,9 @@ public class StandardJMeterEngine implements JMeterEngine, Runnable {
 
     @Override
     public void configure(HashTree testTree) {
+
+        JMeterEventService.configureEngine(host, testTree);
+
         // Is testplan serialised?
         SearchByClass<TestPlan> testPlan = new SearchByClass<>(TestPlan.class);
         testTree.traverse(testPlan);
