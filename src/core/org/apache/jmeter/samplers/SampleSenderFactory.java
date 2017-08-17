@@ -26,6 +26,9 @@ import org.slf4j.LoggerFactory;
 
 public class SampleSenderFactory {
 
+    private static final String CONTROLLER_RESULT_COLLECTOR_CLASS = "cz.etnetera.jmeter.listener.ControllerResultCollector";
+    private static final String THROTTLED_SAMPLE_SENDER_CLASS = "cz.etnetera.jmeter.sender.ThrottledSampleSender";
+
     private static final Logger log = LoggerFactory.getLogger(SampleSenderFactory.class);
 
     private static final String MODE_STANDARD = "Standard"; // $NON-NLS-1$
@@ -60,7 +63,18 @@ public class SampleSenderFactory {
         final boolean holdSamples = JMeterUtils.getPropDefault("hold_samples", false); // $NON-NLS-1$
 
         // Extended property name
-        final String type = JMeterUtils.getPropDefault("mode", MODE_STRIPPED_BATCH); // $NON-NLS-1$
+        String type = JMeterUtils.getPropDefault("mode", MODE_STRIPPED_BATCH); // $NON-NLS-1$
+
+        if (listener instanceof RemoteSampleListenerImpl) {
+            RemoteSampleListenerImpl listenerImpl = (RemoteSampleListenerImpl) listener;
+            if (listenerImpl.getSampleListener() != null) {
+                SampleListener sampleListener = listenerImpl.getSampleListener();
+                if (sampleListener.getClass().getName().equals(CONTROLLER_RESULT_COLLECTOR_CLASS)) {
+                    type = THROTTLED_SAMPLE_SENDER_CLASS;
+                    log.info("Creating " + THROTTLED_SAMPLE_SENDER_CLASS + " sender");
+                }
+            }
+        }
         
         if (holdSamples || type.equalsIgnoreCase(MODE_HOLD)) {
             if(holdSamples) {

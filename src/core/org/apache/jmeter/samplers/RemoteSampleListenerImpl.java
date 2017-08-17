@@ -53,6 +53,10 @@ public class RemoteSampleListenerImpl extends java.rmi.server.UnicastRemoteObjec
         }
     }
 
+    public SampleListener getSampleListener() {
+        return sampleListener;
+    }
+
     @Override
     public void testStarted() {
         if (testListener != null) {
