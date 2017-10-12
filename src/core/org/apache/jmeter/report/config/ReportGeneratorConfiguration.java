@@ -624,7 +624,7 @@ public class ReportGeneratorConfiguration {
                 REPORT_GENERATOR_KEY_TEMP_DIR_DEFAULT, File.class);
         configuration.setTempDirectory(tempDirectory);
 
-        // Load apdex statisfied threshold
+        // Load apdex satisfied threshold
         final long apdexSatisfiedThreshold = getRequiredProperty(props,
                 REPORT_GENERATOR_KEY_APDEX_SATISFIED_THRESHOLD,
                 REPORT_GENERATOR_KEY_APDEX_SATISFIED_THRESHOLD_DEFAULT,
@@ -638,7 +638,7 @@ public class ReportGeneratorConfiguration {
                 long.class).longValue();
         configuration.setApdexToleratedThreshold(apdexToleratedThreshold);
         
-        // Load apdex per transactions, overriden by user
+        // Load apdex per transactions, overridden by user
         final String apdexPerTransaction = getOptionalProperty(props, 
                 REPORT_GENERATOR_KEY_APDEX_PER_TRANSACTION, 
                 String.class);
@@ -725,7 +725,7 @@ public class ReportGeneratorConfiguration {
      * Parses a string coming from properties to fill a map containing
      * sample names as keys and an array of 2 longs [satisfied, tolerated] as values.
      * The sample name can be a regex supplied by the user.
-     * @param apdexPerTransaction, the string coming from properties
+     * @param apdexPerTransaction the string coming from properties
      * @return {@link Map} containing for each sample name or sample name regex an array of Long corresponding to satisfied and tolerated apdex thresholds.
      */
     public static Map<String, Long[]> getApdexPerTransactionParts(String apdexPerTransaction) {

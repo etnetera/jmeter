@@ -18,7 +18,7 @@
 
 <!DOCTYPE document
 [
-<!ENTITY sect-num '21'>
+<!ENTITY sect-num '20'>
 <!ENTITY ccedil   "&#x000E7;" >
 <!ENTITY eacute   "&#x000E9;" >
 <!ENTITY hellip   "&#x02026;" >
@@ -112,6 +112,7 @@ Alternatively, just use <code>/</code> instead for the path separator - e.g. <co
         <tr><td>Information</td><td> <a href="#__machineIP">machineIP</a></td><td>get the local machine IP address</td><td>2.6</td></tr>
         <tr><td>Information</td><td> <a href="#__machineName">machineName</a></td><td>get the local machine name</td><td>1.X</td></tr>
         <tr><td>Information</td><td> <a href="#__time">time</a></td><td>return current time in various formats</td><td>2.2</td></tr>
+        <tr><td>Information</td><td> <a href="#__timeShift">timeShift</a></td><td>return a date in various formats with the specified amount of seconds/minutes/hours/days added</td><td>3.3</td></tr>
         <tr><td>Information</td><td> <a href="#__log">log</a></td><td>log (or display) a message (and return the value)</td><td>2.2</td></tr>
         <tr><td>Information</td><td> <a href="#__logn">logn</a></td><td>log (or display) a message (empty return value)</td><td>2.2</td></tr>
         <tr><td>Input</td><td> <a href="#__StringFromFile">StringFromFile</a></td><td>read a line from a file</td><td>1.9</td></tr>
@@ -122,6 +123,7 @@ Alternatively, just use <code>/</code> instead for the path separator - e.g. <co
         <tr><td>Calculation</td><td> <a href="#__intSum">intSum</a></td><td>add int numbers</td><td>1.8.1</td></tr>
         <tr><td>Calculation</td><td> <a href="#__longSum">longSum</a></td><td>add long numbers</td><td>2.3.2</td></tr>
         <tr><td>Calculation</td><td> <a href="#__Random">Random</a></td><td>generate a random number</td><td>1.9</td></tr>
+        <tr><td>Calculation</td><td> <a href="#__RandomDate">RandomDate</a></td><td>generate random date within a specific date range</td><td>3.3</td></tr>
         <tr><td>Calculation</td><td> <a href="#__RandomFromMultipleVars">RandomFromMultipleVars</a></td><td>extracts an element from the values of a set of variables separated by <code>|</code></td><td>3.1</td></tr>
         <tr><td>Calculation</td><td> <a href="#__RandomString">RandomString</a></td><td>generate a random string</td><td>2.6</td></tr>
         <tr><td>Calculation</td><td> <a href="#__UUID">UUID</a></td><td>generate a random type 4 UUID</td><td>2.9</td></tr>
@@ -431,8 +433,6 @@ be in the interval -2147483648 to 2147483647.
 </p>
 </component>
 
-<!-- Alternate spelling -->
-<a name="_StringFromFile"/>
 <component index="&sect-num;.5.5" name="__StringFromFile">
 
 <description>
@@ -519,8 +519,8 @@ Here are a few format strings and the corresponding sequences they will generate
     the sequence number is interpreted as a loop count, and the file will be used at most "<code>end</code>" times.
     In this case the filename is not formatted.
     <br></br>
-    <code>${_StringFromFile(PIN#'.'DAT,,1,2)}</code> - reads <code>PIN1.DAT</code>, <code>PIN2.DAT</code><br></br>
-    <code>${_StringFromFile(PIN.DAT,,,2)}</code> - reads <code>PIN.DAT</code> twice<br></br>
+    <code>${__StringFromFile(PIN#'.'DAT,,1,2)}</code> - reads <code>PIN1.DAT</code>, <code>PIN2.DAT</code><br></br>
+    <code>${__StringFromFile(PIN.DAT,,,2)}</code> - reads <code>PIN.DAT</code> twice<br></br>
     Note that the "<code>.</code>" in <code>PIN.DAT</code> above should <u>not</u> be quoted.
     In this case the start number is omitted, so the file name is used exactly as is.
     </p>
@@ -639,6 +639,27 @@ the comma after <code>7</code> is escaped.</note>
 </p>
 </component>
 
+<component index="&sect-num;.5.8" name="__RandomDate">
+<description><p>The RandomDate function returns a random date that lies between the given start date and end date values.</p></description>
+
+<properties>
+        <property name="Time format" required="No">Format string for DateTimeFormatter (default <code>yyyy-MM-dd</code>)</property>
+        <property name="Start date" required="No">The start date, the default is <em>now</em></property>
+        <property name="End date" required="Yes">The end date</property>
+        <property name="Locale to use for format" required="No">
+        The string format of a locale. The language code must be lowercase. The country code must be uppercase. The separator must be an underscore, e.g. <code>en_EN</code>.
+        See <a href="http://www.oracle.com/technetwork/java/javase/javase7locales-334809.html">http://www.oracle.com/technetwork/java/javase/javase7locales-334809.html</a>.
+        If omitted, by default the function uses the Apache JMeter locale one.
+        </property>
+        <property name="Name of variable" required="No">The name of the variable to set.</property>
+</properties>
+
+<p>Examples:
+<source>${__RandomDate(,,2050-07-08,,)}</source> will return a random date between <em>now</em> and <code>2050-07-08</code>. For example <code>2039-06-21</code><br/>
+<source>${__RandomDate(dd MM yyyy,,08 07 2050,,)}</source> will return a random date with a custom format like <code>04 03 2034</code><br/>
+</p>
+</component>
+
 <component index="&sect-num;.5.8" name="__RandomString">
 <description><p>The RandomString function returns a random String of length using characters in chars to use.</p></description>
 
@@ -696,7 +717,7 @@ This leads to creation of match number variable called <code>varName_matchNr</co
 </component>
 
 <component index="&sect-num;.5.8" name="__CSVRead">
-<description><p>The CSVRead function returns a string from a CSV file (c.f. <a href="#_StringFromFile">StringFromFile</a>)</p>
+<description><p>The CSVRead function returns a string from a CSV file (c.f. <a href="#__StringFromFile">StringFromFile</a>)</p>
     <p>NOTE: JMeter supports multiple file names.
     </p>
     <p><b>In most cases, the newer 
@@ -1075,8 +1096,8 @@ The following shorthand aliases are provided:
 <li><code>YMD</code> = <code>yyyyMMdd</code></li>
 <li><code>HMS</code> = <code>HHmmss</code></li>
 <li><code>YMDHMS</code> = <code>yyyyMMdd-HHmmss</code></li>
-<li><code>USER1</code> = whatever is in the Jmeter property <code>time.USER1</code></li>
-<li><code>USER2</code> = whatever is in the Jmeter property <code>time.USER2</code></li>
+<li><code>USER1</code> = whatever is in the JMeter property <code>time.USER1</code></li>
+<li><code>USER2</code> = whatever is in the JMeter property <code>time.USER2</code></li>
 </ul>
 <p>The defaults can be changed by setting the appropriate JMeter property, e.g.
 <code>time.YMD=yyMMdd</code>
@@ -1496,6 +1517,40 @@ becomes:
         <property name="String to escape" required="Yes">
         The string to be escaped.
         </property>
+</properties>
+</component>
+
+
+<component index="&sect-num;.5.22" name="__timeShift">
+<description>
+    <p>The timeShift function returns a date in the given format with the specified amount of seconds, minutes, hours, days or months added</p>
+    </description>
+<properties>
+        <property name="Format" required="No">
+        The format to be passed to DateTimeFormatter.
+        See https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html
+        If omitted, the function uses milliseconds since epoch format.
+        </property>
+        <property name="Date to shift" required="No">
+        Indicate the date in the format set by the parameter 'Format' to shift
+        If omitted, the date is set to now
+        </property>
+        <property name="value to shift" required="No">
+        Indicate the specified amount of seconds, minutes, hours or days to shift according to a textual representation of a duration such as PnDTnHnMn.nS. See https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence- 
+        <ul>
+        <li><code>PT20.345S</code> parses as 20.345 seconds</li>
+        <li><code>PT15M</code> parses as 15 minutes</li>
+        <li><code>PT10H</code> parses as 10 hours</li>
+        <li><code>P2D</code> parses as 2 days</li>
+        <li><code>-P6H3M</code> parses as -6 hours and -3 minutes</li>
+        </ul>
+        </property>
+        <property name="Locale to use for format" required="No">
+        The string format of a locale. The language code must be lowercase. The country code must be uppercase. The separator must be an underscore. ex: en_EN
+        See http://www.oracle.com/technetwork/java/javase/javase7locales-334809.html
+        If omitted, by default the function use the ApacheJMeter locale one.
+        </property>
+        <property name="Name of variable" required="No">The name of the variable to set.</property>
 </properties>
 </component>
 

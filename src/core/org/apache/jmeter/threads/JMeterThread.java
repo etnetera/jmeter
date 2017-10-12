@@ -1,4 +1,5 @@
 /*
+
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -281,7 +282,7 @@ public class JMeterThread implements Runnable, Interruptible {
                 }
             }
         }
-        // Might be found by contoller.next()
+        // Might be found by controller.next()
         catch (JMeterStopTestException e) { // NOSONAR
             if (log.isInfoEnabled()) {
                 log.info("Stopping Test: {}", e.toString());
@@ -385,15 +386,13 @@ public class JMeterThread implements Runnable, Interruptible {
      */
     private SampleResult processSampler(Sampler current, Sampler parent, JMeterContext threadContext) {
         SampleResult transactionResult = null;
+        // Check if we are running a transaction
+        TransactionSampler transactionSampler = null;
+        // Find the package for the transaction
+        SamplePackage transactionPack = null;
         try {
-            // Check if we are running a transaction
-            TransactionSampler transactionSampler = null;
             if(current instanceof TransactionSampler) {
                 transactionSampler = (TransactionSampler) current;
-            }
-            // Find the package for the transaction
-            SamplePackage transactionPack = null;
-            if(transactionSampler != null) {
                 transactionPack = compiler.configureTransactionSampler(transactionSampler);
 
                 // Check if the transaction is done
@@ -451,6 +450,13 @@ public class JMeterThread implements Runnable, Interruptible {
                 log.error("Error while processing sampler.", e);
             }
         }
+        if(!running 
+                && transactionResult == null 
+                && transactionSampler != null
+                && transactionPack != null) {
+            transactionResult = doEndTransactionSampler(transactionSampler, parent, transactionPack, threadContext);
+        }
+
         return transactionResult;
     }
 
@@ -472,32 +478,33 @@ public class JMeterThread implements Runnable, Interruptible {
         threadVars.putObject(PACKAGE_OBJECT, pack);
 
         delay(pack.getTimers());
-        Sampler sampler = pack.getSampler();
-        sampler.setThreadContext(threadContext);
-        // TODO should this set the thread names for all the subsamples?
-        // might be more efficient than fetching the name elsewhere
-        sampler.setThreadName(threadName);
-        TestBeanHelper.prepare(sampler);
-
-        // Perform the actual sample
-        currentSampler = sampler;
-        if(!sampleMonitors.isEmpty()) {
-            for(SampleMonitor sampleMonitor : sampleMonitors) {
-                sampleMonitor.sampleStarting(sampler);
-            }
-        }
         SampleResult result = null;
-        try {
-            result = sampler.sample(null);
-        } finally {
+        if(running) {
+            Sampler sampler = pack.getSampler();
+            sampler.setThreadContext(threadContext);
+            // TODO should this set the thread names for all the subsamples?
+            // might be more efficient than fetching the name elsewhere
+            sampler.setThreadName(threadName);
+            TestBeanHelper.prepare(sampler);
+    
+            // Perform the actual sample
+            currentSampler = sampler;
             if(!sampleMonitors.isEmpty()) {
                 for(SampleMonitor sampleMonitor : sampleMonitors) {
-                    sampleMonitor.sampleEnded(sampler);
+                    sampleMonitor.sampleStarting(sampler);
                 }
             }
+            try {
+                result = sampler.sample(null);
+            } finally {
+                if(!sampleMonitors.isEmpty()) {
+                    for(SampleMonitor sampleMonitor : sampleMonitors) {
+                        sampleMonitor.sampleEnded(sampler);
+                    }
+                }
+            }
+            currentSampler = null;
         }
-        currentSampler = null;
-
         // If we got any results, then perform processing on the result
         if (result != null) {
             int nbActiveThreadsInThreadGroup = threadGroup.getNumberOfThreads();
@@ -548,9 +555,8 @@ public class JMeterThread implements Runnable, Interruptible {
                             Sampler parent,
                             SamplePackage transactionPack,
                             JMeterContext threadContext) {
-        SampleResult transactionResult;
         // Get the transaction sample result
-        transactionResult = transactionSampler.getTransactionResult();
+        SampleResult transactionResult = transactionSampler.getTransactionResult();
         transactionResult.setThreadName(threadName);
         transactionResult.setGroupThreads(threadGroup.getNumberOfThreads());
         transactionResult.setAllThreads(JMeterContextService.getNumberOfThreads());

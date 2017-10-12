@@ -18,6 +18,7 @@
 
 package org.apache.jmeter.reporters;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -105,7 +106,7 @@ public class ResultSaver extends AbstractTestElement implements NoThreadClone, S
     }
 
     /**
-     * @return next number accross all instances
+     * @return next number across all instances
      */
     private long nextNumber() {
         synchronized(LOCK) {
@@ -139,7 +140,7 @@ public class ResultSaver extends AbstractTestElement implements NoThreadClone, S
 
     @Override
     public void testEnded(String host) {
-        
+        // NOOP
     }
 
     /**
@@ -197,8 +198,9 @@ public class ResultSaver extends AbstractTestElement implements NoThreadClone, S
             JMeterContextService.getContext().getVariables().put(variable, fileName);
         }
         File out = new File(fileName);
-        try (FileOutputStream fos = new FileOutputStream(out)){
-            JOrphanUtils.write(s.getResponseData(), fos); // chunk the output if necessary
+        try (FileOutputStream fos = new FileOutputStream(out);
+                BufferedOutputStream bos = new BufferedOutputStream(fos)){
+            JOrphanUtils.write(s.getResponseData(), bos); // chunk the output if necessary
         } catch (FileNotFoundException e) {
             log.error("Error creating sample file for {}", s.getSampleLabel(), e);
         } catch (IOException e) {
@@ -296,5 +298,21 @@ public class ResultSaver extends AbstractTestElement implements NoThreadClone, S
     // Mutable int to keep track of sample count
     private static class Counter{
         int num;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        return super.equals(obj);
     }
 }

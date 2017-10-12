@@ -22,7 +22,6 @@ import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -31,6 +30,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -114,6 +114,8 @@ public class SaveService {
     private static final XStream JTLSAVER = new XStreamWrapper(new PureJavaReflectionProvider());
     static {
         JTLSAVER.setMode(XStream.NO_REFERENCES); // This is needed to stop XStream keeping copies of each class
+        JMeterUtils.setupXStreamSecurityPolicy(JMXSAVER);
+        JMeterUtils.setupXStreamSecurityPolicy(JTLSAVER);
     }
 
     // The XML header, with placeholder for encoding, since that is controlled by property
@@ -153,7 +155,7 @@ public class SaveService {
     private static String fileVersion = ""; // computed from saveservice.properties file// $NON-NLS-1$
     // Must match the sha1 checksum of the file saveservice.properties (without newline character),
     // used to ensure saveservice.properties and SaveService are updated simultaneously
-    static final String FILEVERSION = "672a997ce15720edd5ac94b288fd19f80202e4d3"; // Expected value $NON-NLS-1$
+    static final String FILEVERSION = "4336c68d43562b80a1d1b5feba226aa36f52597b"; // Expected value $NON-NLS-1$
 
     private static String fileEncoding = ""; // read from properties file// $NON-NLS-1$
 
@@ -191,11 +193,10 @@ public class SaveService {
     private static String getChecksumForPropertiesFile()
             throws NoSuchAlgorithmException, IOException {
         MessageDigest md = MessageDigest.getInstance("SHA1");
-        try (FileReader fileReader = new FileReader(
-                    JMeterUtils.getJMeterHome()
+        try (BufferedReader reader = 
+                Files.newBufferedReader(new File(JMeterUtils.getJMeterHome()
                     + JMeterUtils.getPropDefault(SAVESERVICE_PROPERTIES,
-                    SAVESERVICE_PROPERTIES_FILE));
-                BufferedReader reader = new BufferedReader(fileReader)) {
+                    SAVESERVICE_PROPERTIES_FILE)).toPath(), Charset.defaultCharset())) {
             String line = null;
             while ((line = reader.readLine()) != null) {
                 md.update(line.getBytes());
@@ -355,7 +356,7 @@ public class SaveService {
         try {
             return "class:"+result.getClass()+",content:"+ToStringBuilder.reflectionToString(result);
         } catch(Exception e) {
-            return "Exception occured creating debug from event, message:"+e.getMessage();
+            return "Exception occurred creating debug from event, message:"+e.getMessage();
         }
     }
 

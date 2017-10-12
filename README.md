@@ -1,6 +1,12 @@
 ![Apache JMeter logo](https://jmeter.apache.org/images/logo.svg)
 # Apache JMeter
 
+
+[![Build Status](https://api.travis-ci.org/apache/jmeter.svg?branch=trunk)](https://travis-ci.org/apache/jmeter/)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.apache.jmeter/ApacheJMeter/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.apache.jmeter/ApacheJMeter)
+[![License](http://img.shields.io/:license-apache-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
+[![Stack Overflow](http://img.shields.io/:stack%20overflow-jmeter-brightgreen.svg)](http://stackoverflow.com/questions/tagged/jmeter)
+
 ## What is it?
 
 Apache JMeter is a 100% pure Java application designed to test
@@ -92,6 +98,10 @@ The documentation available as of the date of this release is
 also included, in HTML format, in the `printable_docs/` directory,
 and it may be browsed starting from the file called `index.html`.
 
+## Reporting a bug/enhancement
+
+See [Issue Tracking](http://jmeter.apache.org/issues.html)
+
 ## Build instructions
 
 ### Release builds
@@ -131,6 +141,7 @@ skip.bug60607=true
 skip.batchtest_Http4ImplPreemptiveBasicAuth=true
 skip.batchtest_SlowCharsFeature=true
 skip.batchtest_TestKeepAlive=true
+skip.batchtest_ResponseDecompression=true
 skip.test_http=true
 skip.test_TestDNSCacheManager.testWithCustomResolverAnd1Server=true
 ```

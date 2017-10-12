@@ -83,7 +83,7 @@ public class ReportGenerator {
 
     private static final String INVALID_CLASS_FMT = "Class name \"%s\" is not valid.";
     private static final String INVALID_EXPORT_FMT = "Data exporter \"%s\" is unable to export data.";
-    private static final String NOT_SUPPORTED_CONVERTION_FMT = "Not supported conversion to \"%s\"";
+    private static final String NOT_SUPPORTED_CONVERSION_FMT = "Not supported conversion to \"%s\"";
 
     public static final String NORMALIZER_CONSUMER_NAME = "normalizer";
     public static final String BEGIN_DATE_CONSUMER_NAME = "beginDate";
@@ -444,7 +444,7 @@ public class ReportGenerator {
                 for (Map.Entry<String, Long[]> entry : configuration.getApdexPerTransaction().entrySet()) {
                     org.apache.oro.text.regex.Pattern regex = JMeterUtils.getPatternCache().getPattern(entry.getKey());
                     PatternMatcher matcher = JMeterUtils.getMatcher();
-                    if (matcher.matches(sampleName, regex)) {
+                    if (sampleName != null && matcher.matches(sampleName, regex)) {
                         Long satisfied = entry.getValue()[0];
                         Long tolerated = entry.getValue()[1];
                         if(log.isDebugEnabled()) {
@@ -547,7 +547,7 @@ public class ReportGenerator {
                             if (converter == null) {
                                 throw new GenerationException(
                                         String.format(
-                                                NOT_SUPPORTED_CONVERTION_FMT,
+                                                NOT_SUPPORTED_CONVERSION_FMT,
                                                 parameterType
                                                         .getName()));
                             }

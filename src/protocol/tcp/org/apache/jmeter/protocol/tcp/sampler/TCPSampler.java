@@ -400,7 +400,7 @@ public class TCPSampler extends AbstractSampler implements ThreadListener, Inter
                 // TODO handle filenames
                 res.setSamplerData(req);
                 protocolHandler.write(os, req);
-                String in = protocolHandler.read(is);
+                String in = protocolHandler.read(is, res);
                 isSuccessful = setupSampleResult(res, in, null, protocolHandler);
             }
         } catch (ReadException ex) {
@@ -429,7 +429,7 @@ public class TCPSampler extends AbstractSampler implements ThreadListener, Inter
     /**
      * Fills SampleResult object
      * @param sampleResult {@link SampleResult}
-     * @param readResponse Response read until error occured
+     * @param readResponse Response read until error occurred
      * @param exception Source exception
      * @param protocolHandler {@link TCPClient}
      * @return boolean if sample is considered as successful
