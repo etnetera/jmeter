@@ -1,5 +1,14 @@
 apply plugin: 'base'
+apply plugin: 'java'
 apply plugin: 'idea'
+
+sourceSets {
+    main {
+        java {
+            srcDirs = [ 'src/components', 'src/core', 'src/jorphan', 'src/functions', 'src/protocol' ]
+        }
+    }
+}
 
 ant.importBuild('build.xml') { antTargetName ->
     'ant-' + antTargetName
