@@ -17,8 +17,19 @@ public interface JMeterEventListener {
      */
     void initialized();
 
-    void initializeDistributedTest(List<String> addresses, HashTree tree, Properties props);
+    /**
+     * Controller is initializing a distributed test.
+     * @param hosts list of load generators (ip:port or hostname:port)
+     * @param tree test plan
+     * @param remoteProps properties for load generators
+     */
+    void initializeDistributedTest(List<String> hosts, HashTree tree, Properties remoteProps);
 
+    /**
+     * Engine is being configured. Either single test or load gens.
+     * @param host host
+     * @param tree test plan
+     */
     void configureEngine(String host, HashTree tree);
 
 }
