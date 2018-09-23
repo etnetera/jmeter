@@ -17,7 +17,7 @@ commons-net-3.6.jar
 commons-pool2-2.5.0.jar
 excalibur-logger-1.1.jar
 geronimo-jms_1.1_spec-1.1.1.jar
-groovy-all-2.4.13.jar
+groovy-all-2.4.15.jar
 httpclient-4.5.3.jar
 httpcore-4.4.7.jar
 httpcore-nio-4.4.7.jar
@@ -26,8 +26,8 @@ jorphan.jar (part of JMeter)
 logkit-2.0.jar
 oro-2.0.8.jar
 serializer-2.7.2.jar
-tika-core-1.17.jar
-tika-parsers-1.17.jar
+tika-core-1.18.jar
+tika-parsers-1.18.jar
 xalan-2.7.2.jar
 xercesImpl-2.11.0.jar
 xml-apis-1.4.01.jar

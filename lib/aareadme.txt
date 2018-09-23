@@ -13,7 +13,7 @@ Which jars are used by which modules?
 ====================================
 [not exhaustive]
 
-asm-6.0 (org.ow2.asm)
+asm-6.1 (org.ow2.asm)
 ----------------------
 - JSON Path extractor
 
@@ -35,7 +35,7 @@ dec-0.1.2 (org.brotli.dec)
 https://github.com/google/brotli/tree/master/java/org/brotli
 - Used by HTTP4 HC Impl for brotli decoding
 
-caffeine 2.6.1
+caffeine 2.6.2
 -----------------
 https://github.com/ben-manes/caffeine/
 - Used by CssParser
@@ -82,7 +82,7 @@ commons-net-3.6
 http://commons.apache.org/downloads/download_net.cgi
 - FTPSampler
 
-commons-pool2-2.5.0
+commons-pool2-2.6.0
 -----------------
 http://commons.apache.org/proper/commons-pool/download_pool.cgi
 - BackendListener
@@ -102,7 +102,7 @@ dnsjava-2.1.8
 http://www.dnsjava.org/download/
 - DNSCacheManager
 
-groovy-all-2.4.13
+groovy-all-2.4.15
 ----------------------
 Advised scripting language for JSR223 Test Elements
 
@@ -111,9 +111,18 @@ hamcrest-core-1.3
 - unit tests, JUnit sampler
 https://github.com/hamcrest/JavaHamcrest
 
-freemarker-2.3.23.jar
+freemarker-2.3.28.jar
 ----------------------
 - used by Report/Dashboard feature
+
+javax.activation-api-1.2.0.jar
+----------------------
+- used by SMTP Sampler
+
+javax.activation-1.2.0.jar
+----------------------
+- used by SMTP Sampler
+
 
 jCharts-0.7.5 (org.jCharts)
 -------------
@@ -125,22 +134,22 @@ jdom-1.1.3
 http://www.jdom.org/downloads/index.html
 - Anakia
 
-jodd-core-4.1.4
+jodd-core-5.0.3
 --------
 http://www.jodd.org/
 - CSS/JQuery like extractor dependency
 
-jodd-lagarto-4.1.4
+jodd-lagarto-5.0.3
 --------
 http://jodd.org/doc/csselly/
 - CSS/JQuery like extractor
 
-jodd-log-4.1.4
+jodd-log-5.0.3
 --------
 http://www.jodd.org/
 - CSS/JQuery like extractor dependency
 
-jodd-props-4.1.4
+jodd-props-5.0.3
 --------
 http://www.jodd.org/
 - used by Report/Dashboard feature properties management
@@ -162,22 +171,22 @@ jsoup-1.11.2
 http://www.jsoup.org/
 - CSS/JQuery like extractor
 
-log4j2-2.10.0
+log4j2-2.11.0
 --------
 https://logging.apache.org/log4j/2.x/
 - Logging framework
 
-ph-css-6.0.0
+ph-css-6.1.1
 --------
 https://github.com/phax/ph-css
 - CssParser
 
-ph-commons-9.0.0
+ph-commons-9.1.2
 --------
 https://github.com/phax/ph-commons
 - CssParser
 
-rhino-1.7.7.2
+rhino-1.7.10
 --------
 https://developer.mozilla.org/en-US/docs/Mozilla/Projects/Rhino/Download_Rhino
 - javascript function
@@ -196,10 +205,10 @@ junit 4.12
 - unit tests, JUnit sampler
 
 HttpComponents
-- HttpComponents Core 4.4.9 
-- HttpComponents Client 4.5.5
+- HttpComponents Core 4.4.10
+- HttpComponents Client 4.5.6
 - HttpComponents AsyncClient 4.1.3
-- HttpComponents Core NIO 4.4.9
+- HttpComponents Core NIO 4.4.10
 -----------
 http://hc.apache.org/
 - httpclient 4 implementation for HTTP sampler
@@ -231,14 +240,18 @@ http://www.slf4j.org/
 - jodd-core
 - json-path
 
-tika-1.17
+tika-1.18
 --------------
 http://tika.apache.org/
 - Regular Expression Extractor
 
-commons-dbcp2-2.2.0 (org.apache.commons.dbcp2)
+commons-dbcp2-2.4.0 (org.apache.commons.dbcp2)
 --------------------------
 - DataSourceElement (JDBC)
+
+Saxon-HE-9.8.0-12 (net.sf.saxon)
+--------------------------
+- XPath2Extractor (XML)
 
 velocity-1.7
 --------------
