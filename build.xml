@@ -592,7 +592,7 @@
       JMeter version
       This is overridden for formal releases.
     -->
-    <property name="jmeter.version" value="5.1"/>
+    <property name="jmeter.version" value="5.1.1"/>
     <!-- Remember to change "docversion" below if necessary -->
     <condition property="implementation.version"
           value="${jmeter.version} r${svn.revision}" else="${jmeter.version} r${DSTAMP}">
@@ -1142,7 +1142,7 @@ run JMeter unless all the JMeter jars are added.
         fullpath="META-INF/LICENSE-openiconlibrary.txt" />
       <!-- Only include class files from build tree - see above -->
       <fileset dir="${build.core}" includes="**/*.class"
-        excludes="**/BeanShellClient*.class,**/NewDriver*,**/DynamicClassLoader*"/>
+        excludes="**/BeanShellClient*.class,**/NewDriver*,**/DynamicClassLoader*,**/ShutdownClient.class"/>
       <fileset dir="${src.core}" includes="org/apache/jmeter/images/**"
         excludes="**/*.properties,org/apache/jmeter/images/toolbar/icons-custom/**"/>
       <fileset dir="${build.core}" includes="**/*.properties">
@@ -3250,7 +3250,7 @@ run JMeter unless all the JMeter jars are added.
   </target>
 
   <target name="complete-junit"  depends="compile-tests"
-    description="Run individual JUnit test (-Dtest.case=org.apache.jorphan.test.AllTests) (-Dtest.format=plain) (-Dtest.showoutput=true)"
+    description="Run all JUnit tests (-Dtest.format=plain) (-Dtest.showoutput=true)"
     xmlns:jacoco="antlib:org.jacoco.ant">
   <mkdir dir="reports"/>
   <property name="test.format" value="plain"/>
@@ -3589,6 +3589,7 @@ run JMeter unless all the JMeter jars are added.
       <fileset dir="${lib.opt}" includes="org.jacoco.ant-*-nodeps.jar" excludes="${jacocoant.jar}"/>
       <!-- tidy up unused slf4j-ext jar -->
       <fileset dir="${lib.dir}" includes="slf4j-ext-1.7.25.jar" />
+      <fileset dir="${lib.dir}" includes="spock-core-1.0-groovy-2.4.jar" />
     </delete>
     <antcall target="_process_all_jars">
         <param name="_get_file" value="true"/>
