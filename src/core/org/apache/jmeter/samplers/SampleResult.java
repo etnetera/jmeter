@@ -216,7 +216,7 @@ public class SampleResult implements Serializable, Cloneable, Searchable {
      * In Non GUI mode and when best config is used, size never exceeds 1,
      * but as a compromise set it to 2
      */
-    private final Set<String> files = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>(2));
+    private final Set<String> files = new HashSet<>(2);
 
     // TODO do contentType and/or dataEncoding belong in HTTPSampleResult instead?
     private String dataEncoding;// (is this really the character set?) e.g.
@@ -500,7 +500,7 @@ public class SampleResult implements Serializable, Cloneable, Searchable {
      * @param filename the name of the file
      * @return <code>true</code> if the result was previously marked
      */
-    public boolean markFile(String filename) {
+    public synchronized boolean markFile(String filename) {
         return !files.add(filename);
     }
 
