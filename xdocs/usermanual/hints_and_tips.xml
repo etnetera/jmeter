@@ -30,7 +30,7 @@
 <section name="&sect-num;. Hints and Tips" anchor="hints">
 <p>
 This section is a collection of various hints and tips that have been suggested by various questions on the JMeter User list.
-If you don't find what you are looking for here, please check the <a href="http://wiki.apache.org/jmeter">JMeter Wiki</a>.
+If you don't find what you are looking for here, please check the <a href="https://cwiki.apache.org/confluence/display/JMETER/Home">JMeter Wiki</a>.
 Also, try search the JMeter User list; someone may well have already provided a solution.
 </p>
 <subsection name="&sect-num;.1 Passing variables between threads" anchor="variable_and_threads">
@@ -65,7 +65,7 @@ You can use these to determine the correct property setting to change the loggin
 
 <p>
 It is sometimes very useful to see Log messages to debug dynamic scripting languages like BeanShell or
-groovy used in JMeter.
+Apache Groovy used in JMeter.
 You can view log messages directly in JMeter GUI, to do so:</p>
 <ul>
 <li>use menu <menuchoice><guimenuitem>Options</guimenuitem><guimenuitem>Log Viewer</guimenuitem></menuchoice>,
@@ -225,6 +225,35 @@ will match any component that contains test in searchable elements of the compon
             To change these binding, please find "<code>gui.quick_*</code>" properties within <code>jmeter.properties</code> file as example,
             it is recommended to put overrides for them into <code>user.properties</code> file.
         </p>
+    </subsection>
+    <subsection name="&sect-num;.6 Browser renderer is not displaying in View Results Tree" anchor="browser_renderer_view_results_tree">
+        <p>
+            If you're using OpenJDK or Oracle Java version higher than 8, you'll notice that Browser Renderer is not displayed.
+            This is because JavaFX is not embedded.
+            In order to have this element you need to follow the below procedure.
+        </p>
+        <ul>
+            <li>Follow this <a href="https://openjfx.io/openjfx-docs/" >documentation</a> to install Java FX for your OS and Java version. <br/>
+            If you don't want to read it, here are the necessary steps:
+                <ul>
+                    <li>Go to <a href="Gluon website">https://gluonhq.com/products/javafx/</a> and download the runtime for your Java version and OS</li>
+                    <li>Unzip it</li>
+                    <li>Then configure a variable pointing to lib folder:<br/>
+                        Linux/MacOSX:<br/>
+                        <source>export PATH_TO_FX=path/to/javafx-sdk-XX/lib</source>
+                        Windows:<br/>
+                        <source>set PATH_TO_FX=path/to/javafx-sdk-XX/lib</source>
+                    </li>
+                </ul>
+            </li>
+            <li>Then open bin/jmeter file for Linux/MacOSX, bin/jmeter.bat for Windows, find JAVA9_OPTS variable and add:<br/>
+               Linux/MacOSX:<br/>
+               <source>--module-path $PATH_TO_FX --add-modules javafx.web,javafx.swing</source>
+               Windows:<br/>
+               <source>--module-path %PATH_TO_FX% --add-modules javafx.web,javafx.swing</source>
+            </li>
+            <li></li>
+        </ul>
     </subsection>
 </section>
 

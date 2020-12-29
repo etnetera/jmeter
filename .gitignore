@@ -1,15 +1,36 @@
 # Directory trees to ignore
-/.gradle/
-backups/
-build/
-dist/
-local/
-printable_docs/
-reports/
-site/
-target/
+/backups/
+/build/
+/buildSrc/build/
+/buildSrc/subprojects/*/build/
+/buildSrc/subprojects/*/bin/
+/buildSrc/subprojects/*/out/
+/src/build/
+/src/bin/
+/src/out/
+/src/*/build/
+/src/*/bin/
+/src/*/out/
+/src/protocol/*/build/
+/src/protocol/*/bin/
+/src/protocol/*/out/
+/dist/
+/docs/
+/local/
+/printable_docs/
+/reports/
+/site/
+/target/
 
-!bin/report-template/**/dist
+!/bin/report-template/**/dist
+/bin/temp/
+/bin/testfiles/testReport*
+
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# macOS
+.DS_Store
 
 # specific files to ignore
 *.log
@@ -22,7 +43,16 @@ target/
 .pmd
 .project
 .settings
-bin/ApacheJMeter.jar
+
+# bin/ folder is used to launch JMeter, so we ignore certain files there
+/bin/ApacheJMeter.jar
+# Below are the results of "batch test" execution
+/bin/*.csv
+/bin/*.jmx
+/bin/*.jtl
+/bin/*.xml
+# We need log4j2.xml even though we want to exclude xml created by batch tests
+!/bin/log4j2.xml
 
 build-local.properties
 jmeter-fb.*
@@ -40,7 +70,7 @@ jmeter-fb.*
 /output/
 
 # IDEA
-out/
+/out/
 .idea/
 *.iml
 

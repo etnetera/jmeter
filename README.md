@@ -2,34 +2,35 @@
 <h4 align="center">Open Source application designed to load test applications and measure performance. By The Apache Software Foundation</h4>
 <br>
 
-[![Build Status](https://api.travis-ci.org/apache/jmeter.svg?branch=trunk)](https://travis-ci.org/apache/jmeter/)
-[![codecov](https://codecov.io/gh/apache/jmeter/branch/trunk/graph/badge.svg)](https://codecov.io/gh/apache/jmeter)
-[![License](http://img.shields.io/:license-apache-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
+[![Build Status](https://api.travis-ci.org/apache/jmeter.svg?branch=master)](https://travis-ci.org/apache/jmeter/)
+[![codecov](https://codecov.io/gh/apache/jmeter/branch/master/graph/badge.svg)](https://codecov.io/gh/apache/jmeter)
+[![License](https://img.shields.io/:license-apache-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 [![Stack Overflow](https://img.shields.io/:stack%20overflow-jmeter-brightgreen.svg)](https://stackoverflow.com/questions/tagged/jmeter)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.apache.jmeter/ApacheJMeter/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.apache.jmeter/ApacheJMeter)
 [![Javadocs](https://www.javadoc.io/badge/org.apache.jmeter/ApacheJMeter_core.svg)](https://www.javadoc.io/doc/org.apache.jmeter/ApacheJMeter_core)
 [![Twitter](https://img.shields.io/twitter/url/https/github.com/apache/jmeter.svg?style=social)](https://twitter.com/intent/tweet?text=Powerful%20load%20testing%20with%20Apache%20JMeter:&url=https://jmeter.apache.org)
 
-## What is it?
+## What is it
 
 Apache JMeter may be used to test performance both on static and dynamic resources, Web dynamic applications.
 It can be used to simulate a heavy load on a server, group of servers, network or object to test its strength or to analyze overall performance under different load types.
 
-![Image of JMeter 4.0](https://raw.githubusercontent.com/apache/jmeter/trunk/xdocs/images/screenshots/JMETER_4.0.png)
+![Image of JMeter 4.0](https://raw.githubusercontent.com/apache/jmeter/master/xdocs/images/screenshots/JMETER_4.0.png)
 
 Apache JMeter features include:
 
-Ability to load and performance test many different applications/server/protocol types: 
- -  Web - HTTP, HTTPS (Java, NodeJS, PHP, ASP.NET,...)
- -  SOAP / REST Webservices
- -  FTP
- -  Database via JDBC
- -  LDAP
- -  Message-oriented Middleware (MOM) via JMS
- -  Mail - SMTP(S), POP3(S) and IMAP(S)
- -  Native commands or shell scripts
- -  TCP
- -  Java Objects
+Ability to load and performance test many different applications/server/protocol types:
+
+- Web - HTTP, HTTPS (Java, NodeJS, PHP, ASP.NET,...)
+- SOAP / REST Webservices
+- FTP
+- Database via JDBC
+- LDAP
+- Message-oriented Middleware (MOM) via JMS
+- Mail - SMTP(S), POP3(S) and IMAP(S)
+- Native commands or shell scripts
+- TCP
+- Java Objects
 
 Full featured Test IDE that allows fast Test Plan **recording (from Browsers or native applications), building and debugging.**
 
@@ -37,11 +38,11 @@ Full featured Test IDE that allows fast Test Plan **recording (from Browsers or 
 
 A complete and [**ready to present dynamic HTML report**](http://jmeter.apache.org/usermanual/generating-dashboard.html)
 
-![Dashboard screenshot](https://raw.githubusercontent.com/apache/jmeter/trunk/xdocs/images/screenshots/dashboard/response_time_percentiles_over_time.png)
+![Dashboard screenshot](https://raw.githubusercontent.com/apache/jmeter/master/xdocs/images/screenshots/dashboard/response_time_percentiles_over_time.png)
 
 [**Live reporting**](http://jmeter.apache.org/usermanual/realtime-results.html) into 3rd party databases like InfluxDB or Graphite
 
-![Live report](https://raw.githubusercontent.com/apache/jmeter/trunk/xdocs/images/screenshots/grafana_dashboard.png)
+![Live report](https://raw.githubusercontent.com/apache/jmeter/master/xdocs/images/screenshots/grafana_dashboard.png)
 
 Easy correlation through ability to extract data from most popular response formats, [**HTML**](http://jmeter.apache.org/usermanual/component_reference.html#CSS/JQuery_Extractor), [**JSON**](http://jmeter.apache.org/usermanual/component_reference.html#JSON_Extractor), [**XML**](http://jmeter.apache.org/usermanual/component_reference.html#XPath_Extractor) or [**any textual format**](http://jmeter.apache.org/usermanual/component_reference.html#Regular_Expression_Extractor)
 
@@ -53,53 +54,51 @@ and simultaneous sampling of different functions by separate thread groups.
 Caching and offline analysis/replaying of test results.
 
 Highly Extensible core:
- -  Pluggable Samplers allow unlimited testing capabilities.
- -  **Scriptable Samplers** (JSR223-compatible languages like Groovy)
- -  Several load statistics may be chosen with **pluggable timers**.
- -  Data analysis and **visualization plugins** allow great extensibility and personalization.
- -  Functions can be used to provide dynamic input to a test or provide data manipulation.
- -  Easy Continuous Integration through 3rd party Open Source libraries for Maven, Gradle and Jenkins
 
+- Pluggable Samplers allow unlimited testing capabilities.
+- **Scriptable Samplers** (JSR223-compatible languages like Groovy)
+- Several load statistics may be chosen with **pluggable tiers**.
+- Data analysis and **visualization plugins** allow great exensibility and personalization.
+- Functions can be used to provide dynamic input to a test orprovide data manipulation.
+- Easy Continuous Integration through 3rd party Open Source libraries for Maven, Gradle and Jenkins
 
 ## The Latest Version
 
-Details of the latest version can be found on the JMeter Apache 
-Project web site (https://jmeter.apache.org/).
+Details of the latest version can be found on the [JMeter Apache
+Project web site](https://jmeter.apache.org/)
 
 ## Requirements
 
 The following requirements exist for running Apache JMeter:
 
-*  Java Interpreter:
+- Java Interpreter:
 
-    A fully compliant Java 8 Runtime Environment is required 
-    for Apache JMeter to execute. A JDK with keytool utility is better suited 
-    for Recording HTTPS websites. 
-    Java 9 is not yet supported as of version 3.3.
+  A fully compliant Java 8 Runtime Environment is required
+  for Apache JMeter to execute. A JDK with `keytool` utility is better suited
+  for Recording HTTPS websites.
 
-*  Optional jars:
+- Optional jars:
 
-    Some jars are not included with JMeter.
-    If required, these should be downloaded and placed in the lib directory
+  Some jars are not included with JMeter.
+  If required, these should be downloaded and placed in the lib directory
+  - JDBC - available from the database supplier
+  - JMS - available from the JMS provider
+  - [Bouncy Castle](http://www.bouncycastle.org/test_releases.html) -
+  only needed for SMIME Assertion
 
-    * JDBC - available from the database supplier
-    * JMS - available from the JMS provider
-    * [Bouncy Castle](http://www.bouncycastle.org/latest_releases.html) - 
-    only needed for SMIME Assertion
+- Java Compiler (*OPTIONAL*):
 
-*  Java Compiler (OPTIONAL):
-
-    A Java compiler is not needed since the distribution includes a
-    precompiled Java binary archive. _Note that a compiler is required
-    to build plugins for Apache JMeter._
+  A Java compiler is not needed since the distribution cludes a
+  precompiled Java binary archive.
+  > **Note** that a compiler is required to build plugins for Apache JMeter.
 
 ## Installation Instructions
 
-_Note that spaces in directory names can cause problems._
+> **Note** that spaces in directory names can cause problems.
 
- * Release builds
+- Release builds
 
-   Unpack the binary archive into a suitable directory structure.
+  Unpack the binary archive into a suitable directory structure.
 
 ## Running JMeter
 
@@ -111,15 +110,15 @@ _Note that spaces in directory names can cause problems._
 For Windows there are also some other scripts which you can drag-and-drop
 a JMX file onto:
 
-* `jmeter-n.cmd` - runs the file as a non-GUI test
-* `jmeter-n-r.cmd` - runs the file as a non-GUI remote (client-server) test
-* `jmeter-t.cmd` - loads the file ready to run it as a GUI test
+- `jmeter-n.cmd` - runs the file as a non-GUI test
+- `jmeter-n-r.cmd` - runs the file as a non-GUI remote (client-server) test
+- `jmeter-t.cmd` - loads the file ready to run it as a GUI test
 
 ## Documentation
 
 The documentation available as of the date of this release is
-also included, in HTML format, in the `printable_docs/` directory,
-and it may be browsed starting from the file called `index.html`.
+also included, in HTML format, in the [printable_docs](printable_docs) directory,
+and it may be browsed starting from the file called [index.html](printable_docs/index.html).
 
 ## Reporting a bug/enhancement
 
@@ -132,11 +131,6 @@ See [Issue Tracking](https://jmeter.apache.org/issues.html)
 Unpack the source archive into a suitable directory structure.
 Most of the 3rd party library files can be extracted from the binary archive
 by unpacking it into the same directory structure.
-You can also use Ant to download the required library files:
-
-```sh
-ant download_jars
-```
 
 Any optional jars (see above) should be placed in `lib/opt` and/or `lib`.
 
@@ -146,70 +140,67 @@ but won't be used at run-time.
 _This is useful for testing what happens if the optional jars are not
 downloaded by other JMeter users._
 
-If you are behind a proxy, you can set a few build properties in `build-local.properties` for ant to use the proxy:
+If you are behind a proxy, you can set a few build properties in `~/.gradle/gradle.properties` for gradle to use the proxy:
 
-```
-proxy.use=true
-proxy.host=proxy.example.invalid
-proxy.port=8080
-proxy.user=your_user_name
-proxy.pass=your_password
-```
-
-You might also want to skip some tests - that are failing without proper access to the internet - by adding some more
-properties into `build-local.properties`:
-```
-skip.bug52310=true
-skip.bug60607=true
-skip.batchtest_Http4ImplPreemptiveBasicAuth=true
-skip.batchtest_SlowCharsFeature=true
-skip.batchtest_TestKeepAlive=true
-skip.batchtest_ResponseDecompression=true
-skip.test_http=true
-skip.test_TestDNSCacheManager.testWithCustomResolverAnd1Server=true
+```properties
+systemProp.http.proxyHost=proxy.example.invalid
+systemProp.http.proxyPort=8080
+systemProp.http.proxyUser=your_user_name
+systemProp.http.proxyPassword=your_password
+systemProp.https.proxyHost=proxy.example.invalid
+systemProp.https.proxyPort=8080
+systemProp.https.proxyUser=your_user_name
+systemProp.https.proxyPassword=your_password
 ```
 
 ### Test builds
 
-JMeter is built using Ant.
+JMeter is built using Gradle.
 
-Change to the top-level directory and issue the command:
-
-```sh
-ant download_jars
-```
-_This only needs to be done once; it will download any missing 3rd party jars._
+The following command would build and test JMeter:
 
 ```sh
-ant
+./gradlew build [-Djava.awt.headless=true]
 ```
 
-This will compile the application and enable you to run `jmeter` from the `bin`
-directory.
-
-```sh
-ant test [-Djava.awt.headless=true]
-```
-
-This will compile and run the unit tests.
 The optional property definition is required if the system
 does not have a suitable GUI display.
 
+The output artifacts (jars, reports) are placed to `build` folders.
+For instance, binary artifacts can be found under `src/dist/build/distributions`.
+
+The following command would compile the application and enable you to run `jmeter` from the `bin`
+directory. Note: it completely refreshes `lib/` contents, so it would remove clustom plugins
+should you have them installed.
+
+```sh
+./gradlew createDist
+```
+
+Alternatively you could start GUI via
+
+```sh
+./gradlew runGui
+```
+
 ## Developer information
 
-Building and contributing is explained in details at https://jmeter.apache.org/building.html
+Building and contributing is explained in details at [building JMeter](https://jmeter.apache.org/building.html)
+and [CONTRIBUTING.md](CONTRIBUTING.md). More information on the tasks available for
+building JMeter with Gradle is available in [gradle.md](gradle.md).
 
-The code is maintained in SVN at https://svn.apache.org/repos/asf/jmeter/trunk
+The code is maintained at GitHub:
 
-There is a read-only mirror at GitHub: https://github.com/apache/jmeter
+- <https://github.com/apache/jmeter>
+- <https://gitbox.apache.org/repos/asf/jmeter.git>
 
 ## Licensing and legal information
 
 For legal and licensing information, please see the following files:
 
-* [LICENSE](LICENSE)
+- [LICENSE](LICENSE)
 
-* [NOTICE](NOTICE)
+- [NOTICE](NOTICE)
 
 ## Cryptographic Software Notice
 
@@ -235,17 +226,16 @@ code and source code.
 The following provides more details on the included software that
 may be subject to export controls on cryptographic software:
 
-  Apache JMeter interfaces with the
-  Java Secure Socket Extension (JSSE) API to provide
+Apache JMeter interfaces with the
+Java Secure Socket Extension (JSSE) API to provide
 
-    - HTTPS support
+- HTTPS support
 
-  Apache JMeter interfaces (via Apache HttpClient4) with the
-  Java Cryptography Extension (JCE) API to provide
+Apache JMeter interfaces (via Apache HttpClient4) with the
+Java Cryptography Extension (JCE) API to provide
 
-    - NTLM authentication
+- NTLM authentication
 
-  Apache JMeter does not include any implementation of JSSE or JCE.
-
+Apache JMeter does not include any implementation of JSSE or JCE.
 
 **Thank you for using Apache JMeter.**

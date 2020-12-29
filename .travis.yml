@@ -1,54 +1,55 @@
 sudo: false
 language: java
 
-before_script:
-  - test "x$RUN_CHECKSTYLE" != 'x' || ant -Djava.awt.headless=true download_jars install
-  - test "x$RUN_CHECKSTYLE" != 'xtrue' || ant -Djava.awt.headless=true download_checkstyle
-
-before_install:
-    - wget --no-check-certificate https://www.apache.org/dist/ant/binaries/apache-ant-1.10.5-bin.tar.gz
-    - tar -xzvf apache-ant-1.10.5-bin.tar.gz
-    - export PATH="$(pwd)/apache-ant-1.10.5/bin:$PATH"
-    - echo $(ant -version)
-
 # skip default "install" command
 install: true
 
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+
 env:
   global:
-  - ANT_OPTS="-Ddisable-svnCheck=true -Djava.awt.headless=true -Drmi_force_localhost=true -Dskip.bug52310=true"
+    - SKIP_TAR="-x distTar -x distTarSource"
+    - ORG_GRADLE_PROJECT_checksumFailOn=build_finish
+    - ORG_GRADLE_PROJECT_checksumPrint=true
 
 matrix:
   include:
-    - jdk: oraclejdk8
-      env: RUN_CHECKSTYLE=true
-      script: ant -Djava.awt.headless=true checkstyle
-    - name: Coverage on our default build with Oracle Java 8
-      jdk: oraclejdk8
-      script:
-          - ant coverage-travis
-      after_success:
-          - bash <(curl -s https://codecov.io/bash)
-      sudo: true # otherwise TEST_HTTPS.jmx -> analytics.usa.gov does not work
-    - name: Tests with OpenJDK 8
+    - name: Tests with OpenJDK 8 + code coverage
       jdk: openjdk8
       script:
-          - ant test
+        - xvfb-run ./gradlew build jacocoReport $SKIP_TAR
+      after_success:
+        - bash <(curl -s https://codecov.io/bash)
     - name: Tests with OpenJDK 11
       jdk: openjdk11
+      addons:
+        apt:
+          packages:
+            - language-pack-fr
+      env:
+        - TZ=Pacific/Chatham # flips between +12:45 and +13:45
+        - LANG=fr_FR.UTF-8
+        - LC_ALL=fr_FR.UTF-8
       script:
-          - ant test
-      sudo: true # otherwise TEST_HTTPS.jmx -> analytics.usa.gov does not work
-    - name: Tests with OpenJDK EA
-      jdk: openjdk-ea
+        # This job verifies headless mode to ensure Apache JMeter is workable in headless as well
+        # Spotless and Checksyle are skipped here to save some time. They are verified anyway in Java 8 and Java 13 builds, so skipping them for Java 11 does not harm
+        - ./gradlew build -Djava.awt.headless=true -Duser.language=fr -Duser.country=FR -PskipCheckstyle -PskipSpotless $SKIP_TAR
+    # Java 12 is not here because it has been superceeded by Java 13
+    # Tests with Java 12 do not surface much new, so Java 11 (LTS) and Java 13 (non-LTS) are enough for "post Java 9" testing
+    - name: Tests with OpenJDK 13
+      jdk: openjdk13
       script:
-          - ant test
-      sudo: true # otherwise TEST_HTTPS.jmx -> analytics.usa.gov does not work
-  allow_failures:
-    - jdk: openjdk-ea
-# disable building with jdk9 as it has a bug and will not compile JMeter
-# see https://bugs.java.com/bugdatabase/view_bug.do?bug_id=8193802
-#    - jdk: oraclejdk9
-#      script: ant -Djava.awt.headless=true -Drmi_force_localhost=true -Dskip.bug52310=true test
-#      sudo: true # otherwise TEST_HTTPS.jmx -> analytics.usa.gov does not work
-
+        # ./gradlew wrapper task kills license header from gradle-wrapper.properties, so we use grep/echo to update the file
+        - grep -v Sha256 gradle/wrapper/gradle-wrapper.properties | grep -v Url > gradle/wrapper/gradle-wrapper.properties2
+        - echo 'distributionUrl=https\://services.gradle.org/distributions-snapshots/gradle-6.0-20191001230020+0000-bin.zip' >> gradle/wrapper/gradle-wrapper.properties2
+        - mv gradle/wrapper/gradle-wrapper.properties2 gradle/wrapper/gradle-wrapper.properties
+        # Spotless and Checkstyle are executed here as well to test if the plugins are compatible with Gradle 6.0 / Java 13
+        - xvfb-run ./gradlew build -PchecksumFailOn=never -PchecksumPrint=false $SKIP_TAR
+        # Show difference between the new dependencies and old ones. It is expected that new Gradle version might bring new dependencies
+        - diff -u checksum.xml build/checksum/checksum.xml || true

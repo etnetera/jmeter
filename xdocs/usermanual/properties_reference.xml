@@ -761,7 +761,7 @@ JMETER-SERVER</source>
     Defaults to: <code>5000</code>
 </property>
 <property name="proxy.number.requests">
-    Add numeric prefix to Sampler names.<br/>
+    Add numeric suffix to Sampler names.<br/>
     defaults to: <code>true</code>
 </property>
 <property name="proxy.excludes.suggested">
@@ -1026,18 +1026,11 @@ JMETER-SERVER</source>
 </property>
 <property name="jdbc.config.jdbc.driver.class">
     List of JDBC driver class name<br/>
-    Defaults to: <source>com.mysql.jdbc.Driver|org.postgresql.Driver|oracle.jdbc.OracleDriver|com.ingres.jdbc.IngresDriver|com.microsoft.sqlserver.jdbc.SQLServerDriver|com.microsoft.jdbc.sqlserver.SQLServerDriver|org.apache.derby.jdbc.ClientDriver|org.hsqldb.jdbc.JDBCDriver|com.ibm.db2.jcc.DB2Driver|org.apache.derby.jdbc.ClientDriver|org.h2.Driver|org.firebirdsql.jdbc.FBDriver|org.mariadb.jdbc.Driver|org.sqlite.JDBC|net.sourceforge.jtds.jdbc.Driver</source>
+    Defaults to: <source>com.mysql.jdbc.Driver|org.postgresql.Driver|oracle.jdbc.OracleDriver|com.ingres.jdbc.IngresDriver|com.microsoft.sqlserver.jdbc.SQLServerDriver|com.microsoft.jdbc.sqlserver.SQLServerDriver|org.apache.derby.jdbc.ClientDriver|org.hsqldb.jdbc.JDBCDriver|com.ibm.db2.jcc.DB2Driver|org.apache.derby.jdbc.ClientDriver|org.h2.Driver|org.firebirdsql.jdbc.FBDriver|org.mariadb.jdbc.Driver|org.sqlite.JDBC|net.sourceforge.jtds.jdbc.Driver|com.exasol.jdbc.EXADriver</source>
 </property>
 </properties>
 </section>
 <section name="&sect-num;.24 OS Process Sampler configuration" anchor="os_sampler">
-<properties>
-<property name="os_sampler.poll_for_timeout">
-    Polling to see if process has finished its work, used when a timeout
-    is configured on sampler. Specified in milliseconds.<br/>
-    Defaults to: <code>100</code>
-</property>
-</properties>
 </section>
 <section name="&sect-num;.25 TCP Sampler configuration" anchor="tcp_sampler">
 <properties>

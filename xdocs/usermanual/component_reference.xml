@@ -275,7 +275,7 @@ https.default.protocol=SSLv3
         When using <code>multipart/form-data</code>, this suppresses the <code>Content-Type</code> and
         <code>Content-Transfer-Encoding</code> headers; only the <code>Content-Disposition</code> header is sent.
         </property>
-        <property name="Path" required="Yes">The path to resource (for example, <code>/servlets/myServlet</code>). If the
+        <property name="Path" required="No">The path to resource (for example, <code>/servlets/myServlet</code>). If the
 resource requires query string parameters, add them below in the
 "Send Parameters With the Request" section.
 <note>
@@ -597,6 +597,7 @@ the additional variables for rows four, five and six will be removed.
         </property>
         <property name="Query timeout(s)" required="No">Set a timeout in seconds for query, empty value means 0 which is infinite. <code>-1</code> means don't set any query timeout
 which might be needed for use case or when certain drivers don't support timeout. Defaults to 0.</property>
+        <property name="Limit ResultSet" required="No">Limits the number of rows to iterate through the ResultSet. Empty value means <code>-1</code>, e.g. no limitation, which is also the default. This can help to reduce the amount of data to be fetched from the database via the JDBC driver, but affects all possible options of <code>Handle ResultSet</code> respectively – e.g. incomplete ResultSet and a record count ≤ the limit.</property>
         <property name="Handle ResultSet" required="No">Defines how ResultSet returned from callable statements be handled:
             <ul>
                 <li><code>Store As String</code> (default) - All variables on Variable Names list are stored as strings, will not iterate through a <code>ResultSet</code> when present on the list. <code>CLOB</code>s will be converted to Strings. <code>BLOB</code>s will be converted to Strings as if they were an UTF-8 encoded byte-array. Both <code>CLOB</code>s and <code>BLOB</code>s will be cut off after <code>jdbcsampler.max_retain_result_size</code> bytes.</li>
@@ -884,11 +885,11 @@ This will not have any impact on existing Test plans.
          <property name="Name" required="No">Descriptive name for this sampler that is shown in the tree.</property>
          <property name="Entry name" required="Yes">Distinguished name of the object you want to modify, relative 
            to the given DN in the thread bind operation</property>
-         <property name="Modification test" required="Yes">The attribute-value-opCode triples. The opCode can be any
-           valid LDAP operationCode (<code>add</code>, <code>delete</code>/<code>remove</code> or <code>replace</code>).
-           If you don't specify a value with a <code>delete</code> operation,
-           all values of the given attribute will be deleted. If you do specify a value in a <code>delete</code> operation, only
-           the given value will be deleted. If this value is non-existent, the sampler will fail the test.</property>
+         <property name="Modification test" required="Yes">The attribute-value-opCode triples. <br/>
+            The <code>opCode</code> can be any valid LDAP operationCode (<code>add</code>, <code>delete</code>, <code>remove</code> or <code>replace</code>).<br/>
+           If you don't specify a value with a <code>delete</code> operation, all values of the given attribute will be deleted. <br/>
+           If you do specify a value in a <code>delete</code> operation, only the given value will be deleted. <br/>
+           If this value is non-existent, the sampler will fail the test.</property>
        </properties>
      </dd>
      <dt><b>Compare</b></dt>
@@ -1159,7 +1160,9 @@ props.put("PROP1","1234");</source>
     <property name="Name" required="No">Descriptive name for this sampler that is shown in the tree.</property>
     <property name="Scripting Language" required="Yes">Name of the JSR223 scripting language to be used.
       <note>There are other languages supported than those that appear in the drop-down list.
-        Others may be available if the appropriate jar is installed in the JMeter lib directory.
+        Others may be available if the appropriate jar is installed in the JMeter lib directory.<br/>
+        Notice that some languages such as Velocity may use a different syntax for JSR223 variables,
+        e.g. <source>$log.debug("Hello " + $vars.get("a"));</source> for Velocity.
       </note>
     </property>
     <property name="Script File" required="No">Name of a file to be used as a JSR223 script, if a relative file path is used, then it will be relative to directory referenced by "<code>user.dir</code>" System property</property>
@@ -1918,6 +1921,39 @@ MongoDB Script is more suitable for functional testing or test setup (setup/tear
 
 <a href="#">^</a>
 
+
+<component name="Bolt Request" index="&sect-num;.1.22" width="711" height="488" screenshot="bolt-request.png">
+    <description>
+        <p>This sampler allows you to run Cypher queries through the Bolt protocol.</p>
+        <p>Before using this you need to set up a <complink name="Bolt Connection Configuration"/></p>
+        <p>Every request uses a connection acquired from the pool and returns it to the pool when the sampler completes.
+        The connection pool size use the driver defaults (~100) and is not configurable at the moment.</p>
+        <p>The measured response time corresponds to the "full" query execution, including both
+        the time to execute the cypher query AND the time to consume the results sent back by the database.</p>
+    </description>
+
+    <properties>
+        <property name="Name" required="No">Descriptive name for this sampler that is shown in the tree.</property>
+        <property name="Comments" required="No">Free text for additional details.</property>
+        <property name="Cypher statement" required="Yes">
+            The query to execute.
+        </property>
+        <property name="Params" required="No">The parameter values, JSON formatted.</property>
+        <property name="Record Query Results" required="No">
+            Whether to add or not query result data to the sampler response (default false).
+            Note that activating this has a memory overhead, use it wisely.
+        </property>
+    </properties>
+
+    <note>It is strongly advised to use query parameters, allowing the database to cache and reuse execution plans.</note>
+
+    <links>
+        <complink name="Bolt Connection Configuration"/>
+    </links>
+</component>
+
+<a href="#">^</a>
+
 </section>
 
 <section name="&sect-num;.2 Logic Controllers" anchor="logic_controllers">
@@ -2180,9 +2216,7 @@ Please refer to the <complink name="Constant Throughput Timer"/> for an element 
         By default, the condition is evaluated only once on initial entry, but you have the option to have it evaluated for every runnable element contained in the controller.
         </p>
         <p>
-        If Controller will internally use javascript to evaluate the condition but this can have a performance penalty.
-        <figure width="819" height="265" image="if_controller_javascript.png">If Controller using javascript</figure>
-        A better option (default one) is to check <code>Interpret Condition as Variable Expression?</code>, then in the condition field you have 2 options:
+        The best option (default one) is to check <code>Interpret Condition as Variable Expression?</code>, then in the condition field you have 2 options:
         <ul>
             <li>Option 1 : Use a variable that contains <code>true</code> or <code>false</code>
             <note>If you want to test if last sample was successful, you can use <code>${JMeterThread.last_sample_ok}</code>
@@ -2193,7 +2227,6 @@ Please refer to the <complink name="Constant Throughput Timer"/> for an element 
             <figure width="815" height="260" image="if_controller_expression.png">If Controller using expression</figure>
             </li>
         </ul>
-        
         For example, previously one could use the condition:
         <code>${__jexl3(${VAR} == 23)}</code> and this would be evaluated as <code>true</code>/<code>false</code>, the result would then be passed to JavaScript
         which would then return <code>true</code>/<code>false</code>. If the Variable Expression option is selected, then the expression is evaluated
@@ -2206,6 +2239,9 @@ Please refer to the <complink name="Constant Throughput Timer"/> for an element 
         <source>"${myVar}" != "\${myVar}"</source>
         to test if a variable is defined and is not null.
         </note>
+        If you uncheck <code>Interpret Condition as Variable Expression?</code>, <code>If Controller</code> will internally use javascript to evaluate the condition 
+        which has a performance penalty that can be very big and make your test less scalable.
+        <figure width="819" height="265" image="if_controller_javascript.png">If Controller using javascript</figure>
     </description>
 <properties>
     <property name="Name" required="No">Descriptive name for this controller that is shown in the tree.</property>
@@ -2801,6 +2837,9 @@ may download images, style-sheets, etc. referenced by the HTML code.
 <tr><td><code>JSON Path Tester</code></td>
 <td>The <i>JSON Path Tester view</i> will let you test your JSON-PATH expressions and see the extracted data from a particular response.
 <br/></td></tr>
+<tr><td><code>JSON JMESPath Tester</code></td>
+<td>The <i>JSON JMESPath Tester view</i> will let you test your <a href="http://jmespath.org/">JMESPath</a> expressions and see the extracted data from a particular response.
+<br/></td></tr>
 <tr><td><code>Regexp Tester</code></td>
 <td>The <i>Regexp Tester view</i> only works for text responses. It shows the plain text in the upper panel.
 The "<code>Test</code>" button allows the user to apply the Regular Expression to the upper panel and the results
@@ -3392,6 +3431,7 @@ By default, a Graphite implementation is provided.
     <properties>
         <property name="influxdbMetricsSender" required="Yes"><code>org.apache.jmeter.visualizers.backend.influxdb.HttpMetricsSender</code></property>
         <property name="influxdbUrl" required="Yes">Influx URL (example : http://influxHost:8086/write?db=jmeter)</property>
+        <property name="influxdbToken" required="No">InfluxDB 2 <a href="https://v2.docs.influxdata.com/v2.0/security/">authentication token</a> (example : HE9yIdAPzWJDspH_tCc2UvdKZpX==); since 5.2.</property>
         <property name="application" required="Yes">Name of tested application. This value is stored in the 'events' measurement too as a tag named 'application' </property>
         <property name="measurement" required="Yes">Measurement as per <a href="https://docs.influxdata.com/influxdb/v1.1/write_protocols/line_protocol_reference/">Influx Line Protocol Reference</a>. Defaults to "<code>jmeter</code>."</property>
         <property name="summaryOnly" required="Yes">Only send a summary with no detail. Defaults to <code>true</code>.</property>
@@ -3501,7 +3541,7 @@ By default, a Graphite implementation is provided.
   if the variable name field empty, then the first line of the file is read and interpreted as the list of column names.
   </property>
   <property name="Use first line as Variable Names" required="No">
-  Ignore first line of CSV file, it will only be used used if Variable Names is not empty, 
+  Ignore first line of CSV file, it will only be used if Variable Names is not empty,
   if Variable Names is empty the first line must contain the headers.
   </property>
   <property name="Delimiter" required="Yes">Delimiter to be used to split the records in the file.
@@ -3908,7 +3948,7 @@ instead. (see figures 12 and 13).</p>
 </component>
 
 <component name="JDBC Connection Configuration" index="&sect-num;.4.10" 
-                 width="697" height="656" screenshot="jdbc-config/jdbc-conn-config.png">
+                 width="687" height="669" screenshot="jdbc-config/jdbc-conn-config.png">
     <description>Creates a database connection (used by <complink name="JDBC Request"/>Sampler)
      from the supplied JDBC Connection settings. The connection may be optionally pooled between threads.
      Otherwise each thread gets its own connection.
@@ -3939,6 +3979,7 @@ instead. (see figures 12 and 13).</p>
         See <a href="https://commons.apache.org/proper/commons-dbcp/api-2.1.1/org/apache/commons/dbcp2/BasicDataSource.html#getTimeBetweenEvictionRunsMillis--" >BasicDataSource.html#getTimeBetweenEvictionRunsMillis</a></property>
         <property name="Auto Commit" required="Yes">Turn auto commit on or off for the connections.</property>
         <property name="Transaction isolation" required="Yes">Transaction isolation level</property>
+        <property name="Preinit Pool" required="No">The connection pool can be intialized instantly. If set to <code>False</code> (default), the JDBC request samplers using this pool might measure higher response times for the first queries – as the connection establishment time for the whole pool is included.</property>
         <property name="Init SQL statements separated by new line" required="No">A Collection of SQL statements that will be used to initialize physical connections when they are first created. These statements are executed only once - when the configured connection factory creates the connection. </property>
         <property name="Test While Idle" required="Yes">Test idle connections of the pool, see <a href="https://commons.apache.org/proper/commons-dbcp/api-2.1.1/org/apache/commons/dbcp2/BasicDataSource.html#getTestWhileIdle--">BasicDataSource.html#getTestWhileIdle</a>. 
         Validation Query will be used to test it.</property>
@@ -3954,13 +3995,14 @@ instead. (see figures 12 and 13).</p>
               <dt>hsqldb</dt><dd><code>select 1 from INFORMATION_SCHEMA.SYSTEM_USERS</code></dd>
               <dt>Oracle</dt><dd><code>select 1 from dual</code></dd>
               <dt>DB2</dt><dd><code>select 1 from sysibm.sysdummy1</code></dd>
-              <dt>MySQL</dt><dd><code>select 1</code></dd>
+              <dt>MySQL or MariaDB</dt><dd><code>select 1</code></dd>
               <dt>Microsoft SQL Server (MS JDBC driver)</dt><dd><code>select 1</code></dd>
               <dt>PostgreSQL</dt><dd><code>select 1</code></dd>
               <dt>Ingres</dt><dd><code>select 1</code></dd>
               <dt>Derby</dt><dd><code>values 1</code></dd>
               <dt>H2</dt><dd><code>select 1</code></dd>
               <dt>Firebird</dt><dd><code>select 1 from rdb$database</code></dd>
+              <dt>Exasol</dt><dd><code>select 1</code></dd>
             </dl>
         <note>The list come from <a href="https://stackoverflow.com/questions/10684244/dbcp-validationquery-for-different-databases">stackoverflow entry on different database validation queries</a> and it can be incorrect</note>
         <note>Note this validation query is used on pool creation to validate it even if "<code>Test While Idle</code>" suggests query would only be used on idle connections.
@@ -3969,7 +4011,7 @@ instead. (see figures 12 and 13).</p>
         <property name="Database URL" required="Yes">JDBC Connection string for the database.</property>
         <property name="JDBC Driver class" required="Yes">Fully qualified name of driver class. (Must be in
         JMeter's classpath - easiest to copy <code>.jar</code> file into JMeter's <code>/lib</code> directory).
-        <p>The list of the validation queries can be configured with <code>jdbc.config.jdbc.driver.class</code> property and are by default:</p>
+        <p>The list of the preconfigured jdbc driver classes can be configured with <code>jdbc.config.jdbc.driver.class</code> property and are by default:</p>
             <dl>
               <dt>hsqldb</dt><dd>org.hsqldb.jdbc.JDBCDriver</dd>
               <dt>Oracle</dt><dd>oracle.jdbc.OracleDriver</dd>
@@ -3985,6 +4027,7 @@ instead. (see figures 12 and 13).</p>
               <dt>MariaDB</dt><dd>org.mariadb.jdbc.Driver</dd>
               <dt>SQLite</dt><dd>org.sqlite.JDBC</dd>
               <dt>Sybase AES</dt><dd>net.sourceforge.jtds.jdbc.Driver</dd>
+              <dt>Exasol</dt><dd>com.exasol.jdbc.EXADriver</dd>
             </dl>
         </property>
         <property name="Username" required="No">Name of user to connect as.</property>
@@ -4060,6 +4103,24 @@ If the database server is not running or is not accessible, then JMeter will rep
       <dd><code>jdbc:derby://server[:port]/databaseName[;URLAttributes=value[;&hellip;]]</code></dd>
     </dl>
   </dd>
+  <dt>MariaDB</dt>
+  <dd>
+    <dl>
+      <dt>Driver class</dt>
+      <dd><code>org.mariadb.jdbc.Driver</code></dd>
+      <dt>Database URL</dt>
+      <dd><code>jdbc:mariadb://host[:port]/dbname[;URLAttributes=value[;&hellip;]]</code></dd>
+    </dl>
+  </dd>
+  <dt>Exasol (see also <a href="https://docs.exasol.com/connect_exasol/drivers/jdbc.htm" >JDBC driver documentation</a>)</dt>
+  <dd>
+    <dl>
+      <dt>Driver class</dt>
+      <dd><code>com.exasol.jdbc.EXADriver</code></dd>
+      <dt>Database URL</dt>
+      <dd><code>jdbc:exa:host[:port][;schema=SCHEMA_NAME][;prop_x=value_x]</code></dd>
+    </dl>
+  </dd>
 </dl>
 <note>The above may not be correct - please check the relevant JDBC driver documentation.</note>
 </component>
@@ -4080,6 +4141,8 @@ This component is typically used in HTTPS scenarios where you don't want to take
     </ul>
 </li>
 </ol>
+<p>To use PKCS11 as the source for the store, you need to set <code>javax.net.ssl.keyStoreType</code> to <code>PKCS11</code>
+and <code>javax.net.ssl.keyStore</code> to <code>NONE</code>.</p>
 </description>
 
 <properties>
@@ -4365,6 +4428,22 @@ DB db = MongoDBHolder.getDBFromSource("value of property MongoDB Source",
         <property name="Write Concern : Continue on error" required="No">
             If batch inserts should continue after the first error
         </property>
+    </properties>
+</component>
+
+<a href="#">^</a>
+
+<component name="Bolt Connection Configuration" index="&sect-num;.4.21"
+           width="711" height="170" screenshot="bolt-connection-config.png">
+    <description>Creates a Bolt connection pool (used by <complink name="Bolt Request"/> Sampler)
+        from the supplied Connection settings.
+    </description>
+    <properties>
+        <property name="Name" required="No">Descriptive name for this sampler that is shown in the tree.</property>
+        <property name="Comments" required="No">Free text for additional details.</property>
+        <property name="Bolt URI" required="Yes">The database URI.</property>
+        <property name="Username" required="No">User account.</property>
+        <property name="Password" required="No">User credentials.</property>
     </properties>
 </component>
 
@@ -4699,7 +4778,7 @@ Some sample expressions:
 <property name="Ignore Whitespace"  required="If Tidy is not selected">Ignore Element Whitespace.</property>
 <property name="Fetch External DTDs"  required="If Tidy is not selected">If selected, external DTDs are fetched.</property>
 <property name="XPath Assertion"    required="Yes">XPath to match in the document.</property>
-<property name="True if nothing matches"    required="No">True if a XPath expression is not matched</property>
+<property name="Invert assertion(will fail if above conditions met)"    required="No">True if a XPath expression is not matched or returns false</property>
 </properties>
 <note>
 The non-tolerant parser can be quite slow, as it may need to download the DTD etc.
@@ -4720,6 +4799,30 @@ prefix2=http\://toto.apache.org
 </ul>
 </note>
 </component>
+
+<component name="XPath2 Assertion" index="&sect-num;.5.16"  width="871" height="615" screenshot="xpath_assertion.png">
+<description><p>The XPath2 Assertion tests a document for well formedness.  Using "<code>/</code>" will match any well-formed
+document, and is the default XPath2 Expression. 
+The assertion also supports boolean expressions, such as "<code>count(//*error)=2</code>".
+</p>
+Some sample expressions:
+<ul>
+<li><code>//title[text()='Text to match']</code> - matches <code>&lt;title&gt;Text to match&lt;/title&gt;</code> anywhere in the response</li>
+<li><code>/title[text()='Text to match']</code> - matches <code>&lt;title&gt;Text to match&lt;/title&gt;</code> at root level in the response</li>
+</ul>
+</description>
+
+<properties>
+<property name="Namespaces aliases list" required="No">List of namespaces aliases you want to use to parse the document, one line per declaration.
+    You must specify them as follow : <code>prefix=namespace</code>. This implementation makes it easier to
+    use namespaces than with the old XPathExtractor version.</property>
+<property name="XPath2 Assertion"    required="Yes">XPath to match in the document.</property>
+<property name="Invert assertion"    required="No">Will fail if xpath expression returns true or matches, succeed otherwise</property>
+<property name="Namespace aliases list"    required="No">List of namespace aliases prefix=full namespace (one per line)</property>
+</properties>
+</component>
+
+
 <component name="XML Schema Assertion" index="&sect-num;.5.9"  width="472" height="132" screenshot="assertion/XMLSchemaAssertion.png">
 <description><p>The XML Schema Assertion allows the user to validate a response against an XML Schema.</p></description>
 
@@ -4837,7 +4940,7 @@ please ensure that you select "<code>Store the message using MIME (raw)</code>" 
         <p>
             This component allows you to perform validations of JSON documents.
             First, it will parse the JSON and fail if the data is not JSON.
-            Second, it will search for specified path, using syntax from <a href="https://github.com/jayway/JsonPath" > Jayway JsonPath 1.2.0</a>. If the path is not found, it will fail.
+            Second, it will search for specified path, using syntax from <a href="https://github.com/json-path/JsonPath" >Jayway JsonPath 1.2.0</a>. If the path is not found, it will fail.
             Third, if JSON path was found in the document, and validation against expected value was requested, it will perform validation. For the <code>null</code> value there is special checkbox in the GUI.
             Note that if the path will return array object, it will be iterated and if expected value is found, the assertion will succeed. To validate empty array use <code>[]</code> string. Also, if patch will return dictionary object, it will be converted to string before comparison.
         </p>
@@ -4851,7 +4954,28 @@ please ensure that you select "<code>Store the message using MIME (raw)</code>" 
         <property name="Invert assertion (will fail if above conditions met)" required="No">Invert assertion (will fail if above conditions met)</property>
     </properties>
 </component>
-
+<component name="JSON JMESPath Assertion" index="&sect-num;.5.15" anchor="JSON_JMESPath_Assertion" width="1095" height="307" screenshot="assertion/jmespath_assertion.png">
+    <description>
+        <p>
+            This component allows you to perform assertion on JSON documents content using <a href="http://jmespath.org/" target="blank">JMESPath</a>.
+            First, it will parse the JSON and fail if the data is not JSON. <br/>
+            Second, it will search for specified path, using JMESPath syntax. <br/>
+            If the path is not found, it will fail. <br/>
+            Third, if JMES path was found in the document, and validation against expected value was requested, it will perform this additional check. 
+            If you want to check for nullity, use the <code>Expect null</code> checkbox. <br/>
+            Note that the path cannot be null as the expression JMESPath will not be compiled and an error will occur. 
+            Even if you expect an empty or null response, you must put a valid JMESPath expression.
+        </p>
+    </description>
+    <properties>
+        <property name="Assert JMESPath exists" required="Yes">Check that JMESPath to JSON element exists</property>
+        <property name="Additionally assert value" required="No">Select checkbox if you check the extracted JMESPath against an expected one</property>
+        <property name="Match as regular expression" required="No">Select checkbox if you want to use a regular expression for matching</property>
+        <property name="Expected Value" required="No">Value to use for exact matching or regular expression if <code>Match as regular expression</code> is checked</property>
+        <property name="Expect null" required="No">Select checkbox if you expect the value to be null</property>
+        <property name="Invert assertion (will fail if above conditions met)" required="No">Invert assertion (will fail if above conditions met)</property>
+    </properties>
+</component>
 <a href="#">^</a>
 
 </section>
@@ -5935,7 +6059,44 @@ by:
 where "<code>uri-for-namespace</code>" is the uri for the "<code>mynamespace</code>" namespace.(not applicable if Tidy is selected)
 </component>
 
-<component name="Result Status Action Handler" index="&sect-num;.8.4"  width="613" height="133" screenshot="resultstatusactionhandler.png">
+<component name="JSON JMESPath Extractor" index="&sect-num;.8.4" anchor="JSON_JMESPath_Extractor" width="729" height="317" screenshot="jmes_extractor.png">
+    <description>This test element allows the user to extract value(s) from 
+        structured response - XML or (X)HTML - using JMESPath
+        query language.
+   </description>
+   <note>In the XPATH Extractor we support to extract multiple xpaths at the same time, but in JMES Extractor only 
+   one JMES Expression can be entered at a time.
+   </note>
+   <properties>
+       <property name="Name" required="No">Descriptive name for this element that is shown in the tree.</property>
+       <property name="Apply to:" required="Yes">
+        This is for use with samplers that can generate sub-samples, 
+        e.g. HTTP Sampler with embedded resources, Mail Reader or samples generated by the Transaction Controller.
+        <ul>
+        <li><code>Main sample only</code> - only applies to the main sample</li>
+        <li><code>Sub-samples only</code> - only applies to the sub-samples</li>
+        <li><code>Main sample and sub-samples</code> - applies to both.</li>
+        <li><code>JMeter Variable Name to use</code> - extraction is to be applied to the contents of the named variable</li>
+        </ul>
+       </property>
+    <property name="Name of created variable" required="Yes">The name of the JMeter variable in which to store the result.</property>
+    <property name="JMESPath expressions" required="Yes">Element query in JMESPath query language. Can return the matched result.</property>
+    <property name="Match No. (0 for Random)" required="No">If the JMESPath query leads to many results, you can choose which one(s) to extract as Variables:
+    <ul>
+        <li><code>0</code> : means random</li>
+        <li><code>-1</code> means extract all results (default value), they will be named as <code><em>&lt;variable name&gt;</em>_N</code> (where <code>N</code> goes from 1 to Number of results)</li>
+        <li><code>X</code> : means extract the X<sup>th</sup> result. If this X<sup>th</sup> is greater than number of matches, then nothing is returned. Default value will be used</li>
+    </ul>
+    </property>
+    <property name="Default Value" required="">Default value returned when no match found. 
+    It is also returned if the node has no value and the fragment option is not selected.</property>
+   </properties>
+      <p>JMESPath is a query language for JSON. It is described in an ABNF grammar with a complete specification. This ensures that the language syntax is precisely defined. 
+    See <a href="http://jmespath.org/">JMESPath Reference</a> for more information. Here are also some examples <a href="http://jmespath.org/tutorial.html">JMESPath Example</a>.
+   </p>
+</component>
+
+<component name="Result Status Action Handler" index="&sect-num;.8.5"  width="613" height="133" screenshot="resultstatusactionhandler.png">
    <description>This test element allows the user to stop the thread or the whole test if the relevant sampler failed.
    </description>
    <properties>
@@ -5954,7 +6115,7 @@ where "<code>uri-for-namespace</code>" is the uri for the "<code>mynamespace</co
    </properties>
 </component>
 
-<component name="BeanShell PostProcessor"  index="&sect-num;.8.5"  width="847" height="633" screenshot="beanshell_postprocessor.png">
+<component name="BeanShell PostProcessor"  index="&sect-num;.8.6"  width="847" height="633" screenshot="beanshell_postprocessor.png">
 <description>
 <p>
 The BeanShell PreProcessor allows arbitrary code to be applied after taking a sample.
@@ -6068,8 +6229,7 @@ In the linked test plan, "<code>JDBC PostProcessor</code>" JDBC PostProcessor ca
 <p>
 The JSON PostProcessor enables you extract data from JSON responses using JSON-PATH syntax. This post processor is very similar to Regular expression extractor.
 It must be placed as a child of HTTP Sampler or any other sampler that has responses.
-It will allow you to extract in a very easy way text content, see <a href="http://goessner.net/articles/JsonPath/" >JSON Path syntax</a>.
-
+It will allow you to extract in a very easy way text content, see <a href="https://github.com/json-path/JsonPath">JSON Path syntax</a>.
 </p>
 </description>
 <properties>
@@ -6133,8 +6293,8 @@ generate the template string, and store the result into the given variable name.
         Headers can be useful for HTTP samples; it may not be present for other sample types.
         </property>
         <property name="Name of created variable" required="Yes">The name of the JMeter variable in which to store the result.  Also note that each group is stored as <code>[refname]_g#</code>, where <code>[refname]</code> is the string you entered as the reference name, and <code>#</code> is the group number, where group <code>0</code> is the entire match, group <code>1</code> is the match from the first set of parentheses, etc.</property>
-        <property name="Left Boundary" required="Yes">Left boundary of value to find</property>
-        <property name="Right Boundary" required="Yes">Right boundary of value to find</property>
+        <property name="Left Boundary" required="No">Left boundary of value to find</property>
+        <property name="Right Boundary" required="No">Right boundary of value to find</property>
         <property name="Match No. (0 for Random)" required="Yes">Indicates which match to use.  The boundaries may match multiple times.  
             <ul>
                 <li>Use a value of zero to indicate JMeter should choose a match at random.</li>
@@ -6177,6 +6337,7 @@ generate the template string, and store the result into the given variable name.
     Note that the <code>refName</code> variable is always set to the default value in this case, 
     and the associated group variables are not set.
 </p>
+<note>If both left and right boundary are null, the whole data selected in scope is returned</note>
 </component>
 </section>
 
@@ -6284,16 +6445,16 @@ Behaviour can be modified with some properties by setting in user.properties:
         </property>
         <property name="Number of Threads" required="Yes">Number of users to simulate.</property>
         <property name="Ramp-up Period" required="Yes">How long JMeter should take to get all the threads started.  If there are 10 threads and a ramp-up time of 100 seconds, then each thread will begin 10 seconds after the previous thread started, for a total time of 100 seconds to get the test fully up to speed.</property>
-        <property name="Loop Count" required="Yes, unless forever is selected">Number of times to perform the test case.  Alternatively, "<code>forever</code>" can be selected causing the test to run until manually stopped.</property>
+        <property name="Loop Count" required="Yes, unless Infinite is selected">Number of times to perform the test case.  Alternatively, "<code>infinite</code>" can be selected causing the test to run until manually stopped or end of the thread lifetime is reached.</property>
         <property name="Delay Thread creation until needed" required="Yes">
         If selected, threads are created only when the appropriate proportion of the ramp-up time has elapsed.
         This is most appropriate for tests with a ramp-up time that is significantly longer than the time to execute a single thread.
-        I.e. where earlier threads finish before later ones start. 
+        I.e. where earlier threads finish before later ones start.
         <br></br>
         If not selected, all threads are created when the test starts (they then pause for the appropriate proportion of the ramp-up time).
         This is the original default, and is appropriate for tests where threads are active throughout most of the test.
         </property>
-        <property name="Scheduler" required="Yes">If selected, enables the scheduler</property>
+        <property name="Specify Thread lifetime" required="Yes">If selected, confines Thread operation time to the given bounds</property>
         <property name="Duration (seconds)" required="No">
             If the scheduler checkbox is selected, one can choose a relative end time. 
             JMeter will use this to calculate the End Time.
@@ -6361,7 +6522,7 @@ Behaviour can be modified with some properties by setting in user.properties:
 <description><p>The HTTP(S) Test Script Recorder allows JMeter to intercept and record your actions while you browse your web application
 with your normal browser.  JMeter will create test sample objects and store them
 directly into your test plan as you go (so you can view samples interactively while you make them).<br/>
-Ensure you read this <a href="https://wiki.apache.org/jmeter/TestRecording210">wiki page</a> to setup correctly JMeter.
+Ensure you read this <a href="https://cwiki.apache.org/confluence/display/JMETER/TestRecording210">wiki page</a> to setup correctly JMeter.
 </p>
 
 <p>To use the recorder, <i>add</i> the HTTP(S) Test Script Recorder element.
@@ -6893,7 +7054,7 @@ This is done by default since JMeter 2.13.
 </note>
 </component>
 
-<component name="setUp Thread Group" index="&sect-num;.9.10" width="908" height="364" screenshot="setup_thread_group.png">
+<component name="setUp Thread Group" index="&sect-num;.9.10" width="1252" height="828" screenshot="setup_thread_group.png">
 <description>
     <p>
     A special type of ThreadGroup that can be utilized to perform Pre-Test Actions.  The behavior of these threads
@@ -6903,7 +7064,7 @@ This is done by default since JMeter 2.13.
 </description>
 </component>
 
-<component name="tearDown Thread Group" index="&sect-num;.9.11" width="909" height="366" screenshot="teardown_thread_group.png">
+<component name="tearDown Thread Group" index="&sect-num;.9.11" width="1248" height="824" screenshot="teardown_thread_group.png">
 <description>
     <p>
     A special type of ThreadGroup that can be utilized to perform Post-Test Actions.  The behavior of these threads
