@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jorphan.util;
@@ -160,6 +159,7 @@ public class HeapDumper {
      * @return the name of the dump file that was created
      * @throws Exception if the MXBean cannot be found, or if there is a problem during invocation
      */
+    @SuppressWarnings("JdkObsolete")
     public static String dumpHeap(File basedir, boolean live) throws Exception {
         SimpleDateFormat timestampFormat = new SimpleDateFormat("yyyyMMdd_hhmmss_SSS");
         String stamp = timestampFormat.format(new Date());
@@ -181,7 +181,7 @@ public class HeapDumper {
             if (exception == null) {
                 server.invoke(hotspotDiagnosticBean,
                         "dumpHeap",
-                        new Object[]{fileName, Boolean.valueOf(live)},
+                        new Object[]{fileName, live},
                         new String[]{"java.lang.String", "boolean"});
             } else {
                 throw exception;

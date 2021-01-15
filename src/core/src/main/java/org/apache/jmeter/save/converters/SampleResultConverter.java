@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.save.converters;
@@ -142,7 +141,7 @@ public class SampleResultConverter extends AbstractCollectionConverter {
         if (save.saveUrl()) {
             final URL url = res.getURL();
             if (url != null) {
-                writeItem(url, context, writer);
+                writeCompleteItem(url, context, writer);
             }
         }
     }
@@ -240,7 +239,7 @@ public class SampleResultConverter extends AbstractCollectionConverter {
             SampleResult[] subResults = res.getSubResults();
             for (SampleResult subResult : subResults) {
                 subResult.setSaveConfig(save);
-                writeItem(subResult, context, writer);
+                writeCompleteItem(subResult, context, writer);
             }
         }
     }
@@ -262,7 +261,7 @@ public class SampleResultConverter extends AbstractCollectionConverter {
         if (save.saveAssertions()) {
             AssertionResult[] assertionResults = res.getAssertionResults();
             for (AssertionResult assertionResult : assertionResults) {
-                writeItem(assertionResult, context, writer);
+                writeCompleteItem(assertionResult, context, writer);
             }
         }
     }
@@ -369,7 +368,7 @@ public class SampleResultConverter extends AbstractCollectionConverter {
         retrieveAttributes(reader, context, res);
         while (reader.hasMoreChildren()) {
             reader.moveDown();
-            Object subItem = readItem(reader, context, res);
+            Object subItem = readBareItem(reader, context, res);
             retrieveItem(reader, context, res, subItem);
             reader.moveUp();
         }
@@ -397,7 +396,7 @@ public class SampleResultConverter extends AbstractCollectionConverter {
         if (subItem instanceof AssertionResult) {
             res.addAssertionResult((AssertionResult) subItem);
         } else if (subItem instanceof SampleResult) {
-            res.storeSubResult((SampleResult) subItem);
+            res.storeSubResult((SampleResult) subItem, false);
         } else if (nodeName.equals(TAG_RESPONSE_HEADER)) {
             res.setResponseHeaders((String) subItem);
         } else if (nodeName.equals(TAG_REQUEST_HEADER)) {

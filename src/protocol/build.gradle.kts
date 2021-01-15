@@ -2,24 +2,23 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 subprojects {
     dependencies {
         api(project(":src:core"))
-        testCompile(project(":src:core", "testClasses"))
+        testImplementation(project(":src:core", "testClasses"))
     }
 }
 
@@ -34,7 +33,7 @@ project("bolt") {
 
 project("ftp") {
     dependencies {
-        implementation("commons-net:commons-net:3.6")
+        implementation("commons-net:commons-net")
         implementation("commons-io:commons-io") {
             because("IOUtils")
         }
@@ -48,7 +47,7 @@ project("http") {
     dependencies {
         // for SearchTextExtension
         api(project(":src:components"))
-        testCompile(project(":src:components", "testClasses"))
+        testImplementation(project(":src:components", "testClasses"))
 
         api("com.thoughtworks.xstream:xstream") {
             because("HTTPResultConverter uses XStream in public API")
@@ -71,21 +70,33 @@ project("http") {
         implementation("org.jodd:jodd-lagarto")
         implementation("org.jsoup:jsoup")
         implementation("oro:oro")
-        implementation("commons-collections:commons-collections")
-        implementation("commons-net:commons-net:3.6")
-        implementation("com.helger:ph-commons:9.2.1") {
+        implementation("org.apache.commons:commons-collections4")
+        implementation("commons-net:commons-net")
+        implementation("com.helger:ph-commons") {
             // We don't really need to use/distribute jsr305
             exclude("com.google.code.findbugs", "jsr305")
         }
-        implementation("com.helger:ph-css:6.1.1") {
+        implementation("com.helger:ph-css") {
             // We don't really need to use/distribute jsr305
             exclude("com.google.code.findbugs", "jsr305")
         }
-        implementation("dnsjava:dnsjava:2.1.8")
-        implementation("org.apache.httpcomponents:httpmime:4.5.8")
-        implementation("org.brotli:dec:0.1.2")
+        implementation("dnsjava:dnsjava")
+        implementation("org.apache.httpcomponents:httpmime")
+        implementation("org.apache.httpcomponents:httpcore")
+        implementation("org.brotli:dec")
+        implementation("com.miglayout:miglayout-swing")
+        implementation("com.fasterxml.jackson.core:jackson-core")
+        implementation("com.fasterxml.jackson.core:jackson-databind")
         testImplementation(testFixtures(project(":src:testkit-wiremock")))
         testImplementation("com.github.tomakehurst:wiremock-jre8")
+        // For some reason JMeter bundles just tika-core and tika-parsers without transitive
+        // dependencies. So we exclude those
+        implementation("org.apache.tika:tika-core") {
+            isTransitive = false
+        }
+        runtimeOnly("org.apache.tika:tika-parsers") {
+            isTransitive = false
+        }
     }
 }
 
@@ -102,7 +113,7 @@ project("java") {
 
 project("jdbc") {
     dependencies {
-        implementation("org.apache.commons:commons-dbcp2:2.5.0")
+        implementation("org.apache.commons:commons-dbcp2")
         implementation("org.apache.commons:commons-lang3") {
             because("StringUtils, ObjectUtils")
         }
@@ -114,19 +125,20 @@ project("jdbc") {
 
 project("jms") {
     dependencies {
-        testCompile(project(":src:core", "testClasses"))
+        testImplementation(project(":src:core", "testClasses"))
         api("com.github.ben-manes.caffeine:caffeine") {
             because("MessageRenderer#getValueFromFile(..., caffeine.cache.Cache)")
         }
         // TODO: technically speaking, jms_1.1_spec should be compileOnly
         // since we either include a JMS implementation or we can't use JMS at all
-        implementation("org.apache.geronimo.specs:geronimo-jms_1.1_spec:1.1.1")
+        implementation("org.apache.geronimo.specs:geronimo-jms_1.1_spec")
         implementation("org.apache.commons:commons-lang3") {
             because("StringUtils")
         }
         implementation("commons-io:commons-io") {
             because("IOUtils")
         }
+        implementation("com.miglayout:miglayout-swing")
     }
 }
 
@@ -139,6 +151,7 @@ project("junit") {
         implementation("org.exparity:hamcrest-date") {
             because("hamcrest-date.jar was historically shipped with JMeter")
         }
+        implementation("com.miglayout:miglayout-swing")
     }
 }
 
@@ -161,7 +174,7 @@ project("ldap") {
 
 project("mail") {
     dependencies {
-        api("javax.mail:mail:1.5.0-b01") {
+        api("javax.mail:mail") {
             exclude("javax.activation", "activation")
         }
         // There's no javax.activation:activation:1.2.0, so we use com.sun...
@@ -180,7 +193,7 @@ project("mail") {
 
 project("mongodb") {
     dependencies {
-        api("org.mongodb:mongo-java-driver:2.11.3")
+        api("org.mongodb:mongo-java-driver")
         implementation("org.apache.commons:commons-lang3") {
             because("StringUtils")
         }

@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.gui.util;
@@ -23,7 +22,7 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -62,7 +61,7 @@ public class FileListPanel extends JPanel implements ActionListener {
 
     private JButton delete = new JButton(JMeterUtils.getResString("delete")); // $NON-NLS-1$
 
-    private List<ChangeListener> listeners = new LinkedList<>();
+    private List<ChangeListener> listeners = new ArrayList<>();
 
     private String title;
 
@@ -206,7 +205,10 @@ public class FileListPanel extends JPanel implements ActionListener {
             chooser.setFileFilter(new JMeterFileFilter(new String[] { filetype }));
             chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
             chooser.setMultiSelectionEnabled(true);
-            chooser.showOpenDialog(GuiPackage.getInstance().getMainFrame());
+            if (chooser.showOpenDialog(GuiPackage.getInstance().getMainFrame()) !=
+                    JFileChooser.APPROVE_OPTION) {
+                return;
+            }
             File[] cfiles = chooser.getSelectedFiles();
             if (cfiles != null) {
                 for (File cfile : cfiles) {

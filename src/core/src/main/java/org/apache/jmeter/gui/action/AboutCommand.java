@@ -2,25 +2,24 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.gui.action;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Container;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Point;
@@ -38,6 +37,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 
+import org.apache.jmeter.SplashScreen;
 import org.apache.jmeter.gui.GuiPackage;
 import org.apache.jmeter.gui.util.EscapeDialog;
 import org.apache.jmeter.util.JMeterUtils;
@@ -110,11 +110,11 @@ public class AboutCommand extends AbstractAction {
             }
         });
 
-        JLabel jmeterLogo = new JLabel(JMeterUtils.getImage("jmeter.png"));
         JLabel copyright = new JLabel(JMeterUtils.getJMeterCopyright(), SwingConstants.CENTER);
         JLabel rights = new JLabel("All Rights Reserved.", SwingConstants.CENTER);
         JLabel version = new JLabel("Apache JMeter Version " + JMeterUtils.getJMeterVersion(), SwingConstants.CENTER);
         JLabel releaseNotes = new JLabel("<html><a href=\"https://jmeter.apache.org/changes.html\">Release notes</a></html>", SwingConstants.CENTER);
+        releaseNotes.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         releaseNotes.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -134,8 +134,7 @@ public class AboutCommand extends AbstractAction {
         infos.add(releaseNotes);
         Container panel = about.getContentPane();
         panel.setLayout(new BorderLayout());
-        panel.setBackground(Color.white);
-        panel.add(jmeterLogo, BorderLayout.NORTH);
+        panel.add(SplashScreen.loadLogo(), BorderLayout.NORTH);
         panel.add(infos, BorderLayout.SOUTH);
         about.pack();
         return about;

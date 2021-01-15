@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.assertions;
@@ -21,6 +20,9 @@ package org.apache.jmeter.assertions;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringReader;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.testelement.AbstractTestElement;
@@ -30,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.XMLReaderFactory;
 
 /**
  * Checks if the result is a well-formed XML content using {@link XMLReader}
@@ -46,10 +47,12 @@ public class XMLAssertion extends AbstractTestElement implements Serializable, A
         @Override
         protected XMLReader initialValue() {
             try {
-                XMLReader reader = XMLReaderFactory.createXMLReader();
+                XMLReader reader = SAXParserFactory.newInstance()
+                        .newSAXParser()
+                        .getXMLReader();
                 reader.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
                 return reader;
-            } catch (SAXException e) {
+            } catch (SAXException | ParserConfigurationException e) {
                 log.error("Error initializing XMLReader in XMLAssertion", e);
                 return null;
             }

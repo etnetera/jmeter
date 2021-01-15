@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.testelement.property;
@@ -35,14 +34,14 @@ public abstract class AbstractProperty implements JMeterProperty {
 
     private transient boolean runningVersion = false;
 
-    public AbstractProperty(String name) {
+    protected AbstractProperty(String name) {
         if (name == null) {
             throw new IllegalArgumentException("Name cannot be null");
         }
         this.name = name;
     }
 
-    public AbstractProperty() {
+    protected AbstractProperty() {
         this("");
     }
 
@@ -272,15 +271,15 @@ public abstract class AbstractProperty implements JMeterProperty {
         if (item instanceof String) {
             return new StringProperty("", item.toString());
         } else if (item instanceof Boolean) {
-            return new BooleanProperty("", ((Boolean) item).booleanValue());
+            return new BooleanProperty("", (Boolean) item);
         } else if (item instanceof Float) {
-            return new FloatProperty("", ((Float) item).floatValue());
+            return new FloatProperty("", (Float) item);
         } else if (item instanceof Double) {
-            return new DoubleProperty("", ((Double) item).doubleValue());
+            return new DoubleProperty("", (Double) item);
         } else if (item instanceof Integer) {
-            return new IntegerProperty("", ((Integer) item).intValue());
+            return new IntegerProperty("", (Integer) item);
         } else if (item instanceof Long) {
-            return new LongProperty("", ((Long) item).longValue());
+            return new LongProperty("", (Long) item);
         } else {
             return new StringProperty("", item.toString());
         }

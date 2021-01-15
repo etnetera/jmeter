@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.control;
@@ -81,19 +80,19 @@ public class LoopController extends GenericController implements Serializable, I
         // Evaluation occurs when nbLoops is not yet evaluated
         // or when nbLoops is equal to special value INFINITE_LOOP_COUNT
         if (nbLoops==null || // No evaluated yet
-                nbLoops.intValue()==0 || // Last iteration led to nbLoops == 0,
+                nbLoops ==0 || // Last iteration led to nbLoops == 0,
                                          // in this case as resetLoopCount will not be called,
                                          // it leads to no further evaluations if we don't evaluate, see BUG 56276
-                nbLoops.intValue()==INFINITE_LOOP_COUNT // Number of iteration is set to infinite
+                nbLoops ==INFINITE_LOOP_COUNT // Number of iteration is set to infinite
                 ) {
             try {
                 JMeterProperty prop = getProperty(LOOPS);
                 nbLoops = Integer.valueOf(prop.getStringValue());
             } catch (NumberFormatException e) {
-                nbLoops = Integer.valueOf(0);
+                nbLoops = 0;
             }
         }
-        return nbLoops.intValue();
+        return nbLoops;
     }
 
     public String getLoopString() {

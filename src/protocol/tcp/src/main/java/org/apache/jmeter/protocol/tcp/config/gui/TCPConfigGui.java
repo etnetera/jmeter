@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.tcp.config.gui;
@@ -32,6 +31,7 @@ import javax.swing.JTextField;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.config.gui.AbstractConfigGui;
 import org.apache.jmeter.gui.ServerPanel;
+import org.apache.jmeter.gui.TestElementMetadata;
 import org.apache.jmeter.gui.util.HorizontalPanel;
 import org.apache.jmeter.gui.util.JSyntaxTextArea;
 import org.apache.jmeter.gui.util.JTextScrollPane;
@@ -42,6 +42,7 @@ import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.gui.JLabeledTextField;
 
+@TestElementMetadata(labelResource = "tcp_config_title")
 public class TCPConfigGui extends AbstractConfigGui {
 
     private static final long serialVersionUID = 240L;
@@ -220,7 +221,7 @@ public class TCPConfigGui extends AbstractConfigGui {
         reqLabel.setLabelFor(requestData);
 
         JPanel reqDataPanel = new JPanel(new BorderLayout(5, 0));
-        reqDataPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder()));
+        reqDataPanel.setBorder(BorderFactory.createTitledBorder(""));
 
         reqDataPanel.add(reqLabel, BorderLayout.WEST);
         reqDataPanel.add(JTextScrollPane.getInstance(requestData), BorderLayout.CENTER);
@@ -243,7 +244,7 @@ public class TCPConfigGui extends AbstractConfigGui {
         mainPanel.add(serverPanel);
 
         HorizontalPanel optionsPanel = new HorizontalPanel();
-        optionsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder()));
+        optionsPanel.setBorder(BorderFactory.createTitledBorder(""));
         optionsPanel.add(createClosePortPanel());
         optionsPanel.add(createCloseConnectionPanel());
         optionsPanel.add(createNoDelayPanel());

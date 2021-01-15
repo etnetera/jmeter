@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.http.control;
@@ -70,12 +69,12 @@ public class KerberosManager implements Serializable {
                 loginCtx.login();
                 return loginCtx.getSubject();
             } catch (LoginException e) {
-                log.warn("Could not log in user " + username, e);
+                log.warn("Could not log in user {}", username, e);
             }
             return null;
         });
         if(log.isDebugEnabled()) {
-            log.debug("Subject cached:"+subjects.keySet() +" before:"+username);
+            log.debug("Subject cached:{} before:{}", subjects.keySet(), username);
         }
         Future<Subject> subjectFuture = subjects.putIfAbsent(username, task);
         if (subjectFuture == null) {
@@ -85,10 +84,10 @@ public class KerberosManager implements Serializable {
         try {
             return subjectFuture.get();
         } catch (InterruptedException e1) {
-            log.warn("Interrupted while getting subject for " + username, e1);
+            log.warn("Interrupted while getting subject for {}", username, e1);
             Thread.currentThread().interrupt();
         } catch (ExecutionException e1) {
-            log.warn("Execution of getting subject for " + username + " failed", e1);
+            log.warn("Execution of getting subject for {} failed", username, e1);
         }
         return null;
     }

@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.http.parser;
@@ -37,6 +36,7 @@ public abstract class HTMLParser extends BaseParser {
 
     private static final Logger log = LoggerFactory.getLogger(HTMLParser.class);
 
+    protected static final String ATT_ARCHIVE       = "archive"; // $NON-NLS-1$
     protected static final String ATT_BACKGROUND    = "background";// $NON-NLS-1$
     protected static final String ATT_CODE          = "code";// $NON-NLS-1$
     protected static final String ATT_CODEBASE      = "codebase";// $NON-NLS-1$
@@ -193,7 +193,7 @@ public abstract class HTMLParser extends BaseParser {
     protected final boolean isEnableConditionalComments(Float ieVersion) {
         // Conditional comment have been dropped in IE10
         // http://msdn.microsoft.com/en-us/library/ie/hh801214%28v=vs.85%29.aspx
-        return ieVersion != null && ieVersion.floatValue() < IE_10;
+        return ieVersion != null && ieVersion < IE_10;
     }
 
     /**

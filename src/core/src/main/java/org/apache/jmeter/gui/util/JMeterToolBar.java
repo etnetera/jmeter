@@ -2,23 +2,23 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.gui.util;
 
 import java.awt.Component;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,11 +26,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.JToolBar;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.gui.UndoHistory;
 import org.apache.jmeter.gui.action.ActionNames;
 import org.apache.jmeter.gui.action.ActionRouter;
@@ -39,6 +41,9 @@ import org.apache.jmeter.util.LocaleChangeEvent;
 import org.apache.jmeter.util.LocaleChangeListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.weisj.darklaf.icons.ThemedSVGIcon;
+import com.github.weisj.darklaf.ui.button.DarkButtonUI;
 
 /**
  * The JMeter main toolbar class
@@ -86,6 +91,22 @@ public class JMeterToolBar extends JToolBar implements LocaleChangeListener {
         return toolBar;
     }
 
+    @Override
+    protected void addImpl(Component comp, Object constraints, int index) {
+        super.addImpl(comp, constraints, index);
+        if (comp instanceof JButton) {
+            // Ensure buttons added to the toolbar have the same style.
+            JButton b = (JButton) comp;
+            b.setFocusable(false);
+            if (b.isBorderPainted() && (b.getText() == null || b.getText().isEmpty())) {
+                b.setRolloverEnabled(true);
+                b.putClientProperty(DarkButtonUI.KEY_VARIANT, DarkButtonUI.VARIANT_BORDERLESS);
+                b.putClientProperty(DarkButtonUI.KEY_THIN, true);
+                b.putClientProperty(DarkButtonUI.KEY_SQUARE, true);
+            }
+        }
+    }
+
     /**
      * Setup toolbar content
      * @param toolBar {@link JMeterToolBar}
@@ -123,17 +144,25 @@ public class JMeterToolBar extends JToolBar implements LocaleChangeListener {
      * @return a button for toolbar
      */
     private static JButton makeButtonItemRes(IconToolbarBean iconBean) throws Exception {
-        final URL imageURL = JMeterUtils.class.getClassLoader().getResource(iconBean.getIconPath());
-        if (imageURL == null) {
-            throw new Exception("No icon for: " + iconBean.getActionName());
-        }
-        JButton button = new JButton(new ImageIcon(imageURL));
+        JButton button = new JButton(loadIcon(iconBean, iconBean.getIconPath()));
         button.setToolTipText(JMeterUtils.getResString(iconBean.getI18nKey()));
-        final URL imageURLPressed = JMeterUtils.class.getClassLoader().getResource(iconBean.getIconPathPressed());
-        button.setPressedIcon(new ImageIcon(imageURLPressed));
+        if (!iconBean.getIconPathPressed().equals(iconBean.getIconPath())) {
+            button.setPressedIcon(loadIcon(iconBean, iconBean.getIconPathPressed()));
+        }
         button.addActionListener(ActionRouter.getInstance());
         button.setActionCommand(iconBean.getActionNameResolve());
         return button;
+    }
+
+    private static Icon loadIcon(IconToolbarBean iconBean, String iconPath) throws URISyntaxException {
+        final URL imageURL = JMeterUtils.class.getClassLoader().getResource(iconPath);
+        if (imageURL == null) {
+            throw new IllegalArgumentException("No icon for: " + iconBean.getActionName());
+        }
+        if (StringUtils.endsWithIgnoreCase(iconBean.getIconPath(), ".svg")) {
+            return new ThemedSVGIcon(imageURL.toURI(), iconBean.getWidth(), iconBean.getHeight());
+        }
+        return new ImageIcon(imageURL);
     }
 
     /**
@@ -217,7 +246,7 @@ public class JMeterToolBar extends JToolBar implements LocaleChangeListener {
         for (Component component : components) {
             if (component instanceof JButton) {
                 JButton button = (JButton) component;
-                buttonStates.put(button.getActionCommand(), Boolean.valueOf(button.isEnabled()));
+                buttonStates.put(button.getActionCommand(), button.isEnabled());
             }
         }
         return buttonStates;
@@ -248,10 +277,10 @@ public class JMeterToolBar extends JToolBar implements LocaleChangeListener {
      */
     public void setLocalTestStarted(boolean started) {
         Map<String, Boolean> buttonStates = new HashMap<>(3);
-        buttonStates.put(ActionNames.ACTION_START, Boolean.valueOf(!started));
-        buttonStates.put(ActionNames.ACTION_START_NO_TIMERS, Boolean.valueOf(!started));
-        buttonStates.put(ActionNames.ACTION_STOP, Boolean.valueOf(started));
-        buttonStates.put(ActionNames.ACTION_SHUTDOWN, Boolean.valueOf(started));
+        buttonStates.put(ActionNames.ACTION_START, !started);
+        buttonStates.put(ActionNames.ACTION_START_NO_TIMERS, !started);
+        buttonStates.put(ActionNames.ACTION_STOP, started);
+        buttonStates.put(ActionNames.ACTION_SHUTDOWN, started);
         updateButtons(buttonStates);
     }
 
@@ -263,9 +292,9 @@ public class JMeterToolBar extends JToolBar implements LocaleChangeListener {
      */
     public void setRemoteTestStarted(boolean started) {
         Map<String, Boolean> buttonStates = new HashMap<>(3);
-        buttonStates.put(ActionNames.REMOTE_START_ALL, Boolean.valueOf(!started));
-        buttonStates.put(ActionNames.REMOTE_STOP_ALL, Boolean.valueOf(started));
-        buttonStates.put(ActionNames.REMOTE_SHUT_ALL, Boolean.valueOf(started));
+        buttonStates.put(ActionNames.REMOTE_START_ALL, !started);
+        buttonStates.put(ActionNames.REMOTE_STOP_ALL, started);
+        buttonStates.put(ActionNames.REMOTE_SHUT_ALL, started);
         updateButtons(buttonStates);
     }
 
@@ -281,8 +310,8 @@ public class JMeterToolBar extends JToolBar implements LocaleChangeListener {
      */
     public void updateUndoRedoIcons(boolean canUndo, boolean canRedo) {
         Map<String, Boolean> buttonStates = new HashMap<>(2);
-        buttonStates.put(ActionNames.UNDO, Boolean.valueOf(canUndo));
-        buttonStates.put(ActionNames.REDO, Boolean.valueOf(canRedo));
+        buttonStates.put(ActionNames.UNDO, canUndo);
+        buttonStates.put(ActionNames.REDO, canRedo);
         updateButtons(buttonStates);
     }
 

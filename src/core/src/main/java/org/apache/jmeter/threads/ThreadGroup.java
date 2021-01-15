@@ -2,25 +2,24 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.threads;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.util.Map.Entry;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -42,6 +41,7 @@ import org.slf4j.LoggerFactory;
  * This class is intended to be ThreadSafe.
  */
 @GUIMenuSortOrder(1)
+@SuppressWarnings("JavaLangClash")
 public class ThreadGroup extends AbstractThreadGroup {
     private static final long serialVersionUID = 282L;
 
@@ -199,7 +199,7 @@ public class ThreadGroup extends AbstractThreadGroup {
 
         // set the endtime for the Thread
         if (getDuration() > 0) {// Duration is in seconds
-            thread.setEndTime(getDuration() * 1000 + (thread.getStartTime()));
+            thread.setEndTime(getDuration() * 1000 + thread.getStartTime());
         } else {
             throw new JMeterStopTestException("Invalid duration " + getDuration() + " set in Thread Group:" + getName());
         }
@@ -233,7 +233,9 @@ public class ThreadGroup extends AbstractThreadGroup {
                 long nowInMillis = System.currentTimeMillis();
                 if(threadNum > 0) {
                     long timeElapsedToStartLastThread = nowInMillis - lastThreadStartInMillis;
-                    delayForNextThreadInMillis += perThreadDelayInMillis - timeElapsedToStartLastThread;
+                    // Note: `int += long` assignment hides lossy cast to int
+                    delayForNextThreadInMillis = (int) (delayForNextThreadInMillis +
+                            (perThreadDelayInMillis - timeElapsedToStartLastThread));
                 }
                 if (log.isDebugEnabled()) {
                     log.debug("Computed delayForNextThreadInMillis:{} for thread:{}", delayForNextThreadInMillis, Thread.currentThread().getId());
@@ -322,6 +324,7 @@ public class ThreadGroup extends AbstractThreadGroup {
     }
 
     @Override
+    @SuppressWarnings("SynchronizeOnNonFinalField")
     public JMeterThread addNewThread(int delay, StandardJMeterEngine engine) {
         long now = System.currentTimeMillis();
         JMeterContext context = JMeterContextService.getContext();
@@ -350,7 +353,7 @@ public class ThreadGroup extends AbstractThreadGroup {
      */
     @Override
     public boolean stopThread(String threadName, boolean now) {
-        for (Entry<JMeterThread, Thread> threadEntry : allThreads.entrySet()) {
+        for (Map.Entry<JMeterThread, Thread> threadEntry : allThreads.entrySet()) {
             JMeterThread jMeterThread = threadEntry.getKey();
             if (jMeterThread.getThreadName().equals(threadName)) {
                 stopThread(jMeterThread, threadEntry.getValue(), now);
@@ -453,10 +456,16 @@ public class ThreadGroup extends AbstractThreadGroup {
         if (delayedStartup) {
             stoppedAll = verifyThreadStopped(threadStarter);
         }
-        for (Thread t : allThreads.values()) {
-            stoppedAll = stoppedAll && verifyThreadStopped(t);
+        if(stoppedAll) {
+            for (Thread t : allThreads.values()) {
+                if(!verifyThreadStopped(t)) {
+                    return false;
+                }
+            }
+            return true;
+        } else {
+            return false;
         }
-        return stoppedAll;
     }
 
     /**

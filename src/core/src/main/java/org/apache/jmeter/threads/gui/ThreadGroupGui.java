@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.threads.gui;
@@ -32,6 +31,7 @@ import javax.swing.JTextField;
 
 import org.apache.jmeter.control.LoopController;
 import org.apache.jmeter.control.gui.LoopControlPanel;
+import org.apache.jmeter.gui.TestElementMetadata;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.property.BooleanProperty;
 import org.apache.jmeter.threads.AbstractThreadGroup;
@@ -40,6 +40,7 @@ import org.apache.jmeter.util.JMeterUtils;
 
 import net.miginfocom.swing.MigLayout;
 
+@TestElementMetadata(labelResource = "threadgroup")
 public class ThreadGroupGui extends AbstractThreadGroupGui implements ItemListener {
     private static final long serialVersionUID = 240L;
 
@@ -182,7 +183,7 @@ public class ThreadGroupGui extends AbstractThreadGroupGui implements ItemListen
     private void init() { // WARNING: called from ctor so must not be overridden (i.e. must be private or final)
         // THREAD PROPERTIES
         JPanel threadPropsPanel = new JPanel(new MigLayout("fillx, wrap 2", "[][fill,grow]"));
-        threadPropsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+        threadPropsPanel.setBorder(BorderFactory.createTitledBorder(
                 JMeterUtils.getResString("thread_properties"))); // $NON-NLS-1$
 
         // NUMBER OF THREADS

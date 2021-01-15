@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.http.proxy;
@@ -84,7 +83,7 @@ public class TestHttpRequestHdr extends JMeterTestCase {
                 + postBody;
         s = getSamplerForRequest(url, testPostRequest, contentEncoding);
         assertEquals(HTTPConstants.POST, s.getMethod());
-        assertFalse(s.getDoMultipartPost());
+        assertFalse(s.getDoMultipart());
         assertEquals(contentEncoding, s.getContentEncoding());
         // Check arguments
         arguments = s.getArguments();
@@ -113,7 +112,7 @@ public class TestHttpRequestHdr extends JMeterTestCase {
                 + postBody;
         s = getSamplerForRequest(url, testPostRequest, contentEncoding);
         assertEquals(HTTPConstants.POST, s.getMethod());
-        assertFalse(s.getDoMultipartPost());
+        assertFalse(s.getDoMultipart());
         assertEquals(contentEncoding, s.getContentEncoding());
         // Check arguments
         // We should have one argument, with the value equal to the post body
@@ -135,7 +134,7 @@ public class TestHttpRequestHdr extends JMeterTestCase {
         // request is "sent" using that encoding
         s = getSamplerForRequest(null, testPostRequest, contentEncoding);
         assertEquals(HTTPConstants.POST, s.getMethod());
-        assertFalse(s.getDoMultipartPost());
+        assertFalse(s.getDoMultipart());
         assertEquals(contentEncoding, s.getContentEncoding());
         // Check arguments
         // We should have one argument, with the value equal to the post body
@@ -181,7 +180,7 @@ public class TestHttpRequestHdr extends JMeterTestCase {
         // request is "sent" using that encoding
         s = getSamplerForRequest(null, testPostRequest, contentEncoding);
         assertEquals(HTTPConstants.POST, s.getMethod());
-        assertFalse(s.getDoMultipartPost());
+        assertFalse(s.getDoMultipart());
         // TODO Should this be OK ?
         //assertEquals(contentEncoding, s.getContentEncoding());
         // Check arguments
@@ -260,7 +259,7 @@ public class TestHttpRequestHdr extends JMeterTestCase {
         assertEquals(HTTPConstants.POST, s.getMethod());
         assertEquals(queryString, s.getQueryString());
         assertEquals(contentEncoding, s.getContentEncoding());
-        assertFalse(s.getDoMultipartPost());
+        assertFalse(s.getDoMultipart());
 
         // Check arguments
         arguments = s.getArguments();
@@ -284,7 +283,7 @@ public class TestHttpRequestHdr extends JMeterTestCase {
         expectedQueryString = "abc%3FSPACE=a+b&space=a+b&query=What%3F";
         assertEquals(expectedQueryString, s.getQueryString());
         assertEquals(contentEncoding, s.getContentEncoding());
-        assertFalse(s.getDoMultipartPost());
+        assertFalse(s.getDoMultipart());
 
         // Check arguments
         arguments = s.getArguments();
@@ -454,7 +453,7 @@ public class TestHttpRequestHdr extends JMeterTestCase {
         HTTPSamplerBase s = getSamplerForRequest(url, testPostRequest, contentEncoding);
         assertEquals(HTTPConstants.POST, s.getMethod());
         assertEquals(contentEncoding, s.getContentEncoding());
-        assertTrue(s.getDoMultipartPost());
+        assertTrue(s.getDoMultipart());
 
         // Check arguments
         Arguments arguments = s.getArguments();
@@ -474,7 +473,7 @@ public class TestHttpRequestHdr extends JMeterTestCase {
         s = getSamplerForRequest(url, testPostRequest, contentEncoding);
         assertEquals(HTTPConstants.POST, s.getMethod());
         assertEquals(contentEncoding, s.getContentEncoding());
-        assertTrue(s.getDoMultipartPost());
+        assertTrue(s.getDoMultipart());
 
         // Check arguments
         arguments = s.getArguments();
@@ -494,7 +493,7 @@ public class TestHttpRequestHdr extends JMeterTestCase {
         s = getSamplerForRequest(url, testPostRequest, contentEncoding);
         assertEquals(HTTPConstants.POST, s.getMethod());
         assertEquals(contentEncoding, s.getContentEncoding());
-        assertTrue(s.getDoMultipartPost());
+        assertTrue(s.getDoMultipart());
 
         // Check arguments
         arguments = s.getArguments();
@@ -514,7 +513,7 @@ public class TestHttpRequestHdr extends JMeterTestCase {
         s = getSamplerForRequest(url, testPostRequest, contentEncoding);
         assertEquals(HTTPConstants.POST, s.getMethod());
         assertEquals(contentEncoding, s.getContentEncoding());
-        assertTrue(s.getDoMultipartPost());
+        assertTrue(s.getDoMultipart());
 
         // Check arguments
         arguments = s.getArguments();
@@ -572,7 +571,7 @@ public class TestHttpRequestHdr extends JMeterTestCase {
         assertEquals(HTTPConstants.POST, s.getMethod());
         assertEquals(contentEncoding, s.getContentEncoding());
         assertEquals("", s.getQueryString());
-        assertTrue(s.getDoMultipartPost());
+        assertTrue(s.getDoMultipart());
 
         // Check arguments
         Arguments arguments = s.getArguments();

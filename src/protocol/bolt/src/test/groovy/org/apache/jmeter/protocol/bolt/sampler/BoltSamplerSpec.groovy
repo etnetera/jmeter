@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.bolt.sampler
@@ -22,12 +21,12 @@ import org.apache.jmeter.protocol.bolt.config.BoltConnectionElement
 import org.apache.jmeter.samplers.Entry
 import org.apache.jmeter.threads.JMeterContextService
 import org.apache.jmeter.threads.JMeterVariables
-import org.neo4j.driver.v1.Driver
-import org.neo4j.driver.v1.Session
-import org.neo4j.driver.v1.StatementResult
-import org.neo4j.driver.v1.exceptions.ClientException
-import org.neo4j.driver.v1.summary.ResultSummary
-import org.neo4j.driver.v1.summary.SummaryCounters
+import org.neo4j.driver.Driver
+import org.neo4j.driver.Result
+import org.neo4j.driver.Session
+import org.neo4j.driver.exceptions.ClientException
+import org.neo4j.driver.summary.ResultSummary
+import org.neo4j.driver.summary.SummaryCounters
 
 import spock.lang.Specification
 
@@ -113,9 +112,9 @@ class BoltSamplerSpec extends Specification {
     }
 
     def getEmptyQueryResult() {
-        def queryResult = Mock(StatementResult)
+        def queryResult = Mock(Result)
         def summary = Mock(ResultSummary)
-        queryResult.summary() >> summary
+        queryResult.consume() >> summary
         SummaryCounters counters = Mock(SummaryCounters)
         summary.counters() >> counters
         return queryResult

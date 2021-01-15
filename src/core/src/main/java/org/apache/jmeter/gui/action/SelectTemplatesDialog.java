@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.gui.action;
@@ -21,7 +20,6 @@ package org.apache.jmeter.gui.action;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.HeadlessException;
@@ -35,7 +33,6 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -50,7 +47,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRootPane;
 import javax.swing.JScrollPane;
-import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.HyperlinkEvent;
@@ -63,6 +59,7 @@ import org.apache.jmeter.swing.HtmlPane;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.util.TemplateUtil;
 import org.apache.jorphan.gui.ComponentUtil;
+import org.apache.jorphan.gui.JFactory;
 import org.apache.jorphan.gui.JLabeledChoice;
 import org.apache.jorphan.gui.JLabeledTextField;
 import org.slf4j.Logger;
@@ -82,10 +79,6 @@ public class SelectTemplatesDialog extends JDialog implements ChangeListener, Ac
     // Minimal dimensions for dialog box
     private static final int MINIMAL_BOX_WIDTH = 500;
     private static final int MINIMAL_BOX_HEIGHT = 300;
-
-    private static final Font FONT_DEFAULT = UIManager.getDefaults().getFont("TextField.font"); //$NON-NLS-1$
-
-    private static final Font FONT_SMALL = new Font("SansSerif", Font.PLAIN, (int) Math.round(FONT_DEFAULT.getSize() * 0.8)); //$NON-NLS-1$
 
     private static final Logger log = LoggerFactory.getLogger(SelectTemplatesDialog.class);
 
@@ -235,7 +228,7 @@ public class SelectTemplatesDialog extends JDialog implements ChangeListener, Ac
 
     private Map<String, String> getUserParameters(){
         Map<String, String> userParameters = new LinkedHashMap<>();
-        for (Entry<String, JLabeledTextField> entry : parametersTextFields.entrySet()) {
+        for (Map.Entry<String, JLabeledTextField> entry : parametersTextFields.entrySet()) {
             userParameters.put(entry.getKey(), entry.getValue().getText());
         }
         return userParameters;
@@ -245,7 +238,7 @@ public class SelectTemplatesDialog extends JDialog implements ChangeListener, Ac
         templateList.setValues(TemplateManager.getInstance().getTemplateNames());
         templateList.addChangeListener(this);
         reloadTemplateButton.addActionListener(this);
-        reloadTemplateButton.setFont(FONT_SMALL);
+        JFactory.small(reloadTemplateButton);
         helpDoc.setContentType("text/html"); //$NON-NLS-1$
         helpDoc.setEditable(false);
         helpDoc.addHyperlinkListener(this);
@@ -377,7 +370,7 @@ public class SelectTemplatesDialog extends JDialog implements ChangeListener, Ac
         int parameterCount = 0;
 
         JPanel gridbagpanel = new JPanel(new GridBagLayout());
-        for (Entry<String, String> entry : parameters.entrySet()) {
+        for (Map.Entry<String, String> entry : parameters.entrySet()) {
             String key = entry.getKey();
             String value = entry.getValue();
             JLabeledTextField paramLabel = new JLabeledTextField(key + " : ");

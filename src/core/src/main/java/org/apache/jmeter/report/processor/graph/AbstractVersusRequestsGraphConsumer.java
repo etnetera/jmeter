@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.report.processor.graph;
@@ -45,7 +44,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractVersusRequestsGraphConsumer extends
         AbstractGraphConsumer {
-    private static final Long ONE = Long.valueOf(1L);
+    private static final Long ONE = 1L;
     public static final String RESULT_CTX_GRANULARITY = "granularity";
     public static final String TIME_INTERVAL_LABEL = "Interval";
 
@@ -164,7 +163,7 @@ public abstract class AbstractVersusRequestsGraphConsumer extends
     @Override
     protected void initializeExtraResults(MapResultData parentResult) {
         parentResult.setResult(RESULT_CTX_GRANULARITY, new ValueResultData(
-                Long.valueOf(granularity)));
+                granularity));
     }
 
     private static class TimeCountConsumer extends AbstractSampleConsumer {
@@ -220,7 +219,7 @@ public abstract class AbstractVersusRequestsGraphConsumer extends
 
         private Long getTimeInterval(Sample sample) {
             long time = sample.getEndTime();
-            return Long.valueOf(time - (time % parent.getGranularity()));
+            return time - (time % parent.getGranularity());
         }
 
         // Adds a new field in the sample metadata for each channel
@@ -290,7 +289,7 @@ public abstract class AbstractVersusRequestsGraphConsumer extends
                     fileInfos.add(new FileInfo(tmpFile, getConsumedMetadata(i)));
                 } catch (IOException ex) {
                     String message = String.format(
-                            "Cannot create temporary file for channel #%d", Integer.valueOf(i));
+                            "Cannot create temporary file for channel #%d", i);
                     log.error(message, ex);
                     throw new SampleException(message, ex);
                 }
@@ -313,7 +312,7 @@ public abstract class AbstractVersusRequestsGraphConsumer extends
             Long time = getTimeInterval(sample);
             Long count = counts.get(time);
             if (count != null) {
-                counts.put(time, Long.valueOf(count.longValue() + 1));
+                counts.put(time, count + 1);
             } else {
                 counts.put(time, ONE);
             }

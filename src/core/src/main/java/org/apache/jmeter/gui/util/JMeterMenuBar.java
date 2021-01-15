@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.gui.util;
@@ -26,16 +25,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
+import javax.swing.ButtonGroup;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
 import javax.swing.MenuElement;
 import javax.swing.UIManager;
@@ -46,6 +46,8 @@ import org.apache.jmeter.gui.action.ActionNames;
 import org.apache.jmeter.gui.action.ActionRouter;
 import org.apache.jmeter.gui.action.KeyStrokes;
 import org.apache.jmeter.gui.action.LoadRecentProject;
+import org.apache.jmeter.gui.action.LogLevelCommand;
+import org.apache.jmeter.gui.action.LookAndFeelCommand;
 import org.apache.jmeter.gui.plugin.MenuCreator;
 import org.apache.jmeter.gui.plugin.MenuCreator.MENU_LOCATION;
 import org.apache.jmeter.util.JMeterUtils;
@@ -54,9 +56,9 @@ import org.apache.jmeter.util.LocaleChangeListener;
 import org.apache.jmeter.util.SSLManager;
 import org.apache.jorphan.reflect.ClassFinder;
 import org.apache.jorphan.util.JOrphanUtils;
+import org.apache.logging.log4j.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.event.Level;
 
 public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
     private static final long serialVersionUID = 241L;
@@ -95,16 +97,18 @@ public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
     public static final String SYSTEM_LAF = "System"; // $NON-NLS-1$
     public static final String CROSS_PLATFORM_LAF = "CrossPlatform"; // $NON-NLS-1$
     public static final String DARCULA_LAF = "Darcula"; // $NON-NLS-1$
+    public static final String DARKLAF_LAF = "Darklaf"; // $NON-NLS-1$
     public static final String DARCULA_LAF_CLASS = "com.bulenkov.darcula.DarculaLaf"; // $NON-NLS-1$
+    public static final String DARKLAF_LAF_CLASS = "com.github.weisj.darklaf.DarkLaf"; // $NON-NLS-1$
 
     public JMeterMenuBar() {
         // List for recent files menu items
-        fileLoadRecentFiles = new LinkedList<>();
+        fileLoadRecentFiles = new ArrayList<>();
         // Lists for remote engines menu items
-        remoteEngineStart = new LinkedList<>();
-        remoteEngineStop = new LinkedList<>();
-        remoteEngineShut = new LinkedList<>();
-        remoteEngineExit = new LinkedList<>();
+        remoteEngineStart = new ArrayList<>();
+        remoteEngineStop = new ArrayList<>();
+        remoteEngineShut = new ArrayList<>();
+        remoteEngineExit = new ArrayList<>();
         remoteHosts = JOrphanUtils.split(JMeterUtils.getPropDefault("remote_hosts", ""), ","); //$NON-NLS-1$
         if (remoteHosts.length == 1 && remoteHosts[0].isEmpty()) {
             remoteHosts = new String[0];
@@ -228,8 +232,12 @@ public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
                         MenuCreator creator = (MenuCreator) commandClass.getDeclaredConstructor().newInstance();
                         creators.add(creator);
                     }
+                } catch (NoClassDefFoundError e) {
+                    log.error("Exception registering implementation: [{}] of interface: [{}], a dependency used by the plugin class is missing",
+                            strClassName, MenuCreator.class, e);
                 } catch (Exception e) {
-                    log.error("Exception registering {} with implementation: {}", MenuCreator.class, strClassName, e);
+                    log.error("Exception registering implementation: [{}] of interface: [{}], a jar is probably missing",
+                            strClassName, MenuCreator.class, e);
                 }
             }
         } catch (IOException e) {
@@ -296,12 +304,21 @@ public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
         JMenu menuLoggerLevel = makeMenuRes("menu_logger_level"); //$NON-NLS-1$
         JMenuItem menuItem;
         String levelString;
-        for (Level level : Level.values()) {
+        // Note: slf4j does not provide a way to set log level, so we use log4j levels here
+        Level currentLevel = LogLevelCommand.getRootLevel();
+        ButtonGroup loggerLevels = new ButtonGroup();
+        Level[] logLevels = Level.values();
+        Arrays.sort(logLevels);
+        for (Level level : logLevels) {
             levelString = level.toString();
-            menuItem = new JMenuItem(levelString);
+            menuItem = new JRadioButtonMenuItem(levelString);
             menuItem.addActionListener(ActionRouter.getInstance());
             menuItem.setActionCommand(ActionNames.LOG_LEVEL_PREFIX + levelString);
             menuItem.setToolTipText(levelString); // show the classname to the user
+            if (level.equals(currentLevel)) {
+                menuItem.setSelected(true);
+            }
+            loggerLevels.add(menuItem);
             menuLoggerLevel.add(menuItem);
         }
         optionsMenu.add(menuLoggerLevel);
@@ -327,11 +344,16 @@ public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
 
     private JMenu createLaFMenu() {
         JMenu lafMenu = makeMenuRes("appearance", 'L');
-        for (LookAndFeelInfo laf : getAllLAFs()) {
-            JMenuItem menuItem = new JMenuItem(laf.getName());
+        ButtonGroup lafGroup = new ButtonGroup();
+        String currentLafCommand = LookAndFeelCommand.getPreferredLafCommand();
+        for (LookAndFeelCommand.MenuItem item : LookAndFeelCommand.getMenuItems()) {
+            JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem(item.getTitle());
             menuItem.addActionListener(ActionRouter.getInstance());
-            menuItem.setActionCommand(ActionNames.LAF_PREFIX + laf.getClassName());
-            menuItem.setToolTipText(laf.getClassName()); // show the classname to the user
+            menuItem.setActionCommand(item.getCommand());
+            if (item.getCommand().equals(currentLafCommand)) {
+                menuItem.setSelected(true);
+            }
+            lafGroup.add(menuItem);
             lafMenu.add(menuItem);
         }
         return lafMenu;
@@ -349,13 +371,19 @@ public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
          * Create a language entry from the locale name.
          *
          * @param locale - must also be a valid resource name
+         * @param languageGroup - group for radio items
+         * @param selected - if the menu item is selected
          */
-        void addLang(String locale){
+        void addLang(String locale, ButtonGroup languageGroup, boolean selected) {
             String localeString = JMeterUtils.getLocaleString(locale);
-            JMenuItem language = new JMenuItem(localeString);
+            JMenuItem language = new JRadioButtonMenuItem(localeString);
             language.addActionListener(actionRouter);
             language.setActionCommand(ActionNames.CHANGE_LANGUAGE);
             language.setName(locale); // This is used by the ChangeLanguage class to define the Locale
+            if (selected) {
+                language.setSelected(true);
+            }
+            languageGroup.add(language);
             languageMenu.add(language);
         }
    }
@@ -379,6 +407,7 @@ public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
         lang.add(Locale.JAPANESE.toString()); // ja
         lang.add(Locale.SIMPLIFIED_CHINESE.toString()); // zh_CN
         lang.add(Locale.TRADITIONAL_CHINESE.toString()); // zh_TW
+        lang.add(Locale.KOREAN.toString()); // ko
         final String addedLocales = JMeterUtils.getProperty("locales.add");
         if (addedLocales != null) {
             Arrays.stream(addedLocales.split(","))
@@ -400,8 +429,16 @@ public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
          * Also, need to ensure that the names are valid resource entries too.
          */
 
+        Locale currentLocale = JMeterUtils.getLocale();
+        String selectedLocale = currentLocale == null ? "" : currentLocale.toString();
+        if (selectedLocale.equals(JMeterUtils.getLocaleString(selectedLocale))) {
+            // E.g. if the current locale has no localized name, then it is unknown to JMeter,
+            // so it can't appear in the menu. In that case, we assume English locale is used.
+            selectedLocale = Locale.ENGLISH.toString();
+        }
+        ButtonGroup languageGroup = new ButtonGroup();
         for (String lang : getLanguages()) {
-            langMenu.addLang(lang);
+            langMenu.addLang(lang, languageGroup, selectedLocale.equals(lang));
         }
         return languageMenu;
     }

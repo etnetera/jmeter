@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.timers.poissonarrivals;
@@ -23,12 +22,14 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.jmeter.gui.GUIMenuSortOrder;
+import org.apache.jmeter.gui.TestElementMetadata;
 import org.apache.jmeter.testbeans.TestBean;
 import org.apache.jmeter.testelement.AbstractTestElement;
 import org.apache.jmeter.testelement.TestStateListener;
 import org.apache.jmeter.threads.AbstractThreadGroup;
 import org.apache.jmeter.timers.Timer;
 import org.apache.jorphan.util.JMeterStopThreadException;
+import org.apiguardian.api.API;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,10 +39,11 @@ import org.slf4j.LoggerFactory;
  * @since 4.0
  */
 @GUIMenuSortOrder(3)
+@TestElementMetadata(labelResource = "displayName")
 public class PreciseThroughputTimer extends AbstractTestElement implements Cloneable, Timer, TestStateListener, TestBean, ThroughputProvider, DurationProvider {
     private static final Logger log = LoggerFactory.getLogger(PreciseThroughputTimer.class);
 
-    private static final long serialVersionUID = 3;
+    private static final long serialVersionUID = 4;
     private static final ConcurrentMap<AbstractThreadGroup, EventProducer> groupEvents = new ConcurrentHashMap<>();
 
     /**
@@ -113,17 +115,18 @@ public class PreciseThroughputTimer extends AbstractTestElement implements Clone
         synchronized (events) {
             nextEvent = events.next();
         }
-        long delay = (long) (nextEvent * TimeUnit.SECONDS.toMillis(1) + testStarted - System.currentTimeMillis());
+        long now = System.currentTimeMillis();
+        long delay = (long) (nextEvent * TimeUnit.SECONDS.toMillis(1) + testStarted - now);
         if (log.isDebugEnabled()) {
             log.debug("Calculated delay is {}", delay);
         }
         delay = Math.max(0, delay);
         long endTime = getThreadContext().getThread().getEndTime();
-        if (endTime > 0 && System.currentTimeMillis() + delay > endTime) {
+        if (endTime > 0 && now + delay > endTime) {
             throw new JMeterStopThreadException("The thread is scheduled to stop in " +
-                    (System.currentTimeMillis() - endTime) + " ms" +
+                    (endTime - now) + " ms" +
                     " and the throughput timer generates a delay of " + delay + "." +
-                    " JMeter (as of 4.0) does not support interrupting of sleeping threads, thus terminating the thread manually."
+                    " Terminating the thread manually."
             );
         }
         return delay;
@@ -135,13 +138,14 @@ public class PreciseThroughputTimer extends AbstractTestElement implements Clone
         return
                 groupEvents.computeIfAbsent(tg, x -> new ConstantPoissonProcessGenerator(
                         () -> PreciseThroughputTimer.this.getThroughput() / throughputPeriod,
-                        batchSize, batchThreadDelay, this, exactLimit, allowedThroughputSurplus, seed, true));
+                        batchSize, batchThreadDelay, this, seed, true));
     }
 
     /**
      * Returns number of generated samples per {@link #getThroughputPeriod}
      * @return number of samples per {@link #getThroughputPeriod}
      */
+    @Override
     public double getThroughput() {
         return throughput;
     }
@@ -167,6 +171,7 @@ public class PreciseThroughputTimer extends AbstractTestElement implements Clone
         this.throughputPeriod = throughputPeriod;
     }
 
+    @Override
     public long getDuration() {
         return duration;
     }
@@ -175,18 +180,26 @@ public class PreciseThroughputTimer extends AbstractTestElement implements Clone
         this.duration = duration;
     }
 
+    @Deprecated
+    @API(status = API.Status.DEPRECATED, since = "5.3.0")
     public int getExactLimit() {
         return exactLimit;
     }
 
+    @Deprecated
+    @API(status = API.Status.DEPRECATED, since = "5.3.0")
     public void setExactLimit(int exactLimit) {
         this.exactLimit = exactLimit;
     }
 
+    @Deprecated
+    @API(status = API.Status.DEPRECATED, since = "5.3.0")
     public double getAllowedThroughputSurplus() {
         return allowedThroughputSurplus;
     }
 
+    @Deprecated
+    @API(status = API.Status.DEPRECATED, since = "5.3.0")
     public void setAllowedThroughputSurplus(double allowedThroughputSurplus) {
         this.allowedThroughputSurplus = allowedThroughputSurplus;
     }

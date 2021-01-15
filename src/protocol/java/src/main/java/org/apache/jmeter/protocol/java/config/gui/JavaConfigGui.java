@@ -2,25 +2,22 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.java.config.gui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Font;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -40,6 +37,7 @@ import org.apache.jmeter.config.Argument;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.config.gui.AbstractConfigGui;
 import org.apache.jmeter.config.gui.ArgumentsPanel;
+import org.apache.jmeter.gui.TestElementMetadata;
 import org.apache.jmeter.gui.util.VerticalPanel;
 import org.apache.jmeter.protocol.java.config.JavaConfig;
 import org.apache.jmeter.protocol.java.sampler.JavaSampler;
@@ -47,6 +45,7 @@ import org.apache.jmeter.protocol.java.sampler.JavaSamplerClient;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.property.JMeterProperty;
 import org.apache.jmeter.util.JMeterUtils;
+import org.apache.jorphan.gui.JFactory;
 import org.apache.jorphan.gui.JLabeledChoice;
 import org.apache.jorphan.reflect.ClassFinder;
 import org.slf4j.Logger;
@@ -57,6 +56,7 @@ import org.slf4j.LoggerFactory;
  * {@link JavaConfig} object.
  *
  */
+@TestElementMetadata(labelResource = "java_request_defaults")
 public class JavaConfigGui extends AbstractConfigGui implements ChangeListener {
     private static final long serialVersionUID = 241L;
 
@@ -158,9 +158,7 @@ public class JavaConfigGui extends AbstractConfigGui implements ChangeListener {
                 false);
         classNameLabeledChoice.addChangeListener(this);
 
-        warningLabel.setForeground(Color.RED);
-        Font font = warningLabel.getFont();
-        warningLabel.setFont(new Font(font.getFontName(), Font.BOLD, (int)(font.getSize()*1.1)));
+        JFactory.error(warningLabel);
         warningLabel.setVisible(false);
 
         VerticalPanel panel = new VerticalPanel();
@@ -189,8 +187,10 @@ public class JavaConfigGui extends AbstractConfigGui implements ChangeListener {
     private void configureClassName() {
         String className = classNameLabeledChoice.getText().trim();
         try {
-            JavaSamplerClient client = (JavaSamplerClient) Class.forName(className, true,
-                    Thread.currentThread().getContextClassLoader()).getDeclaredConstructor().newInstance();
+            JavaSamplerClient client = Class.forName(className, true,
+                    Thread.currentThread().getContextClassLoader())
+                    .asSubclass(JavaSamplerClient.class)
+                    .getDeclaredConstructor().newInstance();
 
             Arguments currArgs = new Arguments();
             argsPanel.modifyTestElement(currArgs);
@@ -203,7 +203,7 @@ public class JavaConfigGui extends AbstractConfigGui implements ChangeListener {
             } catch (AbstractMethodError e) {
                 log.warn("JavaSamplerClient doesn't implement "
                         + "getDefaultParameters.  Default parameters won't "
-                        + "be shown.  Please update your client class: " + className);
+                        + "be shown.  Please update your client class: {}", className);
             }
 
             if (testParams != null) {
@@ -229,7 +229,7 @@ public class JavaConfigGui extends AbstractConfigGui implements ChangeListener {
             argsPanel.configure(newArgs);
             warningLabel.setVisible(false);
         } catch (Exception e) {
-            log.error("Error getting argument list for " + className, e);
+            log.error("Error getting argument list for {}", className, e);
             warningLabel.setVisible(true);
         }
     }
@@ -269,14 +269,16 @@ public class JavaConfigGui extends AbstractConfigGui implements ChangeListener {
      */
     private boolean classOk(String className) {
         try {
-            JavaSamplerClient client = (JavaSamplerClient) Class.forName(className, true,
-                    Thread.currentThread().getContextClassLoader()).getDeclaredConstructor().newInstance();
+            JavaSamplerClient client = Class.forName(className, true,
+                    Thread.currentThread().getContextClassLoader())
+                    .asSubclass(JavaSamplerClient.class)
+                    .getDeclaredConstructor().newInstance();
             // Just to use client
             return client != null;
         } catch (Exception ex) {
-            log.error("Error creating class:'"+className+"' in JavaSampler "+getName()
-                +", check for a missing jar in your jmeter 'search_paths' and 'plugin_dependency_paths' properties",
-                ex);
+            log.error("Error creating class:'{}' in JavaSampler {}"
+                    + ", check for a missing jar in your jmeter 'search_paths' and 'plugin_dependency_paths' properties",
+                    className, getName(), ex);
             return false;
         }
     }

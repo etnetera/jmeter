@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.mail.sampler;
@@ -140,6 +139,7 @@ public class MailReaderSampler extends AbstractSampler implements Interruptible 
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("JdkObsolete")
     public SampleResult sample(Entry e) {
         SampleResult parent = new SampleResult();
         boolean isOK = false; // Did sample succeed?
@@ -174,16 +174,16 @@ public class MailReaderSampler extends AbstractSampler implements Interruptible 
                 }
             } else if (isUseLocalTrustStore()){
                 File truststore = new File(getTrustStoreToUse());
-                log.info("load local truststore - try to load truststore from: "+truststore.getAbsolutePath());
+                log.info("load local truststore - try to load truststore from: {}", truststore.getAbsolutePath());
                 if(!truststore.exists()){
-                    log.info("load local truststore -Failed to load truststore from: "+truststore.getAbsolutePath());
+                    log.info("load local truststore -Failed to load truststore from: {}", truststore.getAbsolutePath());
                     truststore = new File(FileServer.getFileServer().getBaseDir(), getTrustStoreToUse());
-                    log.info("load local truststore -Attempting to read truststore from:  "+truststore.getAbsolutePath());
+                    log.info("load local truststore -Attempting to read truststore from: {}", truststore.getAbsolutePath());
                     if (!truststore.exists()){
                         log.info(
-                                "load local truststore -Failed to load truststore from: "
-                                        + truststore.getAbsolutePath()
-                                        + ". Local truststore not available, aborting execution.");
+                                "load local truststore -Failed to load truststore from: {}"
+                                        + ". Local truststore not available, aborting execution.",
+                                truststore.getAbsolutePath());
                         throw new IOException(
                                 "Local truststore file not found. Also not available under : "
                                         + truststore.getAbsolutePath());
@@ -306,6 +306,7 @@ public class MailReaderSampler extends AbstractSampler implements Interruptible 
         return parent;
     }
 
+    @SuppressWarnings("JdkObsolete")
     protected void addCustomProperties(Properties props) {
         Properties jMeterProperties = JMeterUtils.getJMeterProperties();
         @SuppressWarnings("unchecked")

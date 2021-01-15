@@ -2,26 +2,26 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.visualizers;
 
 import java.awt.BorderLayout;
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.Collections;
-import java.util.LinkedList;
+import java.util.Deque;
 import java.util.List;
 
 import javax.swing.JPanel;
@@ -42,7 +42,7 @@ public class RequestPanel {
 
     private static final Logger log = LoggerFactory.getLogger(RequestPanel.class);
 
-    private final LinkedList<RequestView> listRequestView;
+    private final Deque<RequestView> listRequestView;
 
     private final JPanel panel;
 
@@ -51,7 +51,7 @@ public class RequestPanel {
      * and Create Request Panel
      */
     public RequestPanel() {
-        listRequestView = new LinkedList<>();
+        listRequestView = new ArrayDeque<>();
         List<String> classesToAdd = Collections.<String> emptyList();
         try {
             classesToAdd = JMeterUtils.findClassesThatExtend(RequestView.class);
@@ -63,14 +63,21 @@ public class RequestPanel {
         for (String clazz : classesToAdd) {
             try {
                 // Instantiate requestview classes
-                final RequestView requestView = (RequestView) Class.forName(clazz).getDeclaredConstructor().newInstance();
+                final RequestView requestView = Class.forName(clazz)
+                        .asSubclass(RequestView.class)
+                        .getDeclaredConstructor().newInstance();
                 if (rawTab.equals(requestView.getLabel())) {
                     rawObject = requestView; // use later
                 } else {
                     listRequestView.add(requestView);
                 }
+            }
+            catch (NoClassDefFoundError e) {
+                log.error("Exception registering implementation: [{}] of interface: [{}], a dependency used by the plugin class is missing",
+                        clazz, RequestView.class, e);
             } catch (Exception e) {
-                log.warn("Error in load result render: {}", clazz, e); // $NON-NLS-1$
+                log.error("Exception registering implementation: [{}] of interface: [{}], a jar is probably missing",
+                        clazz, RequestView.class, e);
             }
         }
         // place raw tab in first position (first tab)

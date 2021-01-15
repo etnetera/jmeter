@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.testbeans.gui;
@@ -31,7 +30,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -39,7 +37,7 @@ import java.util.ResourceBundle;
 
 import javax.swing.JPopupMenu;
 
-import org.apache.commons.collections.map.LRUMap;
+import org.apache.commons.collections4.map.LRUMap;
 import org.apache.jmeter.assertions.Assertion;
 import org.apache.jmeter.assertions.gui.AbstractAssertionGui;
 import org.apache.jmeter.config.ConfigElement;
@@ -91,7 +89,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class TestBeanGUI extends AbstractJMeterGuiComponent implements JMeterGUIComponent, LocaleChangeListener{
-    private static final long serialVersionUID = 241L;
+    private static final long serialVersionUID = 242L;
 
     private static final Logger log = LoggerFactory.getLogger(TestBeanGUI.class);
 
@@ -111,8 +109,7 @@ public class TestBeanGUI extends AbstractJMeterGuiComponent implements JMeterGUI
      * needs to be limited, though, to avoid memory issues when editing very
      * large test plans.
      */
-    @SuppressWarnings("unchecked")
-    private final Map<TestElement, Customizer> customizers = new LRUMap(20);
+    private final Map<TestElement, Customizer> customizers = new LRUMap<>(20);
 
     /** Index of the customizer in the JPanel's child component list: */
     private int customizerIndexInPanel;
@@ -123,8 +120,11 @@ public class TestBeanGUI extends AbstractJMeterGuiComponent implements JMeterGUI
     /** Whether the GUI components have been created. */
     private boolean initialized = false;
 
+    /** The list of categories this UI participates in */
+    private List<String> menuCategories;
+
     static {
-        List<String> paths = new LinkedList<>();
+        List<String> paths = new ArrayList<>();
         paths.add("org.apache.jmeter.testbeans.gui");// $NON-NLS-1$
         paths.addAll(Arrays.asList(PropertyEditorManager.getEditorSearchPath()));
         String s = JMeterUtils.getPropDefault("propertyEditorSearchPath", null);// $NON-NLS-1$
@@ -299,6 +299,8 @@ public class TestBeanGUI extends AbstractJMeterGuiComponent implements JMeterGUI
     public void configure(TestElement element) {
         if (!initialized){
             init();
+            // It populates GUI_CLASS bean property which is used for icon display
+            setupGuiClassesList();
         }
         clearGui();
         super.configure(element);
@@ -323,12 +325,11 @@ public class TestBeanGUI extends AbstractJMeterGuiComponent implements JMeterGUI
             if (initialized){
                 remove(customizerIndexInPanel);
             }
-            Customizer c = customizers.get(element);
-            if (c == null) {
-                c = createCustomizer();
-                c.setObject(propertyMap);
-                customizers.put(element, c);
-            }
+            Customizer c = customizers.computeIfAbsent(element, e -> {
+                Customizer result = createCustomizer();
+                result.setObject(propertyMap);
+                return result;
+            });
             add((Component) c, BorderLayout.CENTER);
         }
     }
@@ -369,7 +370,11 @@ public class TestBeanGUI extends AbstractJMeterGuiComponent implements JMeterGUI
      * @return matches
      */
     private List<String> setupGuiClassesList() {
-        List<String> menuCategories = new ArrayList<>();
+        List<String> menuCategories = this.menuCategories;
+        if (menuCategories != null) {
+            return menuCategories;
+        }
+        menuCategories = new ArrayList<>(1);
         // TODO: there must be a nicer way...
         BeanDescriptor bd = beanInfo.getBeanDescriptor();
         if (Assertion.class.isAssignableFrom(testBeanClass)) {
@@ -404,6 +409,7 @@ public class TestBeanGUI extends AbstractJMeterGuiComponent implements JMeterGUI
             menuCategories.add(MenuFactory.TIMERS);
             bd.setValue(TestElement.GUI_CLASS, AbstractTimerGui.class.getName());
         }
+        this.menuCategories = menuCategories;
         return menuCategories;
     }
 

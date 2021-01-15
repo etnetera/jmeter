@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.visualizers;
@@ -29,6 +28,7 @@ import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.Stroke;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import javax.swing.JPanel;
 
@@ -282,7 +282,7 @@ public class RespTimeGraphChart extends JPanel {
             double[][] _data, int _width, int _height, int _incrScaleYAxis,
             Color[] _color, Font legendFont, Graphics g) {
 
-        double max = maxYAxisScale > 0 ? maxYAxisScale : getTopValue(findMax(_data), BigDecimal.ROUND_UP); // define max scale y axis
+        double max = maxYAxisScale > 0 ? maxYAxisScale : getTopValue(findMax(_data), RoundingMode.HALF_EVEN); // define max scale y axis
         try {
             // if the title graph is empty, we can assume some default
             if (_title.length() == 0 ) {
@@ -332,7 +332,7 @@ public class RespTimeGraphChart extends JPanel {
                 double incrYAxis = max / numInterval;
                 double incrTopValue = _incrScaleYAxis;
                 if (_incrScaleYAxis == 0) {
-                    incrTopValue = getTopValue(incrYAxis, BigDecimal.ROUND_HALF_UP);
+                    incrTopValue = getTopValue(incrYAxis, RoundingMode.HALF_EVEN);
                 }
                 if (incrTopValue < 1) {
                     incrTopValue = 1.0d; // Increment cannot be < 1
@@ -369,7 +369,7 @@ public class RespTimeGraphChart extends JPanel {
         }
     }
 
-    private int getTopValue(double value, int roundMode) {
+    private int getTopValue(double value, RoundingMode roundingMode) {
         String maxStr = String.valueOf(Math.round(value));
         StringBuilder divValueStr = new StringBuilder(maxStr.length()+1);
         divValueStr.append("1");
@@ -378,7 +378,7 @@ public class RespTimeGraphChart extends JPanel {
         }
         int divValueInt = Integer.parseInt(divValueStr.toString());
         BigDecimal round = BigDecimal.valueOf(value / divValueInt);
-        round = round.setScale(0, roundMode);
+        round = round.setScale(0, roundingMode);
         int topValue = round.intValue() * divValueInt;
         return topValue;
     }
@@ -403,7 +403,7 @@ public class RespTimeGraphChart extends JPanel {
         double max = 0;
         for (double[] data : datas) {
             for (final double value : data) {
-                if ((!Double.isNaN(value)) && (value > max)) {
+                if (!Double.isNaN(value) && (value > max)) {
                     max = value;
                 }
             }

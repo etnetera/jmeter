@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.report.processor;
@@ -34,6 +33,7 @@ public class StatisticsSummaryData {
     private long errors = 0L;
     private long total = 0L;
     private final MeanAggregator mean;
+    private final PercentileAggregator median;
     private final PercentileAggregator percentile1;
     private final PercentileAggregator percentile2;
     private final PercentileAggregator percentile3;
@@ -192,12 +192,13 @@ public class StatisticsSummaryData {
      * @param percentileIndex2 value of second percentile
      * @param percentileIndex3 value of third percentile
      */
-    public StatisticsSummaryData(long percentileIndex1, long percentileIndex2,
-            long percentileIndex3) {
+    public StatisticsSummaryData(double percentileIndex1, double percentileIndex2,
+            double percentileIndex3) {
         percentile1 = new PercentileAggregator(percentileIndex1);
         percentile2 = new PercentileAggregator(percentileIndex2);
         percentile3 = new PercentileAggregator(percentileIndex3);
         mean = new MeanAggregator();
+        median = new PercentileAggregator(50);
     }
 
     /**
@@ -258,6 +259,13 @@ public class StatisticsSummaryData {
      */
     public MeanAggregator getMean() {
         return mean;
+    }
+
+    /**
+     * @return the median response times
+     */
+    public PercentileAggregator getMedian() {
+        return median;
     }
 
     /**

@@ -2,23 +2,23 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.http.sampler;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.jmeter.gui.TestElementMetadata;
 import org.apache.jmeter.protocol.http.control.CookieManager;
 import org.apache.jmeter.protocol.http.util.HTTPConstants;
 import org.apache.jmeter.protocol.http.util.accesslog.Filter;
@@ -64,6 +64,7 @@ import org.slf4j.LoggerFactory;
  * </p>
  *
  */
+@TestElementMetadata(labelResource = "displayName")
 public class AccessLogSampler extends HTTPSampler implements TestBean,ThreadListener {
     private static final Logger log = LoggerFactory.getLogger(AccessLogSampler.class);
 
@@ -199,7 +200,8 @@ public class AccessLogSampler extends HTTPSampler implements TestBean,ThreadList
             try {
                 if (StringUtils.isNotBlank(this.getParserClassName())) {
                     if (StringUtils.isNotBlank(this.getLogFile())) {
-                        parser = (LogParser) Class.forName(getParserClassName()).getDeclaredConstructor().newInstance();
+                        parser = Class.forName(getParserClassName())
+                                .asSubclass(LogParser.class).getDeclaredConstructor().newInstance();
                         parser.setSourceFile(this.getLogFile());
                         parser.setFilter(filter);
                     } else {
@@ -307,7 +309,8 @@ public class AccessLogSampler extends HTTPSampler implements TestBean,ThreadList
     protected void initFilter() {
         if (filter == null && StringUtils.isNotBlank(filterClassName)) {
             try {
-                filter = (Filter) Class.forName(filterClassName).getDeclaredConstructor().newInstance();
+                filter = Class.forName(filterClassName)
+                    .asSubclass(Filter.class).getDeclaredConstructor().newInstance();
             } catch (Exception e) {
                 log.warn("Couldn't instantiate filter '{}'", filterClassName, e);
             }

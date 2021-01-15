@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.visualizers;
@@ -21,7 +20,6 @@ package org.apache.jmeter.visualizers;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -34,7 +32,6 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.UIManager;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.apache.commons.lang3.StringUtils;
@@ -45,6 +42,7 @@ import org.apache.jmeter.gui.action.RegexpSearcher;
 import org.apache.jmeter.gui.action.Searcher;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.visualizers.utils.Colors;
+import org.apache.jorphan.gui.JFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,10 +57,6 @@ public class SearchTreePanel extends JPanel implements ActionListener {
     private static final Logger log = LoggerFactory.getLogger(SearchTreePanel.class);
 
     private static final String SEARCH_TEXT_COMMAND = "search_text"; // $NON-NLS-1$
-
-    private static final Font FONT_DEFAULT = UIManager.getDefaults().getFont("TextField.font");
-
-    private static final Font FONT_SMALL = new Font("SansSerif", Font.PLAIN, (int) Math.round(FONT_DEFAULT.getSize() * 0.8));
 
     private JButton searchButton;
 
@@ -109,6 +103,8 @@ public class SearchTreePanel extends JPanel implements ActionListener {
         setLayout(new BorderLayout(10,10));
 
         searchTF = new JTextField(20); //$NON-NLS-1$
+        JFactory.small(searchTF);
+
         InputMap im = searchTF
                 .getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         im.put(KeyStrokes.ENTER, SEARCH_TEXT_COMMAND);
@@ -118,8 +114,8 @@ public class SearchTreePanel extends JPanel implements ActionListener {
         isRegexpCB = new JCheckBox(JMeterUtils.getResString("search_text_chkbox_regexp"), false); //$NON-NLS-1$
         isCaseSensitiveCB = new JCheckBox(JMeterUtils.getResString("search_text_chkbox_case"), false); //$NON-NLS-1$
 
-        isRegexpCB.setFont(FONT_SMALL);
-        isCaseSensitiveCB.setFont(FONT_SMALL);
+        JFactory.small(isRegexpCB);
+        JFactory.small(isCaseSensitiveCB);
 
         searchButton = new JButton(JMeterUtils.getResString("search")); //$NON-NLS-1$
         searchButton.addActionListener(this);
@@ -128,7 +124,9 @@ public class SearchTreePanel extends JPanel implements ActionListener {
 
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
-        searchPanel.add(new JLabel(JMeterUtils.getResString("search_text_field")));
+        JLabel searchLabel = new JLabel(JMeterUtils.getResString("search_text_field"));
+        JFactory.small(searchLabel);
+        searchPanel.add(searchLabel);
         searchPanel.add(searchTF);
         searchPanel.add(isCaseSensitiveCB);
         searchPanel.add(isRegexpCB);

@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.visualizers;
@@ -40,6 +39,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.apache.jmeter.gui.TestElementMetadata;
 import org.apache.jmeter.gui.util.VerticalPanel;
 import org.apache.jmeter.reporters.MailerModel;
 import org.apache.jmeter.reporters.MailerResultCollector;
@@ -49,6 +49,7 @@ import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.visualizers.gui.AbstractVisualizer;
+import org.apache.jorphan.gui.JMeterUIDefaults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,6 +63,7 @@ import org.slf4j.LoggerFactory;
  * This class implements a visualizer that mails a message when an error occurs.
  *
  */
+@TestElementMetadata(labelResource = "mailer_visualizer_title")
 public class MailerVisualizer extends AbstractVisualizer implements ActionListener, Clearable, ChangeListener {
     private static final long serialVersionUID = 241L;
 
@@ -108,7 +110,7 @@ public class MailerVisualizer extends AbstractVisualizer implements ActionListen
     }
 
     /**
-     * Clears any stored sampling-informations.
+     * Clears any stored sampling-information.
      */
     @Override
     public synchronized void clearData() {
@@ -150,7 +152,7 @@ public class MailerVisualizer extends AbstractVisualizer implements ActionListen
         mainPanel.add(makeTitlePanel());
 
         JPanel attributePane = new VerticalPanel();
-        attributePane.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+        attributePane.setBorder(BorderFactory.createTitledBorder(
                 JMeterUtils.getResString("mailer_title_settings"))); // $NON-NLS-1$
 
         // Settings panes
@@ -180,7 +182,7 @@ public class MailerVisualizer extends AbstractVisualizer implements ActionListen
 
     private JPanel createMailingSettings() {
         JPanel settingsPane = new JPanel(new BorderLayout());
-        settingsPane.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+        settingsPane.setBorder(BorderFactory.createTitledBorder(
                 JMeterUtils.getResString("mailer_title_message"))); // $NON-NLS-1$
 
         JPanel headerPane = new JPanel(new BorderLayout());
@@ -240,7 +242,7 @@ public class MailerVisualizer extends AbstractVisualizer implements ActionListen
 
     private JPanel createSmtpSettings() {
         JPanel settingsPane = new JPanel(new BorderLayout());
-        settingsPane.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+        settingsPane.setBorder(BorderFactory.createTitledBorder(
                 JMeterUtils.getResString("mailer_title_smtpserver"))); // $NON-NLS-1$
 
         JPanel hostPane = new JPanel(new BorderLayout());
@@ -282,7 +284,7 @@ public class MailerVisualizer extends AbstractVisualizer implements ActionListen
                 MailerModel.MailAuthType.NONE.toString(),
                 MailerModel.MailAuthType.SSL.toString(),
                 MailerModel.MailAuthType.TLS.toString()});
-        authTypeCombo.setFont(new Font("SansSerif", Font.PLAIN, 10)); // $NON-NLS-1$
+        authTypeCombo.setFont(JMeterUIDefaults.createFont("SansSerif", Font.PLAIN, 10)); // $NON-NLS-1$
         authTypePane.add(authTypeCombo, BorderLayout.CENTER);
 
         JPanel credPane = new JPanel(new BorderLayout());

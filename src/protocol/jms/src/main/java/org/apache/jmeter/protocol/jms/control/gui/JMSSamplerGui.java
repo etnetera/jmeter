@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.jms.control.gui;
@@ -28,6 +27,7 @@ import javax.swing.JPanel;
 
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.config.gui.ArgumentsPanel;
+import org.apache.jmeter.gui.TestElementMetadata;
 import org.apache.jmeter.gui.util.HorizontalPanel;
 import org.apache.jmeter.gui.util.JSyntaxTextArea;
 import org.apache.jmeter.gui.util.JTextScrollPane;
@@ -42,9 +42,11 @@ import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.gui.JLabeledChoice;
 import org.apache.jorphan.gui.JLabeledTextField;
 
+
 /**
  * Configuration screen for Java Messaging Point-to-Point requests.
  */
+@TestElementMetadata(labelResource = "jms_point_to_point")
 public class JMSSamplerGui extends AbstractSamplerGui {
 
     private static final long serialVersionUID = 240L;
@@ -135,7 +137,9 @@ public class JMSSamplerGui extends AbstractSamplerGui {
         element.setReceiveQueue(receiveQueue.getText());
 
         element.setProperty(JMSSampler.JMS_COMMUNICATION_STYLE, jmsCommunicationStyle.getSelectedIndex());
-        element.removeProperty(JMSSampler.IS_ONE_WAY);
+        @SuppressWarnings("deprecation")
+        String isOneWay = JMSSampler.IS_ONE_WAY;
+        element.removeProperty(isOneWay);
         element.setNonPersistent(useNonPersistentDelivery.isSelected());
         element.setUseReqMsgIdAsCorrelId(useReqMsgIdAsCorrelId.isSelected());
         element.setUseResMsgIdAsCorrelId(useResMsgIdAsCorrelId.isSelected());
@@ -181,7 +185,9 @@ public class JMSSamplerGui extends AbstractSamplerGui {
         queueConnectionFactory.setText(sampler.getQueueConnectionFactory());
         sendQueue.setText(sampler.getSendQueue());
         receiveQueue.setText(sampler.getReceiveQueue());
-        JMeterProperty oneWay = el.getProperty(JMSSampler.IS_ONE_WAY); // NOSONAR
+        @SuppressWarnings("deprecation")
+        String isOneWay = JMSSampler.IS_ONE_WAY;
+        JMeterProperty oneWay = el.getProperty(isOneWay); // NOSONAR
         if(oneWay instanceof NullProperty) {
             jmsCommunicationStyle.setSelectedIndex(el.getPropertyAsInt(JMSSampler.JMS_COMMUNICATION_STYLE));
         } else {
@@ -219,7 +225,7 @@ public class JMSSamplerGui extends AbstractSamplerGui {
         add(makeTitlePanel(), BorderLayout.NORTH);
 
         JPanel jmsQueueingPanel = new JPanel(new BorderLayout());
-        jmsQueueingPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+        jmsQueueingPanel.setBorder(BorderFactory.createTitledBorder(
                 JMeterUtils.getResString("jms_queueing"))); //$NON-NLS-1$
 
         JPanel qcfPanel = new JPanel(new BorderLayout(5, 0));
@@ -237,11 +243,11 @@ public class JMSSamplerGui extends AbstractSamplerGui {
         jmsQueueingPanel.add(receiveQueuePanel, BorderLayout.SOUTH);
 
         JPanel messagePanel = new JPanel(new BorderLayout());
-        messagePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+        messagePanel.setBorder(BorderFactory.createTitledBorder(
                 JMeterUtils.getResString("jms_message_title"))); //$NON-NLS-1$
 
         JPanel correlationPanel = new HorizontalPanel();
-        correlationPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+        correlationPanel.setBorder(BorderFactory.createTitledBorder(
                 JMeterUtils.getResString("jms_correlation_title"))); //$NON-NLS-1$
 
         useReqMsgIdAsCorrelId = new JCheckBox(JMeterUtils.getResString("jms_use_req_msgid_as_correlid"), false); //$NON-NLS-1$
@@ -251,9 +257,12 @@ public class JMSSamplerGui extends AbstractSamplerGui {
         correlationPanel.add(useReqMsgIdAsCorrelId);
         correlationPanel.add(useResMsgIdAsCorrelId);
 
+        JPanel communicationStylePanel = new JPanel();
+        communicationStylePanel.add(jmsCommunicationStyle);
+
         JPanel messageNorthPanel = new JPanel(new BorderLayout());
         JPanel onewayPanel = new HorizontalPanel();
-        onewayPanel.add(jmsCommunicationStyle);
+        onewayPanel.add(communicationStylePanel);
         onewayPanel.add(correlationPanel);
         messageNorthPanel.add(onewayPanel, BorderLayout.NORTH);
 
@@ -292,7 +301,7 @@ public class JMSSamplerGui extends AbstractSamplerGui {
      */
     private JPanel createJNDIPanel() {
         JPanel jndiPanel = new JPanel(new BorderLayout());
-        jndiPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+        jndiPanel.setBorder(BorderFactory.createTitledBorder(
                 JMeterUtils.getResString("jms_jndi_props"))); //$NON-NLS-1$
 
         JPanel contextPanel = new JPanel(new BorderLayout(10, 0));

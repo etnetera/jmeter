@@ -2,25 +2,24 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.gui.tree;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
-import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.tree.DefaultTreeModel;
@@ -35,7 +34,6 @@ import org.apache.jmeter.gui.JMeterGUIComponent;
 import org.apache.jmeter.gui.util.MenuFactory;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.TestPlan;
-import org.apache.jmeter.testelement.WorkBench;
 import org.apache.jorphan.collections.HashTree;
 import org.apache.jorphan.collections.ListedHashTree;
 
@@ -81,7 +79,7 @@ public class JMeterTreeModel extends DefaultTreeModel {
      * @return a list of tree nodes of the given <code>type</code>, or an empty list
      */
     public List<JMeterTreeNode> getNodesOfType(Class<?> type) {
-        List<JMeterTreeNode> nodeList = new LinkedList<>();
+        List<JMeterTreeNode> nodeList = new ArrayList<>();
         traverseAndFind(type, (JMeterTreeNode) this.getRoot(), nodeList);
         return nodeList;
     }
@@ -123,7 +121,7 @@ public class JMeterTreeModel extends DefaultTreeModel {
                 userObject.setFunctionalMode(tp.isFunctionalMode());
                 userObject.setSerialized(tp.isSerialized());
                 addSubTree(subTree.getTree(item), current);
-            } else if (item instanceof WorkBench) {
+            } else if (isWorkbench(item)) {
                 //Move item from WorkBench to TestPlan
                 HashTree workbenchTree = subTree.getTree(item);
                 if (!workbenchTree.isEmpty()) {
@@ -134,6 +132,11 @@ public class JMeterTreeModel extends DefaultTreeModel {
             }
         }
         return getCurrentSubTree(current);
+    }
+
+    @SuppressWarnings("deprecation")
+    private boolean isWorkbench(TestElement item) {
+        return item instanceof org.apache.jmeter.testelement.WorkBench;
     }
 
     /**
@@ -181,6 +184,7 @@ public class JMeterTreeModel extends DefaultTreeModel {
         }
     }
 
+    @SuppressWarnings("JdkObsolete")
     private void traverseAndFind(Class<?> type, JMeterTreeNode node, List<JMeterTreeNode> nodeList) {
         if (type.isInstance(node.getUserObject())) {
             nodeList.add(node);
@@ -192,6 +196,7 @@ public class JMeterTreeModel extends DefaultTreeModel {
         }
     }
 
+    @SuppressWarnings("JdkObsolete")
     private JMeterTreeNode traverseAndFind(TestElement userObject, JMeterTreeNode node) {
         if (userObject == node.getUserObject()) {
             return node;
@@ -212,6 +217,7 @@ public class JMeterTreeModel extends DefaultTreeModel {
      * @param node The {@link JMeterTreeNode} from which the sub tree is to be taken
      * @return newly copied sub tree
      */
+    @SuppressWarnings("JdkObsolete")
     public HashTree getCurrentSubTree(JMeterTreeNode node) {
         ListedHashTree hashTree = new ListedHashTree(node);
         Enumeration<?> enumNode = node.children();

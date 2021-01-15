@@ -2,34 +2,39 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.util;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.Provider;
 import java.security.Security;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.Locale;
 
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 
 import org.apache.commons.lang3.Validate;
@@ -37,6 +42,8 @@ import org.apache.jmeter.gui.GuiPackage;
 import org.apache.jmeter.util.keystore.JmeterKeyStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import net.miginfocom.swing.MigLayout;
 
 /**
  * The SSLManager handles the KeyStore information for JMeter. Basically, it
@@ -76,7 +83,7 @@ public abstract class SSLManager {
     private volatile boolean truststoreLoaded=false;
 
     /** Have the password available */
-    protected String defaultpw = System.getProperty(KEY_STORE_PASSWORD);
+    protected volatile String defaultpw = System.getProperty(KEY_STORE_PASSWORD);
 
     private int keystoreAliasStartIndex;
 
@@ -131,20 +138,16 @@ public abstract class SSLManager {
               // The string 'NONE' is used for the keystore location when using PKCS11
               // https://docs.oracle.com/javase/8/docs/technotes/guides/security/p11guide.html#JSSE
               if ("NONE".equalsIgnoreCase(fileName)) {
-                 this.keyStore.load(null, Validate.notNull(getPassword(), "Password should not be null"));
-                 log.info("Total of {} aliases loaded OK from PKCS11", Integer.valueOf(keyStore.getAliasCount()));
+                 retryLoadKeys(null, false);
+                 log.info("Total of {} aliases loaded OK from PKCS11", keyStore.getAliasCount());
               } else {
                  File initStore = new File(fileName);
                  if (fileName.length() > 0 && initStore.exists()) {
-                    try (InputStream fis = new FileInputStream(initStore);
-                            InputStream fileInputStream = new BufferedInputStream(fis)) {
-                        this.keyStore.load(fileInputStream, getPassword());
-                        if (log.isInfoEnabled()) {
-                            log.info(
-                                    "Total of {} aliases loaded OK from keystore",
-                                    Integer.valueOf(keyStore.getAliasCount()));
-                        }
-                    }
+                     retryLoadKeys(initStore, true);
+                     if (log.isInfoEnabled()) {
+                         log.info("Total of {} aliases loaded OK from keystore {}",
+                                 keyStore.getAliasCount(), fileName);
+                     }
                  } else {
                     log.warn("Keystore file not found, loading empty keystore");
                     this.defaultpw = ""; // Ensure not null
@@ -163,6 +166,29 @@ public abstract class SSLManager {
         return this.keyStore;
     }
 
+    private void retryLoadKeys(File initStore, boolean allowEmptyPassword) throws NoSuchAlgorithmException,
+            CertificateException, IOException, KeyStoreException, UnrecoverableKeyException {
+        for (int i = 0; i < 3; i++) {
+            String password = getPassword();
+            if (!allowEmptyPassword) {
+                Validate.notNull(password, "Password for keystore must not be null");
+            }
+            try {
+                if (initStore == null) {
+                    this.keyStore.load(null, password);
+                } else {
+                    try (InputStream fis = new FileInputStream(initStore)) {
+                        this.keyStore.load(fis, password);
+                    }
+                }
+                return;
+            } catch (IOException e) {
+                log.debug("Could not load keystore. Wrong password for keystore?", e);
+            }
+            this.defaultpw = null;
+        }
+    }
+
     /*
      * The password can be defined as a property; this dialogue is provided to allow it
      * to be entered at run-time.
@@ -172,26 +198,26 @@ public abstract class SSLManager {
         if (null == password) {
             final GuiPackage guiInstance = GuiPackage.getInstance();
             if (guiInstance != null) {
-                synchronized (this) { // TODO is sync really needed?
-                  JPasswordField pwf = new JPasswordField(64);
-                  pwf.setEchoChar('*');
-                  int choice = JOptionPane.showConfirmDialog(
-                          guiInstance.getMainFrame(),
-                          pwf,
-                          JMeterUtils.getResString("ssl_pass_prompt"),
-                          JOptionPane.OK_CANCEL_OPTION,
-                          JOptionPane.PLAIN_MESSAGE);
-                  if (choice == JOptionPane.OK_OPTION) {
-                     char[] pwchars = pwf.getPassword();
-                     this.defaultpw = new String(pwchars);
-                     Arrays.fill(pwchars, '*');
-                  }
-                  System.setProperty(KEY_STORE_PASSWORD, this.defaultpw);
-                  password = this.defaultpw;
-               }
-            } else {
-               log.warn("No password provided, and no GUI present so cannot prompt");
+                JPanel panel = new JPanel(new MigLayout("fillx, wrap 2", "[][fill, grow]"));
+                JLabel passwordLabel = new JLabel("Password: ");
+                JPasswordField pwf = new JPasswordField(64);
+                pwf.setEchoChar('*');
+                passwordLabel.setLabelFor(pwf);
+                panel.add(passwordLabel);
+                panel.add(pwf);
+                int choice = JOptionPane.showConfirmDialog(guiInstance.getMainFrame(), panel,
+                        JMeterUtils.getResString("ssl_pass_prompt"), JOptionPane.OK_CANCEL_OPTION,
+                        JOptionPane.PLAIN_MESSAGE);
+                if (choice == JOptionPane.OK_OPTION) {
+                    char[] pwchars = pwf.getPassword();
+                    this.defaultpw = new String(pwchars);
+                    Arrays.fill(pwchars, '*');
+                }
+                System.setProperty(KEY_STORE_PASSWORD, this.defaultpw);
+                password = this.defaultpw;
             }
+        } else {
+            log.warn("No password provided, and no GUI present so cannot prompt");
         }
         return password;
     }
@@ -240,9 +266,8 @@ public abstract class SSLManager {
                 File initStore = new File(fileName);
 
                 if (initStore.exists()) {
-                    try (InputStream fis = new FileInputStream(initStore);
-                            InputStream fileInputStream = new BufferedInputStream(fis)) {
-                        this.trustStore.load(fileInputStream, null);
+                    try (InputStream fis = new FileInputStream(initStore)) {
+                        this.trustStore.load(fis, null);
                         log.info("Truststore loaded OK from file");
                     }
                 } else {

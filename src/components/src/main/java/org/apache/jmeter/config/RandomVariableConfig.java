@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.config;
@@ -26,6 +25,7 @@ import org.apache.jmeter.engine.event.LoopIterationEvent;
 import org.apache.jmeter.engine.event.LoopIterationListener;
 import org.apache.jmeter.engine.util.NoConfigMerge;
 import org.apache.jmeter.engine.util.NoThreadClone;
+import org.apache.jmeter.gui.TestElementMetadata;
 import org.apache.jmeter.testbeans.TestBean;
 import org.apache.jmeter.testelement.ThreadListener;
 import org.apache.jmeter.threads.JMeterContextService;
@@ -33,6 +33,7 @@ import org.apache.jmeter.threads.JMeterVariables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@TestElementMetadata(labelResource = "displayName")
 public class RandomVariableConfig extends ConfigTestElement
     implements TestBean, LoopIterationListener, NoThreadClone, NoConfigMerge, ThreadListener
 {
@@ -141,6 +142,7 @@ public class RandomVariableConfig extends ConfigTestElement
     }
 
     /**
+     * Returns the minimum value (inclusive).
      * @return the minValue
      */
     public synchronized String getMinimumValue() {
@@ -148,6 +150,7 @@ public class RandomVariableConfig extends ConfigTestElement
     }
 
     /**
+     * Configures the minimum value (inclusive).
      * @param minValue the minValue to set
      */
     public synchronized void setMinimumValue(String minValue) {
@@ -155,6 +158,7 @@ public class RandomVariableConfig extends ConfigTestElement
     }
 
     /**
+     * Returns the maximum value (inclusive).
      * @return the maxvalue
      */
     public synchronized String getMaximumValue() {
@@ -162,6 +166,7 @@ public class RandomVariableConfig extends ConfigTestElement
     }
 
     /**
+     * Configures the maximum value (inclusive).
      * @param maxvalue the maxvalue to set
      */
     public synchronized void setMaximumValue(String maxvalue) {
@@ -169,6 +174,7 @@ public class RandomVariableConfig extends ConfigTestElement
     }
 
     /**
+     * Returns the variable name.
      * @return the variableName
      */
     public synchronized String getVariableName() {
@@ -176,6 +182,7 @@ public class RandomVariableConfig extends ConfigTestElement
     }
 
     /**
+     * Configures the variable name.
      * @param variableName the variableName to set
      */
     public synchronized void setVariableName(String variableName) {
@@ -183,6 +190,7 @@ public class RandomVariableConfig extends ConfigTestElement
     }
 
     /**
+     * Returns the random seed.
      * @return the randomSeed
      */
     public synchronized String getRandomSeed() {
@@ -193,13 +201,14 @@ public class RandomVariableConfig extends ConfigTestElement
         if (randomSeed.length()>0){
             Long seed = getRandomSeedAsLong();
             if(seed != null) {
-                return new Random(seed.longValue());
+                return new Random(seed);
             }
         }
         return new Random();
     }
 
     /**
+     * Returns the random seed as long.
      * @return the randomSeed as a long
      */
     private synchronized Long getRandomSeedAsLong() {
@@ -215,6 +224,7 @@ public class RandomVariableConfig extends ConfigTestElement
     }
 
     /**
+     * Configures the random seed.
      * @param randomSeed the randomSeed to set
      */
     public synchronized void setRandomSeed(String randomSeed) {
@@ -222,6 +232,7 @@ public class RandomVariableConfig extends ConfigTestElement
     }
 
     /**
+     * Returns {@code true} if the random is computed per thread.
      * @return the perThread
      */
     public synchronized boolean getPerThread() {
@@ -229,18 +240,21 @@ public class RandomVariableConfig extends ConfigTestElement
     }
 
     /**
+     * Configures if the random is computed per thread.
      * @param perThread the perThread to set
      */
     public synchronized void setPerThread(boolean perThread) {
         this.perThread = perThread;
     }
     /**
+     * Returns the output format.
      * @return the outputFormat
      */
     public synchronized String getOutputFormat() {
         return outputFormat;
     }
     /**
+     * Configures the output format.
      * @param outputFormat the outputFormat to set
      */
     public synchronized void setOutputFormat(String outputFormat) {

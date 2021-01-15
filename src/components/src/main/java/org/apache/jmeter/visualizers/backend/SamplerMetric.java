@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.visualizers.backend;
@@ -102,6 +101,23 @@ public class SamplerMetric {
      * @param result {@link SampleResult} to be used
      */
     public synchronized void add(SampleResult result) {
+        add(result, false);
+    }
+
+    /**
+     * Add a {@link SampleResult} and its sub-results to be used in the statistics
+     * @param result {@link SampleResult} to be used
+     */
+    public synchronized void addCumulated(SampleResult result) {
+        add(result, true);
+    }
+
+    /**
+     * Add a {@link SampleResult} to be used in the statistics
+     * @param result {@link SampleResult} to be used
+     * @param isCumulated is the overall Sampler Metric
+     */
+    private synchronized void add(SampleResult result, boolean isCumulated) {
         if(result.isSuccessful()) {
             successes+=result.getSampleCount()-result.getErrorCount();
         } else {
@@ -119,32 +135,40 @@ public class SamplerMetric {
         }else {
             koResponsesStats.addValue(time);
         }
-        addHits(result);
-        addNetworkData(result);
+        addHits(result, isCumulated);
+        addNetworkData(result, isCumulated);
     }
 
     /**
      * Increment traffic metrics. A Parent sampler cumulates its children metrics.
      * @param result SampleResult
+     * @param isCumulated related to the overall sampler metric
      */
-    private void addNetworkData(SampleResult result) {
-        if (!TransactionController.isFromTransactionController(result)) {
-            sentBytes += result.getSentBytes();
-            receivedBytes += result.getBytesAsLong();
+    private void addNetworkData(SampleResult result, boolean isCumulated) {
+        if (isCumulated && TransactionController.isFromTransactionController(result)
+                && result.getSubResults().length == 0) { // Transaction controller without generate parent sampler
+            return;
         }
+        sentBytes += result.getSentBytes();
+        receivedBytes += result.getBytesAsLong();
     }
 
     /**
-     * Compute hits from res
-     * @param res {@link SampleResult}
+     * Compute hits from result
+     * @param result {@link SampleResult}
+     * @param isCumulated related to the overall sampler metric
      */
-    private void addHits(SampleResult res) {
-        SampleResult[] subResults = res.getSubResults();
-        if (!TransactionController.isFromTransactionController(res)) {
-            hits += 1;
+    private void addHits(SampleResult result, boolean isCumulated) {
+        SampleResult[] subResults = result.getSubResults();
+        if (isCumulated && TransactionController.isFromTransactionController(result)
+                && subResults.length == 0) { // Transaction controller without generate parent sampler
+            return;
+        }
+        if (!(TransactionController.isFromTransactionController(result) && subResults.length > 0)) {
+            hits += result.getSampleCount();
         }
         for (SampleResult subResult : subResults) {
-            addHits(subResult);
+            addHits(subResult, isCumulated);
         }
     }
 

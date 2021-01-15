@@ -2,26 +2,27 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+import com.github.vlsi.gradle.properties.dsl.props
+import java.time.Duration
 import org.apache.jmeter.buildtools.batchtest.BatchTest
 import org.apache.jmeter.buildtools.batchtest.BatchTestServer
-import java.time.Duration
 
 plugins {
     jmeterbuild.batchtest
+    id("com.github.vlsi.gradle-extensions")
 }
 
 val extraTestDependencies by configurations.creating
@@ -29,7 +30,7 @@ val loggingClasspath by configurations.creating
 
 dependencies {
     api(project(":src:dist"))
-    testCompile(project(":src:dist", "testClasses"))
+    testImplementation(project(":src:dist", "allTestClasses"))
     testImplementation("org.apache.commons:commons-lang3") {
         because("StringUtils")
     }
@@ -232,4 +233,25 @@ tasks.named(JavaPlugin.TEST_TASK_NAME).configure {
     dependsOn(createDist)
     // This is a convenience, so batch tests are executed as a part of default "test" task
     dependsOn(batchTests)
+}
+
+val flakyTests = listOf(
+    "batchHttp4ImplDigestAuth",
+    "batchHttp4ImplPreemptiveBasicAuthJava",
+    "batchSlowCharsFeatureHttpClient4",
+    "batchSlowCharsFeatureJava",
+    "batchTCP_TESTS",
+    "batchTestKeepAlive",
+    "batchTestRedirectionPolicies"
+)
+
+if (props.bool("enableFlaky", default = false)) {
+    println("The following tests are known to be flaky as they depend on the external services: $flakyTests")
+} else {
+    println("Certain tests will be skipped as they depend on external services and fail too often. Please add -PenableFlaky to enable them: $flakyTests")
+    for (test in flakyTests) {
+        tasks.named(test) {
+            enabled = false
+        }
+    }
 }

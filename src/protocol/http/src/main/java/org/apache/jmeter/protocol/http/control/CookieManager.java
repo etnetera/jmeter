@@ -2,30 +2,28 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.http.control;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.ArrayList;
 
 import org.apache.http.client.config.CookieSpecs;
@@ -184,7 +182,7 @@ public class CookieManager extends ConfigTestElement implements TestStateListene
             file = new File(System.getProperty("user.dir") // $NON-NLS-1$
                     + File.separator + authFile);
         }
-        try(PrintWriter writer = new PrintWriter(new FileWriter(file))) { // TODO Charset ?
+        try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(file.toPath()))) {
             writer.println("# JMeter generated Cookie file");// $NON-NLS-1$
             long now = System.currentTimeMillis();
             for (JMeterProperty jMeterProperty : getCookies()) {
@@ -214,16 +212,13 @@ public class CookieManager extends ConfigTestElement implements TestStateListene
             file = new File(System.getProperty("user.dir") // $NON-NLS-1$
                     + File.separator + cookieFile);
         }
-        BufferedReader reader = null;
-        if (file.canRead()) {
-            reader = new BufferedReader(new FileReader(file)); // TODO Charset ?
-        } else {
+        if (!file.canRead()) {
             throw new IOException("The file you specified cannot be read.");
         }
 
         // N.B. this must agree with the save() and cookieToString() methods
         String line;
-        try {
+        try (BufferedReader reader = Files.newBufferedReader(file.toPath())) {
             final CollectionProperty cookies = getCookies();
             while ((line = reader.readLine()) != null) {
                 try {
@@ -259,9 +254,7 @@ public class CookieManager extends ConfigTestElement implements TestStateListene
                     throw new IOException("Error parsing cookie line\n\t'" + line + "'\n\t" + e);
                 }
             }
-        } finally {
-            reader.close();
-         }
+        }
     }
 
     private String cookieToString(Cookie c){

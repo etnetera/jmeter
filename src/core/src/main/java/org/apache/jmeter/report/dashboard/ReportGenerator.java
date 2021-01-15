@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.report.dashboard;
@@ -86,8 +85,6 @@ public class ReportGenerator {
                     .charAt(0);
 
     private static final String INVALID_CLASS_FMT = "Class name \"%s\" is not valid.";
-    private static final String INVALID_EXPORT_FMT = "Data exporter \"%s\" is unable to export data.";
-    private static final String NOT_SUPPORTED_CONVERSION_FMT = "Not supported conversion to \"%s\"";
 
     public static final String NORMALIZER_CONSUMER_NAME = "normalizer";
     public static final String BEGIN_DATE_CONSUMER_NAME = "beginDate";
@@ -176,6 +173,7 @@ public class ReportGenerator {
      * @param propertyKey the property key
      * @return the name of the property setter
      */
+    @SuppressWarnings("JdkObsolete")
     private static String getSetterName(String propertyKey) {
         Matcher matcher = POTENTIAL_CAMEL_CASE_PATTERN.matcher(propertyKey);
         StringBuffer buffer = new StringBuffer(); // NOSONAR Unfortunately Matcher does not support StringBuilder
@@ -269,6 +267,7 @@ public class ReportGenerator {
     /**
      * @return {@link FilterConsumer} that filter data based on date range
      */
+    @SuppressWarnings("JdkObsolete")
     private FilterConsumer createFilterByDateRange() {
         FilterConsumer dateRangeFilter = new FilterConsumer();
         dateRangeFilter.setName(DATE_RANGE_FILTER_CONSUMER_NAME);
@@ -356,6 +355,9 @@ public class ReportGenerator {
                     .excludesControllers() ? excludeControllerFilter
                     : nameFilter;
             entryPoint.addSampleConsumer(graph);
+        } catch (ClassNotFoundException ex) {
+            log.warn("Unable to add class:{} as consumer for HTML report generation, "
+                    + "check class name or that the plugin that contains it is on classpath", className, ex);
         } catch (ClassCastException | IllegalArgumentException |  ReflectiveOperationException | SecurityException ex) {
             String error = String.format(INVALID_CLASS_FMT, className);
             throw new GenerationException(error, ex);
@@ -379,7 +381,7 @@ public class ReportGenerator {
             String error = String.format(INVALID_CLASS_FMT, className);
             throw new GenerationException(error, ex);
         } catch (ExportException ex) {
-            String error = String.format(INVALID_EXPORT_FMT, exporterName);
+            String error = String.format("Data exporter \"%s\" is unable to export data.", exporterName);
             throw new GenerationException(error, ex);
         }
     }
@@ -483,7 +485,7 @@ public class ReportGenerator {
      */
     private AggregateConsumer createEndDateConsumer() {
         AggregateConsumer endDateConsumer = new AggregateConsumer(
-                new MaxAggregator(), sample -> Double.valueOf(sample.getEndTime()));
+                new MaxAggregator(), sample -> (double) sample.getEndTime());
         endDateConsumer.setName(END_DATE_CONSUMER_NAME);
         return endDateConsumer;
     }
@@ -493,7 +495,7 @@ public class ReportGenerator {
      */
     private AggregateConsumer createBeginDateConsumer() {
         AggregateConsumer beginDateConsumer = new AggregateConsumer(
-                new MinAggregator(), sample -> Double.valueOf(sample.getStartTime()));
+                new MinAggregator(), sample -> (double) sample.getStartTime());
         beginDateConsumer.setName(BEGIN_DATE_CONSUMER_NAME);
         return beginDateConsumer;
     }
@@ -531,7 +533,7 @@ public class ReportGenerator {
                             if (converter == null) {
                                 throw new GenerationException(
                                         String.format(
-                                                NOT_SUPPORTED_CONVERSION_FMT,
+                                                "Not supported conversion to \"%s\"",
                                                 parameterType.getName()));
                             }
                             method.invoke(obj, converter.convert(propertyValue));

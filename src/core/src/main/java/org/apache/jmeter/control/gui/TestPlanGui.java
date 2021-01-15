@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.control.gui;
@@ -22,13 +21,15 @@ import java.awt.BorderLayout;
 import java.util.Collection;
 
 import javax.swing.JCheckBox;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JPopupMenu;
-import javax.swing.JTextArea;
 
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.config.gui.ArgumentsPanel;
 import org.apache.jmeter.gui.AbstractJMeterGuiComponent;
+import org.apache.jmeter.gui.TestElementMetadata;
 import org.apache.jmeter.gui.action.ActionNames;
 import org.apache.jmeter.gui.util.FileListPanel;
 import org.apache.jmeter.gui.util.MenuFactory;
@@ -42,6 +43,7 @@ import org.apache.jmeter.util.JMeterUtils;
  * JMeter GUI component representing the test plan which will be executed when
  * the test is run.
  */
+@TestElementMetadata(labelResource = "test_plan", actionGroups = "")
 public class TestPlanGui extends AbstractJMeterGuiComponent {
 
     private static final long serialVersionUID = 240L;
@@ -188,9 +190,7 @@ public class TestPlanGui extends AbstractJMeterGuiComponent {
         southPanel.add(serializedMode);
         southPanel.add(tearDownOnShutdown);
         southPanel.add(functionalMode);
-        JTextArea explain = new JTextArea(JMeterUtils.getResString("functional_mode_explanation")); // $NON-NLS-1$
-        explain.setEditable(false);
-        explain.setBackground(this.getBackground());
+        JComponent explain = new JLabel(JMeterUtils.getResString("functional_mode_explanation")); // $NON-NLS-1$
         southPanel.add(explain);
         southPanel.add(browseJar);
 

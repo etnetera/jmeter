@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jorphan.util;
@@ -561,6 +560,7 @@ public final class JOrphanUtils {
     }
 
     /**
+     * Returns duration formatted with format HH:mm:ss.
      * @param elapsedSec long elapsed time in seconds
      * @return String formatted with format HH:mm:ss
      */
@@ -683,6 +683,7 @@ public final class JOrphanUtils {
      * @param caseSensitive is case taken into account
      * @return array of Object where first row is the replaced text, second row is the number of replacement that occurred
      */
+    @SuppressWarnings("JdkObsolete")
     public static Object[] replaceAllWithRegex(
             String source, String regex, String replacement, boolean caseSensitive) {
         java.util.regex.Pattern pattern = caseSensitive ?
@@ -691,6 +692,7 @@ public final class JOrphanUtils {
         final String replacementQuoted = Matcher.quoteReplacement(replacement);
         Matcher matcher = pattern.matcher(source);
         int totalReplaced = 0;
+        // Can be replaced with StringBuilder for Java 9+
         StringBuffer result = new StringBuffer(); // NOSONAR Matcher#appendReplacement needs a StringBuffer
         while (matcher.find()) {
             matcher.appendReplacement(result, replacementQuoted);
@@ -720,7 +722,7 @@ public final class JOrphanUtils {
             return 0;
         }
         Object[] result = replaceAllWithRegex(value, regex, replaceBy, caseSensitive);
-        int nbReplaced = ((Integer) result[1]).intValue();
+        int nbReplaced = (Integer) result[1];
         if (nbReplaced <= 0) {
             return 0;
         }
@@ -752,6 +754,7 @@ public final class JOrphanUtils {
     }
 
     /**
+     * Random alphanumeric password of a given length.
      * @param length Max length of password
      * @return String random password
      */

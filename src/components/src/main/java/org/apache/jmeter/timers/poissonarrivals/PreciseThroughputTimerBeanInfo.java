@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.timers.poissonarrivals;
@@ -40,7 +39,7 @@ public class PreciseThroughputTimerBeanInfo extends BeanInfoSupport {
         PropertyDescriptor p;
         p = property("throughput"); //$NON-NLS-1$
         p.setValue(NOT_UNDEFINED, Boolean.TRUE);
-        p.setValue(DEFAULT, Double.valueOf(100));
+        p.setValue(DEFAULT, 100d);
 
         p = property("throughputPeriod"); //$NON-NLS-1$
         p.setValue(NOT_UNDEFINED, Boolean.TRUE);
@@ -48,7 +47,7 @@ public class PreciseThroughputTimerBeanInfo extends BeanInfoSupport {
 
         p = property("duration"); //$NON-NLS-1$
         p.setValue(NOT_UNDEFINED, Boolean.TRUE);
-        p.setValue(DEFAULT, Long.valueOf(3600));
+        p.setValue(DEFAULT, 3600L);
 
         createPropertyGroup(
                 "batching", //$NON-NLS-1$
@@ -67,21 +66,15 @@ public class PreciseThroughputTimerBeanInfo extends BeanInfoSupport {
         p.setValue(DEFAULT, 0);
 
 
-        createPropertyGroup(
-                "accuracy", //$NON-NLS-1$
-                new String[]{
-                        "exactLimit", //$NON-NLS-1$
-                        "allowedThroughputSurplus"    //$NON-NLS-1$
-                }
-        );
-
         p = property("exactLimit"); //$NON-NLS-1$
         p.setValue(NOT_UNDEFINED, Boolean.TRUE);
-        p.setValue(DEFAULT, Integer.valueOf(10000));
+        p.setValue(DEFAULT, 10000);
+        p.setHidden(true);
 
         p = property("allowedThroughputSurplus"); //$NON-NLS-1$
         p.setValue(NOT_UNDEFINED, Boolean.TRUE);
-        p.setValue(DEFAULT, Double.valueOf(1.0d));
+        p.setValue(DEFAULT, 1.0d);
+        p.setHidden(true);
 
         createPropertyGroup(
                 "repeatability", //$NON-NLS-1$
@@ -92,6 +85,6 @@ public class PreciseThroughputTimerBeanInfo extends BeanInfoSupport {
 
         p = property("randomSeed"); //$NON-NLS-1$
         p.setValue(NOT_UNDEFINED, Boolean.TRUE);
-        p.setValue(DEFAULT, Long.valueOf(0));
+        p.setValue(DEFAULT, 0L);
     }
 }

@@ -2,33 +2,32 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.http.parser;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
-import static org.junit.Assert.assertThat;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import org.apache.commons.collections.IteratorUtils;
+import org.apache.commons.collections4.IteratorUtils;
 import org.apache.jmeter.junit.JMeterTestCase;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Test;
@@ -47,19 +46,19 @@ public class TestCssParser extends JMeterTestCase {
     @Test
     public void testGetEmbeddedResourceURLsNoUrls() throws Exception {
         CssParser nonIgnoreParser = new CssParser();
-        List<?> result = extractUrls(nonIgnoreParser, "..");
+        List<URL> result = extractUrls(nonIgnoreParser, "..");
         assertThat(result, is(empty()));
     }
 
     @Test
     public void testGetEmbeddedResourceURLsnOneUrl() throws Exception {
-        List<?> result = extractUrls("@import url(http://example.com/abc.css);");
+        List<URL> result = extractUrls("@import url(http://example.com/abc.css);");
         assertThat(result, is(not(empty())));
     }
 
     @Test
     public void testExtractUrlsFromBrokenData() throws Exception {
-        List<?> result = extractUrls(CSS_IN_ERROR);
+        List<URL> result = extractUrls(CSS_IN_ERROR);
         assertThat(result, is(empty()));
     }
 
@@ -68,14 +67,14 @@ public class TestCssParser extends JMeterTestCase {
         assertThat(parser.isReusable(), CoreMatchers.is(true));
     }
 
-    private List<?> extractUrls(String css) throws LinkExtractorParseException,
+    private List<URL> extractUrls(String css) throws LinkExtractorParseException,
             MalformedURLException {
         return extractUrls(parser, css);
     }
 
-    private List<?> extractUrls(CssParser parser, String css)
+    private List<URL> extractUrls(CssParser parser, String css)
             throws LinkExtractorParseException, MalformedURLException {
-        List<?> result = IteratorUtils.toList(parser.getEmbeddedResourceURLs(
+        List<URL> result = IteratorUtils.toList(parser.getEmbeddedResourceURLs(
                 "Mozilla", css.getBytes(StandardCharsets.UTF_8), new URL(
                         "http://example.org/"), StandardCharsets.UTF_8
                         .displayName()));

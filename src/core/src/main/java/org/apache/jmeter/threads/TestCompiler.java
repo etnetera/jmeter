@@ -2,22 +2,22 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.threads;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -53,6 +53,7 @@ import org.slf4j.LoggerFactory;
  *  <li>A map with key TransactionController and as value the associated SamplePackage</li>
  * </ul>
  */
+@SuppressWarnings("JdkObsolete")
 public class TestCompiler implements HashTreeTraverser {
 
     private static final Logger log = LoggerFactory.getLogger(TestCompiler.class);
@@ -65,6 +66,7 @@ public class TestCompiler implements HashTreeTraverser {
      */
     private static final Set<ObjectPair> PAIRING = new HashSet<>();
 
+    // TODO: replace with ArrayDequeue
     private final LinkedList<TestElement> stack = new LinkedList<>();
 
     private final Map<Sampler, SamplePackage> samplerConfigMap = new HashMap<>();
@@ -194,18 +196,18 @@ public class TestCompiler implements HashTreeTraverser {
     }
 
     private void saveSamplerConfigs(Sampler sam) {
-        List<ConfigTestElement> configs = new LinkedList<>();
-        List<Controller> controllers = new LinkedList<>();
-        List<SampleListener> listeners = new LinkedList<>();
-        List<Timer> timers = new LinkedList<>();
-        List<Assertion> assertions = new LinkedList<>();
-        LinkedList<PostProcessor> posts = new LinkedList<>();
-        LinkedList<PreProcessor> pres = new LinkedList<>();
+        List<ConfigTestElement> configs = new ArrayList<>();
+        List<Controller> controllers = new ArrayList<>();
+        List<SampleListener> listeners = new ArrayList<>();
+        List<Timer> timers = new ArrayList<>();
+        List<Assertion> assertions = new ArrayList<>();
+        List<PostProcessor> posts = new ArrayList<>();
+        List<PreProcessor> pres = new ArrayList<>();
         for (int i = stack.size(); i > 0; i--) {
             addDirectParentControllers(controllers, stack.get(i - 1));
-            List<PreProcessor>  tempPre = new LinkedList<>();
-            List<PostProcessor> tempPost = new LinkedList<>();
-            List<Assertion> tempAssertions = new LinkedList<>();
+            List<PreProcessor>  tempPre = new ArrayList<>();
+            List<PostProcessor> tempPost = new ArrayList<>();
+            List<Assertion> tempAssertions = new ArrayList<>();
             for (Object item : testTree.list(stack.subList(0, i))) {
                 if (item instanceof ConfigTestElement) {
                     configs.add((ConfigTestElement) item);
@@ -239,13 +241,13 @@ public class TestCompiler implements HashTreeTraverser {
     }
 
     private void saveTransactionControllerConfigs(TransactionController tc) {
-        List<ConfigTestElement> configs = new LinkedList<>();
-        List<Controller> controllers = new LinkedList<>();
-        List<SampleListener> listeners = new LinkedList<>();
-        List<Timer> timers = new LinkedList<>();
-        List<Assertion> assertions = new LinkedList<>();
-        LinkedList<PostProcessor> posts = new LinkedList<>();
-        LinkedList<PreProcessor> pres = new LinkedList<>();
+        List<ConfigTestElement> configs = new ArrayList<>();
+        List<Controller> controllers = new ArrayList<>();
+        List<SampleListener> listeners = new ArrayList<>();
+        List<Timer> timers = new ArrayList<>();
+        List<Assertion> assertions = new ArrayList<>();
+        List<PostProcessor> posts = new ArrayList<>();
+        List<PreProcessor> pres = new ArrayList<>();
         for (int i = stack.size(); i > 0; i--) {
             addDirectParentControllers(controllers, stack.get(i - 1));
             for (Object item : testTree.list(stack.subList(0, i))) {

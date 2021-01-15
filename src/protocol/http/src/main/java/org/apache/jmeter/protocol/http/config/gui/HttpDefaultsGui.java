@@ -2,25 +2,23 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.http.config.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.event.ItemEvent;
 
 import javax.swing.BorderFactory;
@@ -31,12 +29,12 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
-import javax.swing.UIManager;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.config.gui.AbstractConfigGui;
 import org.apache.jmeter.gui.GUIMenuSortOrder;
+import org.apache.jmeter.gui.TestElementMetadata;
 import org.apache.jmeter.gui.util.HorizontalPanel;
 import org.apache.jmeter.gui.util.VerticalPanel;
 import org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase;
@@ -47,25 +45,26 @@ import org.apache.jmeter.testelement.property.BooleanProperty;
 import org.apache.jmeter.testelement.property.IntegerProperty;
 import org.apache.jmeter.testelement.property.StringProperty;
 import org.apache.jmeter.util.JMeterUtils;
-import org.apache.jorphan.gui.JLabeledTextField;
+import org.apache.jorphan.gui.JFactory;
+
+import net.miginfocom.swing.MigLayout;
 
 /**
  * GUI for Http Request defaults
  */
 @GUIMenuSortOrder(5)
+@TestElementMetadata(labelResource = "url_config_title")
 public class HttpDefaultsGui extends AbstractConfigGui {
 
-    private static final long serialVersionUID = 241L;
-
-    private static final Font FONT_DEFAULT = UIManager.getDefaults().getFont("TextField.font");
-    private static final Font FONT_SMALL = new Font("SansSerif", Font.PLAIN, (int) Math.round(FONT_DEFAULT.getSize() * 0.8));
+    private static final long serialVersionUID = 242L;
 
     private UrlConfigGui urlConfigGui;
     private JCheckBox retrieveEmbeddedResources;
     private JCheckBox concurrentDwn;
     private JTextField concurrentPool;
     private JCheckBox useMD5;
-    private JLabeledTextField embeddedRE; // regular expression used to match against embedded resource URLs
+    private JTextField embeddedAllowRE; // regular expression used to match against embedded resource URLs to allow
+    private JTextField embeddedExcludeRE; // regular expression used to match against embedded resource URLs to discard
     private JTextField sourceIpAddr; // does not apply to Java implementation
     private JComboBox<String> sourceIpType = new JComboBox<>(HTTPSamplerBase.getSourceTypeList());
     private JTextField proxyScheme;
@@ -134,11 +133,17 @@ public class HttpDefaultsGui extends AbstractConfigGui {
         } else {
             config.removeProperty(HTTPSamplerBase.MD5);
         }
-        if (!StringUtils.isEmpty(embeddedRE.getText())) {
+        if (!StringUtils.isEmpty(embeddedAllowRE.getText())) {
             config.setProperty(new StringProperty(HTTPSamplerBase.EMBEDDED_URL_RE,
-                    embeddedRE.getText()));
+                    embeddedAllowRE.getText()));
         } else {
             config.removeProperty(HTTPSamplerBase.EMBEDDED_URL_RE);
+        }
+        if (!StringUtils.isEmpty(embeddedExcludeRE.getText())) {
+            config.setProperty(new StringProperty(HTTPSamplerBase.EMBEDDED_URL_EXCLUDE_RE,
+                    embeddedExcludeRE.getText()));
+        } else {
+            config.removeProperty(HTTPSamplerBase.EMBEDDED_URL_EXCLUDE_RE);
         }
 
         if(!StringUtils.isEmpty(sourceIpAddr.getText())) {
@@ -173,7 +178,8 @@ public class HttpDefaultsGui extends AbstractConfigGui {
         enableConcurrentDwn(false);
         useMD5.setSelected(false);
         urlConfigGui.clear();
-        embeddedRE.setText(""); // $NON-NLS-1$
+        embeddedAllowRE.setText(""); // $NON-NLS-1$
+        embeddedExcludeRE.setText(""); // $NON-NLS-1$
         sourceIpAddr.setText(""); // $NON-NLS-1$
         sourceIpType.setSelectedIndex(HTTPSamplerBase.SourceType.HOSTNAME.ordinal()); //default: IP/Hostname
         proxyScheme.setText(""); // $NON-NLS-1$
@@ -195,7 +201,8 @@ public class HttpDefaultsGui extends AbstractConfigGui {
         concurrentDwn.setSelected(samplerBase.getPropertyAsBoolean(HTTPSamplerBase.CONCURRENT_DWN));
         concurrentPool.setText(samplerBase.getPropertyAsString(HTTPSamplerBase.CONCURRENT_POOL));
         useMD5.setSelected(samplerBase.getPropertyAsBoolean(HTTPSamplerBase.MD5, false));
-        embeddedRE.setText(samplerBase.getPropertyAsString(HTTPSamplerBase.EMBEDDED_URL_RE, ""));//$NON-NLS-1$
+        embeddedAllowRE.setText(samplerBase.getPropertyAsString(HTTPSamplerBase.EMBEDDED_URL_RE, ""));//$NON-NLS-1$
+        embeddedExcludeRE.setText(samplerBase.getPropertyAsString(HTTPSamplerBase.EMBEDDED_URL_EXCLUDE_RE, ""));//$NON-NLS-1$
         sourceIpAddr.setText(samplerBase.getPropertyAsString(HTTPSamplerBase.IP_SOURCE)); //$NON-NLS-1$
         sourceIpType.setSelectedIndex(
                 samplerBase.getPropertyAsInt(HTTPSamplerBase.IP_SOURCE_TYPE,
@@ -246,7 +253,7 @@ public class HttpDefaultsGui extends AbstractConfigGui {
 
     private JPanel getTimeOutPanel() {
         JPanel timeOut = new HorizontalPanel();
-        timeOut.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+        timeOut.setBorder(BorderFactory.createTitledBorder(
                 JMeterUtils.getResString("web_server_timeout_title"))); // $NON-NLS-1$
         final JPanel connPanel = getConnectTimeOutPanel();
         final JPanel reqPanel = getResponseTimeOutPanel();
@@ -297,26 +304,37 @@ public class HttpDefaultsGui extends AbstractConfigGui {
         });
         concurrentPool = new JTextField(2); // 2 columns size
         concurrentPool.setMinimumSize(new Dimension(10, (int) concurrentPool.getPreferredSize().getHeight()));
-        concurrentPool.setMaximumSize(new Dimension(30, (int) concurrentPool.getPreferredSize().getHeight()));
+        concurrentPool.setMaximumSize(new Dimension(60, (int) concurrentPool.getPreferredSize().getHeight()));
 
-        final JPanel embeddedRsrcPanel = new HorizontalPanel();
-        embeddedRsrcPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), JMeterUtils
-                .getResString("web_testing_retrieve_title"))); // $NON-NLS-1$
+        final JPanel embeddedRsrcPanel = new JPanel(new MigLayout());
+        embeddedRsrcPanel.setBorder(BorderFactory.createTitledBorder(
+                JMeterUtils.getResString("web_testing_retrieve_title"))); // $NON-NLS-1$
         embeddedRsrcPanel.add(retrieveEmbeddedResources);
         embeddedRsrcPanel.add(concurrentDwn);
-        embeddedRsrcPanel.add(concurrentPool);
+        embeddedRsrcPanel.add(concurrentPool, "wrap");
 
-        // Embedded URL match regex
-        embeddedRE = new JLabeledTextField(JMeterUtils.getResString("web_testing_embedded_url_pattern"),20); // $NON-NLS-1$
-        embeddedRsrcPanel.add(embeddedRE);
+        // Embedded URL match regex to allow
+        embeddedAllowRE = addTextFieldWithLabel(embeddedRsrcPanel, JMeterUtils.getResString("web_testing_embedded_url_pattern")); // $NON-NLS-1$
+
+        // Embedded URL match regex to exclude
+        embeddedExcludeRE = addTextFieldWithLabel(embeddedRsrcPanel, JMeterUtils.getResString("web_testing_embedded_url_exclude_pattern")); // $NON-NLS-1$
 
         return embeddedRsrcPanel;
     }
 
+    private JTextField addTextFieldWithLabel(JPanel panel, String labelText) {
+        JLabel label = new JLabel(labelText); // $NON-NLS-1$
+        JTextField field = new JTextField(100);
+        label.setLabelFor(field);
+        panel.add(label);
+        panel.add(field, "span");
+        return field;
+    }
+
     protected JPanel createSourceAddrPanel() {
         final JPanel sourceAddrPanel = new HorizontalPanel();
-        sourceAddrPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), JMeterUtils
-                .getResString("web_testing_source_ip"))); // $NON-NLS-1$
+        sourceAddrPanel.setBorder(BorderFactory.createTitledBorder(
+                JMeterUtils.getResString("web_testing_source_ip"))); // $NON-NLS-1$
 
         sourceIpType.setSelectedIndex(HTTPSamplerBase.SourceType.HOSTNAME.ordinal()); //default: IP/Hostname
         sourceAddrPanel.add(sourceIpType);
@@ -329,8 +347,8 @@ public class HttpDefaultsGui extends AbstractConfigGui {
     protected JPanel createOptionalTasksPanel() {
         // OPTIONAL TASKS
         final JPanel checkBoxPanel = new VerticalPanel();
-        checkBoxPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), JMeterUtils
-                .getResString("optional_tasks"))); // $NON-NLS-1$
+        checkBoxPanel.setBorder(BorderFactory.createTitledBorder(
+                JMeterUtils.getResString("optional_tasks"))); // $NON-NLS-1$
 
         // Use MD5
         useMD5 = new JCheckBox(JMeterUtils.getResString("response_save_as_md5")); // $NON-NLS-1$
@@ -346,17 +364,10 @@ public class HttpDefaultsGui extends AbstractConfigGui {
     }
 
     private void enableConcurrentDwn(final boolean enable) {
-        if (enable) {
-            concurrentDwn.setEnabled(true);
-            embeddedRE.setEnabled(true);
-            if (concurrentDwn.isSelected()) {
-                concurrentPool.setEnabled(true);
-            }
-        } else {
-            concurrentDwn.setEnabled(false);
-            concurrentPool.setEnabled(false);
-            embeddedRE.setEnabled(false);
-        }
+        concurrentDwn.setEnabled(enable);
+        embeddedAllowRE.setEnabled(enable);
+        embeddedExcludeRE.setEnabled(enable);
+        concurrentPool.setEnabled(concurrentDwn.isSelected() && enable);
     }
 
     /**
@@ -366,7 +377,7 @@ public class HttpDefaultsGui extends AbstractConfigGui {
      */
     protected final JPanel getImplementationPanel(){
         JPanel implPanel = new HorizontalPanel();
-        implPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+        implPanel.setBorder(BorderFactory.createTitledBorder(
                 JMeterUtils.getResString("web_server_client"))); // $NON-NLS-1$
         implPanel.add(new JLabel(JMeterUtils.getResString("http_implementation"))); // $NON-NLS-1$
         httpImplementation.addItem("");// $NON-NLS-1$
@@ -390,7 +401,7 @@ public class HttpDefaultsGui extends AbstractConfigGui {
         proxyLogin.add(getProxyPassPanel());
 
         JPanel proxyServerPanel = new HorizontalPanel();
-        proxyServerPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+        proxyServerPanel.setBorder(BorderFactory.createTitledBorder(
                 JMeterUtils.getResString("web_proxy_server_title"))); // $NON-NLS-1$
         proxyServerPanel.add(proxyServer);
         proxyServerPanel.add(proxyLogin);
@@ -403,7 +414,7 @@ public class HttpDefaultsGui extends AbstractConfigGui {
 
         JLabel label = new JLabel(JMeterUtils.getResString("web_proxy_scheme")); // $NON-NLS-1$
         label.setLabelFor(proxyScheme);
-        label.setFont(FONT_SMALL);
+        JFactory.small(label);
 
         JPanel panel = new JPanel(new BorderLayout(5, 0));
         panel.add(label, BorderLayout.WEST);
@@ -416,7 +427,7 @@ public class HttpDefaultsGui extends AbstractConfigGui {
 
         JLabel label = new JLabel(JMeterUtils.getResString("web_server_domain")); // $NON-NLS-1$
         label.setLabelFor(proxyHost);
-        label.setFont(FONT_SMALL);
+        JFactory.small(label);
 
         JPanel panel = new JPanel(new BorderLayout(5, 0));
         panel.add(label, BorderLayout.WEST);
@@ -429,7 +440,7 @@ public class HttpDefaultsGui extends AbstractConfigGui {
 
         JLabel label = new JLabel(JMeterUtils.getResString("web_server_port")); // $NON-NLS-1$
         label.setLabelFor(proxyPort);
-        label.setFont(FONT_SMALL);
+        JFactory.small(label);
 
         JPanel panel = new JPanel(new BorderLayout(5, 0));
         panel.add(label, BorderLayout.WEST);
@@ -443,7 +454,7 @@ public class HttpDefaultsGui extends AbstractConfigGui {
 
         JLabel label = new JLabel(JMeterUtils.getResString("username")); // $NON-NLS-1$
         label.setLabelFor(proxyUser);
-        label.setFont(FONT_SMALL);
+        JFactory.small(label);
 
         JPanel panel = new JPanel(new BorderLayout(5, 0));
         panel.add(label, BorderLayout.WEST);
@@ -456,7 +467,7 @@ public class HttpDefaultsGui extends AbstractConfigGui {
 
         JLabel label = new JLabel(JMeterUtils.getResString("password")); // $NON-NLS-1$
         label.setLabelFor(proxyPass);
-        label.setFont(FONT_SMALL);
+        JFactory.small(label);
 
         JPanel panel = new JPanel(new BorderLayout(5, 0));
         panel.add(label, BorderLayout.WEST);

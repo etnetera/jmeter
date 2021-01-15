@@ -1,21 +1,21 @@
 <?xml version="1.0"?>
-<!-- 
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * 
- -->
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one or more
+  ~ contributor license agreements.  See the NOTICE file distributed with
+  ~ this work for additional information regarding copyright ownership.
+  ~ The ASF licenses this file to you under the Apache License, Version 2.0
+  ~ (the "License"); you may not use this file except in compliance with
+  ~ the License.  You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
 <!DOCTYPE document
 [
 <!ENTITY sect-num '19'>
@@ -39,7 +39,7 @@
     which are passed unchanged into the HTML output, e.g. <br/>, not just <br>.
 
     Unfortunately Java does not currently allow for this - it outputs the trailing > -
-    which messes up the Help display. 
+    which messes up the Help display.
     To avoid these artifacts, use the form <br></br>, which Java does seem to handle OK.
 
  -->
@@ -85,7 +85,7 @@ These properties are only taken into account after restarting JMeter as they are
 </properties>
 </section>
 <section name="&sect-num;.3 SSL configuration" anchor="ssl_config">
-<note>SSL (Java) System properties are now in <code>system.properties</code><br/> 
+<note>SSL (Java) System properties are now in <code>system.properties</code><br/>
 JMeter no longer converts <code>javax.<em>xxx</em></code> property entries in
 <code>jmeter.properties</code> into System properties. These must now be
 defined in the <code>system.properties</code> file or on the command-line. The
@@ -127,7 +127,7 @@ Reset HTTP State when starting a new Thread Group iteration.
 In summary<code>true</code> means next iteration is associated to a new user.
 <code>false</code> means next iteration is associated to same user.
 <code>true</code> involves:
- <ul> 
+ <ul>
     <li>Closing opened connection</li>
     <li>resetting SSL State</li>
 </ul>
@@ -177,7 +177,7 @@ Defaults to: <code>true</code>
         This is because the <code>CrossPlatform</code> LAF generally looks better than the <code>System</code> LAF.
         See <bugzilla>52026</bugzilla> for details.
     </note>
-    <note>When you change Look and Feel (LAF) from JMeter GUI through menu Options &gt; Look and Feel, 
+    <note>When you change Look and Feel (LAF) from JMeter GUI through menu Options &gt; Look and Feel,
     you should restart JMeter to ensure change is fully effective.</note>
  </property>
 <property name="jmeter.loggerpanel.display">
@@ -194,6 +194,17 @@ Defaults to: <code>true</code>
 <property name="jmeter.gui.refresh_period">
     Interval period in <code>ms</code> to process the events of the listeners.<br/>
     Defaults to: <code>500</code></property>
+</properties>
+</section>
+<section name="&sect-num;.4.1 Darklaf configuration" anchor="darklaf_config">
+<properties>
+    <property name="darklaf.decorations">
+        Enables custom window chrome when using a Darklaf Look And Feel.
+        Defaults to: <code>false</code></property>
+    <property name="darklaf.unifiedMenuBar">
+        Enables the unified menubar on Windows when using a Darklaf Look and Feel.<br/>
+        This property only has an effect if <code>darklaf.native</code> is <code>true</code>.
+        Defaults to: <code>true</code></property>
 </properties>
 </section>
 <section name="&sect-num;.5 Toolbar display" anchor="toolbar_display">
@@ -213,7 +224,7 @@ Defaults to: <code>true</code>
     Defaults to: <code>22x22</code>
 </property>
 <property name="jmeter.icons">
-    Icon definitions. Alternate set: 
+    Icon definitions. Alternate set:
     <source>jmeter.icons=org/apache/jmeter/images/icon_1.properties</source>
     Historical icon set (deprecated):
     <source>jmeter.icons=org/apache/jmeter/images/icon_old.properties</source>
@@ -279,7 +290,7 @@ gui.quick_9=ViewResultsFullVisualizer
     Backup file names are built after the jmx file being saved. For example,
     saving <code>test-plan.jmx</code> will create a <code>test-plan-000012.jmx</code> in the backup
     directory provided that the last created backup file is <code>test-plan-000011.jmx</code>.<br/>
-    Default value is <code>true</code> indicating that auto backups are enabled.<br/> 
+    Default value is <code>true</code> indicating that auto backups are enabled.<br/>
     Defaults to: <code>true</code>
 </property>
 <property name="jmeter.gui.action.save.backup_directory">
@@ -332,9 +343,11 @@ JMETER-SERVER</source>
     Defaults to: <code>1099</code>
 </property>
 <property name="client.rmi.localport">
-    Parameter that controls the RMI port used by the <code>RemoteSampleListenerImpl</code> (The Controller)<br/>
-    Default value is <code>0</code>, which means port is randomly assigned.
-    <note>You may need to open a port in the firewall on the Controller machine.</note>
+    Parameter that controls the RMI ports used by <code>RemoteSampleListenerImpl</code> and <code>RemoteThreadsListenerImpl</code> (The Controller)<br/>
+    Default value is <code>0</code>, which means ports are randomly assigned.
+    If this is non-zero, it will be used as the base for local port numbers for the client engine.
+    At the moment JMeter will open up to three ports beginning with the port defined in this property.
+    <note>You may need to open corresponding ports in the firewall on the Controller machine.</note>
     Defaults to: <code>0</code>
 </property>
 <property name="client.tries">
@@ -452,6 +465,12 @@ JMETER-SERVER</source>
     Define the local host address to be used for multi-homed hosts,
     example <source>httpclient.localaddress=1.2.3.4</source>
 </property>
+<property name="http.proxyUser">
+    Set the user name to use with a proxy.
+</property>
+<property name="http.proxyPass">
+    Set the password to use with a proxy.
+</property>
 </properties>
 </section>
 <section name="&sect-num;.11 Kerberos properties" anchor="kerberos">
@@ -505,7 +524,7 @@ JMETER-SERVER</source>
 </property>
 <property name="httpclient4.retrycount">
     Number of retries to attempt.
-    Retry will be done on Idempotent Http Methods by default. 
+    Retry will be done on Idempotent Http Methods by default.
     If you want to retry for all methods, see property <code>httpclient4.request_sent_retry_enabled</code>
     <br/>
     Defaults to: <code>0</code>
@@ -523,17 +542,12 @@ JMETER-SERVER</source>
 <property name="httpclient4.validate_after_inactivity">
     Check connection if the elapsed time (in milliseconds) since the last use of the connection
     exceeds this value. Ensure this value is always lower by at least 150 ms than <code>httpclient4.time_to_live</code><br/>
-    Defaults to: <code>1700</code>
+    Defaults to: <code>4900</code>
 </property>
 <property name="httpclient4.time_to_live">
     <abbr title="time to live">TTL</abbr> (in milliseconds) represents an absolute value.
     No matter what, the connection will not be re-used beyond its TTL.<br/>
-    Defaults to: <code>2000</code>
-</property>
-<property name="httpclient4.max_body_retain_size">
-    Max size in bytes of <code>PUT</code> body to retain in result sampler.
-    Bigger results will be clipped.<br/>
-    Defaults to: <code>327678</code> (bytes)
+    Defaults to: <code>60000</code>
 </property>
 <property name="httpclient4.deflate_relax_mode">
     Ignore EOFException that some edgy application may emit to signal end of Deflated stream.<br/>
@@ -725,7 +739,7 @@ JMETER-SERVER</source>
 <property name="sampleresult.timestamp.start">
     Save the start time stamp instead of the end.<br/>
     This also affects the timestamp stored in result files.<br/>
-    Defaults to: <code>true</code>
+    Defaults to: <code>false</code>
 </property>
 <property name="sampleresult.useNanoTime">
     Whether to use <code>System.nanoTime()</code> - otherwise only use <code>System.currentTimeMillis()</code>.<br/>
@@ -763,6 +777,11 @@ JMETER-SERVER</source>
 <property name="proxy.number.requests">
     Add numeric suffix to Sampler names.<br/>
     defaults to: <code>true</code>
+</property>
+<property name="proxy.sampler_format">
+    Default format string for new samplers when <code>Use format string</code> is selected
+    as <code>naming scheme</code>.<br/>
+    Defaults to: <code>#{counter,number,000} - #{path} (#{name})</code>
 </property>
 <property name="proxy.excludes.suggested">
     List of URL patterns that will be added to URL Patterns to exclude.<br/>
@@ -964,7 +983,7 @@ JMETER-SERVER</source>
         and <code>sample_sender_strip_also_on_error</code></dd>
         <dt><code>StrippedDiskStore</code></dt>
         <dd>Same as <code>DiskStore</code> but strips response data from SampleResult</dd>
-        <dt>Class extending <a href="../api/org/apache/jmeter/samplers/AbstractSampleSender.html"><code>AbstractSampleSender</code></a> (<code>org.example.load.MySampleSender</code> for example)</dt>
+        <dt>Class extending <apilink href="org/apache/jmeter/samplers/AbstractSampleSender.html"><code>AbstractSampleSender</code></apilink> (<code>org.example.load.MySampleSender</code> for example)</dt>
         <dd>A custom implementation of your choice</dd>
     </dl>
 <properties>
@@ -1137,9 +1156,9 @@ JMETER-SERVER</source>
     Defaults to: <code>100</code>
 </property>
 <property name="backend_metrics_large_window">
-    Backend metrics sliding window size  for <code>Percentiles</code>, <code>Min</code> 
+    Backend metrics sliding window size  for <code>Percentiles</code>, <code>Min</code>
     and <code>Max</code>. when <code>backend_metrics_window_mode=timed</code><br/>
-    Setting this value too high can lead to OOM Backend metrics sliding window size 
+    Setting this value too high can lead to OOM Backend metrics sliding window size
     Defaults to: <code>5000</code>
 </property>
 
@@ -1766,7 +1785,7 @@ JMETER-SERVER</source>
 </property>
 <property name="generate_report_ui.generation_timeout">
     Timeout in milliseconds for Report generation when using Tools &gt; Generate HTML report.<br/>
-    Defaults to: 120000
+    Defaults to: 300000
 </property>
 </properties>
 </section>
@@ -1835,13 +1854,13 @@ JMETER-SERVER</source>
     Defaults to: <code>1.0f</code>
 </property>
 <property name="think_time_creator.impl">
-    Default implementation that create the Timer structure to add to Test Plan. 
-    Implementation of interface <a href="../api/org/apache/jmeter/gui/action/thinktime/ThinkTimeCreator.html"><code>org.apache.jmeter.gui.action.thinktime.ThinkTimeCreator</code></a>
-    Defaults to: <a href="../api/org/apache/jmeter/thinktime/DefaultThinkTimeCreator.html"><code>org.apache.jmeter.thinktime.DefaultThinkTimeCreator</code></a>
+    Default implementation that create the Timer structure to add to Test Plan.
+    Implementation of interface <apilink href="org/apache/jmeter/gui/action/thinktime/ThinkTimeCreator.html"><code>org.apache.jmeter.gui.action.thinktime.ThinkTimeCreator</code></apilink>
+    Defaults to: <apilink href="org/apache/jmeter/thinktime/DefaultThinkTimeCreator.html"><code>org.apache.jmeter.thinktime.DefaultThinkTimeCreator</code></apilink>
 </property>
 <property name="think_time_creator.default_timer_implementation">
     Default Timer GUI class added to Test Plan by DefaultThinkTimeCreator
-    Defaults to: <a href="../api/org/apache/jmeter/timers/gui/UniformRandomTimerGui.html"><code>org.apache.jmeter.timers.gui.UniformRandomTimerGui</code></a>
+    Defaults to: <apilink href="org/apache/jmeter/timers/gui/UniformRandomTimerGui.html"><code>org.apache.jmeter.timers.gui.UniformRandomTimerGui</code></apilink>
 </property>
 <property name="think_time_creator.default_constant_pause">
     Default constant pause of Timer
@@ -1867,10 +1886,10 @@ JMETER-SERVER</source>
     Defaults to empty suffix
 </property>
 <property name="naming_policy.impl">
-    Implementation of interface <a href="../api/org/apache/jmeter/gui/action/TreeNodeNamingPolicy.html"><code>org.apache.jmeter.gui.action.TreeNodeNamingPolicy</code></a>
-    Default implementation that create the Timer structure to add to Test Plan. 
+    Implementation of interface <apilink href="org/apache/jmeter/gui/action/TreeNodeNamingPolicy.html"><code>org.apache.jmeter.gui.action.TreeNodeNamingPolicy</code></apilink>
+    Default implementation that create the Timer structure to add to Test Plan.
     Implementation of interface org.apache.jmeter.gui.action.thinktime.ThinkTimeCreator
-    Defaults to: <a href="../api/org/apache/jmeter/gui/action/impl/DefaultTreeNodeNamingPolicy.html"><code>org.apache.jmeter.gui.action.impl.DefaultTreeNodeNamingPolicy</code></a>
+    Defaults to: <apilink href="org/apache/jmeter/gui/action/impl/DefaultTreeNodeNamingPolicy.html"><code>org.apache.jmeter.gui.action.impl.DefaultTreeNodeNamingPolicy</code></apilink>
 </property>
 </properties>
 <a href="#">^</a>
@@ -1892,7 +1911,7 @@ JMETER-SERVER</source>
 <properties>
     <property name="groovy.utilities">
     Path to Groovy file containing utility functions to make available to <code><funclink name="__groovy"/></code> function.<br/>
-    Defaults to <code>bin/utility.groovy</code> 
+    Defaults to <code>bin/utility.groovy</code>
     </property>
 </properties>
 </section>
@@ -1929,7 +1948,29 @@ JMETER-SERVER</source>
     No default value</property>
 </properties>
 </section>
-<!-- 
+<section name="&sect-num;.46 Security Provider" anchor="securityprovider">
+<description>Advanced properties for documentation generation</description>
+<properties>
+    <property name="security.provider">
+        The value must be in this format: &lt;ClassName&gt;[:&lt;Postion&gt;[:&lt;ConfigString&gt;]]</property>.
+        Examples:<br/>
+        <dl>
+            <dt>org.bouncycastle.jce.provider.BouncyCastleProvider</dt>
+            <dd>Adds the <code>BouncyCastleProvider</code> to the next position available.</dd>
+            <dt>org.bouncycastle.jce.provider.BouncyCastleProvider:1</dt>
+            <dd>Adds the <code>BouncyCastleProvider</code>, at the first position.</dd>
+            <dt>org.bouncycastle.jsse.provider.BouncyCastleJsseProvider:2:BC</dt>
+            <dd>Adds the <code>BouncyCastleJsseProvider</code>, at the second position. And configure it to use the
+                BC provider.</dd>
+        </dl>
+    <property name="security.provider.&lt;n&gt;">
+        Replace the <code>&lt;n&gt;</code> with any number. The SecurityProviders will be added in the alphabetical
+        order of the property names. (First: <code>security.provider</code> and then <code>security.provider.2</code>, <code>security.provider.3</code>,...)
+        See property <code>security.provider</code>
+        </property>
+</properties>
+</section>
+<!--
 <section name="&sect-num;.10 Reports" anchor="Reports">
 <description>
         <br></br>
@@ -1965,4 +2006,3 @@ JMETER-SERVER</source>
  -->
 </body>
 </document>
-

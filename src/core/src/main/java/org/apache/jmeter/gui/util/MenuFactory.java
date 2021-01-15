@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.gui.util;
@@ -21,12 +20,12 @@ package org.apache.jmeter.gui.util;
 import java.awt.Component;
 import java.awt.HeadlessException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -44,10 +43,12 @@ import org.apache.jmeter.control.Controller;
 import org.apache.jmeter.control.TestFragmentController;
 import org.apache.jmeter.gui.GuiPackage;
 import org.apache.jmeter.gui.JMeterGUIComponent;
+import org.apache.jmeter.gui.TestElementMetadata;
 import org.apache.jmeter.gui.UndoHistory;
 import org.apache.jmeter.gui.action.ActionNames;
 import org.apache.jmeter.gui.action.ActionRouter;
 import org.apache.jmeter.gui.action.KeyStrokes;
+import org.apache.jmeter.gui.menu.StaticJMeterGUIComponent;
 import org.apache.jmeter.gui.tree.JMeterTreeNode;
 import org.apache.jmeter.samplers.Sampler;
 import org.apache.jmeter.testbeans.TestBean;
@@ -89,17 +90,17 @@ public final class MenuFactory {
 
     static {
         menuMap = new HashMap<>();
-        menuMap.put(THREADS, new LinkedList<>());
-        menuMap.put(TIMERS, new LinkedList<>());
-        menuMap.put(ASSERTIONS, new LinkedList<>());
-        menuMap.put(CONFIG_ELEMENTS, new LinkedList<>());
-        menuMap.put(CONTROLLERS, new LinkedList<>());
-        menuMap.put(LISTENERS, new LinkedList<>());
-        menuMap.put(NON_TEST_ELEMENTS, new LinkedList<>());
-        menuMap.put(SAMPLERS, new LinkedList<>());
-        menuMap.put(POST_PROCESSORS, new LinkedList<>());
-        menuMap.put(PRE_PROCESSORS, new LinkedList<>());
-        menuMap.put(FRAGMENTS, new LinkedList<>());
+        menuMap.put(THREADS, new ArrayList<>());
+        menuMap.put(TIMERS, new ArrayList<>());
+        menuMap.put(ASSERTIONS, new ArrayList<>());
+        menuMap.put(CONFIG_ELEMENTS, new ArrayList<>());
+        menuMap.put(CONTROLLERS, new ArrayList<>());
+        menuMap.put(LISTENERS, new ArrayList<>());
+        menuMap.put(NON_TEST_ELEMENTS, new ArrayList<>());
+        menuMap.put(SAMPLERS, new ArrayList<>());
+        menuMap.put(POST_PROCESSORS, new ArrayList<>());
+        menuMap.put(PRE_PROCESSORS, new ArrayList<>());
+        menuMap.put(FRAGMENTS, new ArrayList<>());
         menuMap.put(SEPARATOR, Collections.singletonList(new MenuSeparatorInfo()));
 
         try {
@@ -132,13 +133,27 @@ public final class MenuFactory {
                     // and aren't intended to be added to menus
                     .filter(name -> !name.endsWith("JMeterTreeNode"))
                     .filter(name -> !name.endsWith("TestBeanGUI"))
+                    .filter(name -> !name.equals("org.apache.jmeter.gui.menu.StaticJMeterGUIComponent"))
                     .filter(name -> !elementsToSkip.contains(name))
                     .distinct()
                     .map(String::trim)
                     .collect(Collectors.toList());
 
+            boolean debugTimings = log.isDebugEnabled();
+            Map<String, Long> times = debugTimings ? new HashMap<>() : null;
+            Map<String, JMeterGUIComponent> comps = debugTimings ? new HashMap<>() : null;
+            long a0 = System.currentTimeMillis();
             for (String className : guiClasses) {
+                long t0 = 0;
+                if (debugTimings) {
+                    t0 = System.currentTimeMillis();
+                }
                 JMeterGUIComponent item = getGUIComponent(className, elementsToSkip);
+                if (debugTimings) {
+                    long t1 = System.currentTimeMillis();
+                    times.put(className, t1 - t0);
+                    comps.put(className, item);
+                }
                 if (item == null) {
                     continue;
                 }
@@ -154,6 +169,21 @@ public final class MenuFactory {
                     }
                 }
             }
+            if (debugTimings) {
+                long a1 = System.currentTimeMillis();
+                times.entrySet().stream()
+                        .sorted(Comparator.comparingLong(Map.Entry::getValue))
+                        .forEachOrdered(e -> {
+                            String res = "";
+                            JMeterGUIComponent comp = comps.get(e.getKey());
+                            if (comp != null && comp.getLabelResource() != null) {
+                                res = " @TestElementMetadata(labelResource = \""
+                                        + comp.getLabelResource() + "\")";
+                            }
+                            log.debug("{}ms {} {}", e.getValue(), e.getKey(), res);
+                        });
+                log.debug("{}ms total menu initialization time", a1 - a0);
+            }
         } catch (IOException e) {
             log.error("IO Exception while initializing menus.", e);
         }
@@ -164,8 +194,11 @@ public final class MenuFactory {
         JMeterGUIComponent item = null;
         boolean hideBean = false; // Should the TestBean be hidden?
         try {
-            Class<?> c = Class.forName(name);
-            if (TestBean.class.isAssignableFrom(c)) {
+            Class<?> c = Class.forName(name, false, MenuFactory.class.getClassLoader());
+            TestElementMetadata metadata = c.getAnnotation(TestElementMetadata.class);
+            if (metadata != null) {
+                item = new StaticJMeterGUIComponent(c, metadata);
+            } else if (TestBean.class.isAssignableFrom(c)) {
                 TestBeanGUI testBeanGUI = new TestBeanGUI(c);
                 hideBean = testBeanGUI.isHidden()
                         || (testBeanGUI.isExpert() && !JMeterUtils.isExpertMode());

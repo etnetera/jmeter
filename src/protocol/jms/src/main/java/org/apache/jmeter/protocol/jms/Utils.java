@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.jms;
@@ -100,6 +99,7 @@ public final class Utils {
         return messageProperties(new StringBuilder(), msg).toString();
     }
 
+    @SuppressWarnings("JdkObsolete")
     public static StringBuilder messageProperties(StringBuilder sb, Message msg){
         requestHeaders(sb, msg);
         sb.append("Properties:\n");
@@ -164,6 +164,7 @@ public final class Utils {
      * @throws NamingException
      *             if a naming problem occurs while getting the environment
      */
+    @SuppressWarnings("JdkObsolete")
     public static String getFromEnvironment(Context context, String key) throws NamingException {
         try {
             Hashtable<?,?> env = context.getEnvironment();
@@ -227,12 +228,15 @@ public final class Utils {
             String name = me.getKey();
             Object value = me.getValue();
             if (log.isDebugEnabled()) {
-                log.debug("Adding property [" + name + "=" + value + "]");
+                log.debug("Adding property [{}={}]", name, value);
             }
 
-            // WebsphereMQ does not allow corr. id. to be set using setStringProperty()
+            // Some JMS implemenations do not allow certain header fields to be set using properties
+            // e.g.: WebsphereMQ does not allow corr. id. to be set using setStringProperty()
             if ("JMSCorrelationID".equalsIgnoreCase(name)) { // $NON-NLS-1$
                 msg.setJMSCorrelationID((String)value);
+            } else if ("JMSType".equalsIgnoreCase(name)) { // $NON-NLS-1$
+                msg.setJMSType((String)value);
             } else {
                 msg.setObjectProperty(name, value);
             }

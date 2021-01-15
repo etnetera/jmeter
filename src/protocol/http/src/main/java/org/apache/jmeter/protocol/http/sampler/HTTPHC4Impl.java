@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.http.sampler;
@@ -25,11 +24,13 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
@@ -63,6 +64,7 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.AuthState;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.NTCredentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
 import org.apache.http.client.AuthenticationStrategy;
 import org.apache.http.client.CredentialsProvider;
@@ -206,6 +208,80 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
 
     private static final InputStreamFactory BROTLI = BrotliInputStream::new;
 
+    private static final class ManagedCredentialsProvider implements CredentialsProvider {
+        private AuthManager authManager;
+        private Credentials proxyCredentials;
+        private AuthScope proxyAuthScope;
+
+        public ManagedCredentialsProvider(AuthManager authManager, AuthScope proxyAuthScope, Credentials proxyCredentials) {
+            this.authManager = authManager;
+            this.proxyAuthScope = proxyAuthScope;
+            this.proxyCredentials = proxyCredentials;
+        }
+
+        @Override
+        public void setCredentials(AuthScope authscope, Credentials credentials) {
+            log.debug("Store creds {} for {}", credentials, authscope);
+        }
+
+        @Override
+        public Credentials getCredentials(AuthScope authScope) {
+            log.info("Get creds for {}", authScope);
+            if (this.proxyAuthScope != null && authScope.equals(proxyAuthScope)) {
+                return proxyCredentials;
+            }
+            final Authorization authorization = getAuthorizationForAuthScope(authScope);
+            if (authorization == null) {
+                return null;
+            }
+            return new UsernamePasswordCredentials(authorization.getUser(), authorization.getPass());
+        }
+
+        /**
+         * Find the Authorization for the given AuthScope. We can't ask the AuthManager
+         * by the URL, as we didn't get the scheme or path of the URL. Therefore we do a
+         * best guess on the information we have
+         *
+         * @param authScope information which destination we want to get credentials for
+         * @return matching authorization information entry from the AuthManager
+         */
+        private Authorization getAuthorizationForAuthScope(AuthScope authScope) {
+            if (authScope == null) {
+                return null;
+            }
+            for (JMeterProperty authProp : authManager.getAuthObjects()) {
+                Object authObject = authProp.getObjectValue();
+                if (authObject instanceof Authorization) {
+                    Authorization auth = (Authorization) authObject;
+                    if (!authScope.getRealm().equals(auth.getRealm())) {
+                        continue;
+                    }
+                    try {
+                        URL authUrl = new URL(auth.getURL());
+                        if (authUrl.getHost().equals(authScope.getHost()) && getPort(authUrl) == authScope.getPort()) {
+                            return auth;
+                        }
+                    } catch (MalformedURLException e) {
+                        log.debug("Invalid URL {} in authManager", auth.getURL());
+                    }
+                }
+            }
+            return null;
+        }
+
+        private int getPort(URL url) {
+            if (url.getPort() == -1) {
+                return url.getProtocol().equals("https") ? 443 : 80;
+            }
+            return url.getPort();
+        }
+
+        @Override
+        public void clear() {
+            log.debug("clear creds");
+        }
+    }
+
     private static final class PreemptiveAuthRequestInterceptor implements HttpRequestInterceptor {
         @Override
         public void process(HttpRequest request, HttpContext context) throws HttpException, IOException {
@@ -278,7 +354,9 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
          */
         private void fillAuthCache(HttpHost targetHost, Authorization authorization, AuthCache authCache,
                 AuthScope authScope) {
-            if(authorization.getMechanism() == Mechanism.BASIC_DIGEST || // NOSONAR
+            @SuppressWarnings("deprecation")
+            Mechanism basicDigest = Mechanism.BASIC_DIGEST;
+            if(authorization.getMechanism() == basicDigest ||
                     authorization.getMechanism() == Mechanism.BASIC) {
                 BasicScheme basicAuth = new BasicScheme();
                 authCache.put(targetHost, basicAuth);
@@ -344,21 +422,22 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
     /** Idle timeout to be applied to connections if no Keep-Alive header is sent by the server (default 0 = disable) */
     private static final int IDLE_TIMEOUT = JMeterUtils.getPropDefault("httpclient4.idletimeout", 0);
 
-    private static final int VALIDITY_AFTER_INACTIVITY_TIMEOUT = JMeterUtils.getPropDefault("httpclient4.validate_after_inactivity", 1700);
+    private static final int VALIDITY_AFTER_INACTIVITY_TIMEOUT = JMeterUtils.getPropDefault("httpclient4.validate_after_inactivity", 4900);
 
-    private static final int TIME_TO_LIVE = JMeterUtils.getPropDefault("httpclient4.time_to_live", 2000);
+    private static final int TIME_TO_LIVE = JMeterUtils.getPropDefault("httpclient4.time_to_live", 60000);
 
     /** Preemptive Basic Auth */
     private static final boolean BASIC_AUTH_PREEMPTIVE = JMeterUtils.getPropDefault("httpclient4.auth.preemptive", true);
 
     private static final Pattern PORT_PATTERN = Pattern.compile("\\d+"); // only used in .matches(), no need for anchors
 
+    @SuppressWarnings("UnnecessaryAnonymousClass")
     private static final ConnectionKeepAliveStrategy IDLE_STRATEGY = new DefaultConnectionKeepAliveStrategy(){
         @Override
         public long getKeepAliveDuration(HttpResponse response, HttpContext context) {
             long duration = super.getKeepAliveDuration(response, context);
             if (duration <= 0 && IDLE_TIMEOUT > 0) {// none found by the superclass
-                log.debug("Setting keepalive to {}", Integer.valueOf(IDLE_TIMEOUT));
+                log.debug("Setting keepalive to {}", IDLE_TIMEOUT);
                 return IDLE_TIMEOUT;
             }
             return duration; // return the super-class value
@@ -380,9 +459,9 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
             HttpConnectionMetrics metrics = conn.getMetrics();
             long sentBytesCount = metrics.getSentBytesCount();
             // We save to store sent bytes as we need to reset metrics for received bytes
-            context.setAttribute(CONTEXT_ATTRIBUTE_SENT_BYTES, Long.valueOf(metrics.getSentBytesCount()));
+            context.setAttribute(CONTEXT_ATTRIBUTE_SENT_BYTES, metrics.getSentBytesCount());
             context.setAttribute(CONTEXT_ATTRIBUTE_METRICS, metrics);
-            log.debug("Sent {} bytes", Long.valueOf(sentBytesCount));
+            log.debug("Sent {} bytes", sentBytesCount);
             metrics.reset();
             return response;
         }
@@ -399,6 +478,7 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
      * that HC core {@link ResponseContentEncoding} removes after uncompressing
      * See Bug 59401
      */
+    @SuppressWarnings("UnnecessaryAnonymousClass")
     private static final HttpResponseInterceptor RESPONSE_CONTENT_ENCODING = new ResponseContentEncoding(createLookupRegistry()) {
         @Override
         public void process(HttpResponse response, HttpContext context)
@@ -440,8 +520,13 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
      * 1 HttpClient instance per combination of (HttpClient,HttpClientKey)
      */
     private static final ThreadLocal<Map<HttpClientKey, MutableTriple<CloseableHttpClient, AuthState, PoolingHttpClientConnectionManager>>>
-        HTTPCLIENTS_CACHE_PER_THREAD_AND_HTTPCLIENTKEY =
-            InheritableThreadLocal.withInitial(() -> new HashMap<>(5));
+            HTTPCLIENTS_CACHE_PER_THREAD_AND_HTTPCLIENTKEY = new InheritableThreadLocal<Map<HttpClientKey,
+                    MutableTriple<CloseableHttpClient, AuthState, PoolingHttpClientConnectionManager>>>() {
+        @Override
+        protected Map<HttpClientKey, MutableTriple<CloseableHttpClient, AuthState, PoolingHttpClientConnectionManager>> initialValue() {
+            return new HashMap<>(5);
+        }
+    };
 
     /**
      * CONNECTION_SOCKET_FACTORY changes if we want to simulate Slow connection
@@ -451,11 +536,11 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
     private static final ViewableFileBody[] EMPTY_FILE_BODIES = new ViewableFileBody[0];
 
     static {
-        log.info("HTTP request retry count = {}", Integer.valueOf(RETRY_COUNT));
+        log.info("HTTP request retry count = {}", RETRY_COUNT);
 
         // Set up HTTP scheme override if necessary
         if (CPS_HTTP > 0) {
-            log.info("Setting up HTTP SlowProtocol, cps={}", Integer.valueOf(CPS_HTTP));
+            log.info("Setting up HTTP SlowProtocol, cps={}", CPS_HTTP);
             CONNECTION_SOCKET_FACTORY = new SlowHCPlainConnectionSocketFactory(CPS_HTTP);
         } else {
             CONNECTION_SOCKET_FACTORY = PlainConnectionSocketFactory.getSocketFactory();
@@ -516,7 +601,7 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
 
         if (log.isDebugEnabled()) {
             log.debug("Start : sample {} method {} followingRedirect {} depth {}",
-                    url, method, Boolean.valueOf(areFollowingRedirect), Integer.valueOf(frameDepth));
+                    url, method, areFollowingRedirect, frameDepth);
         }
         JMeterVariables jMeterVariables = JMeterContextService.getContext().getVariables();
 
@@ -621,7 +706,7 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
             if (log.isDebugEnabled()) {
                 long total = res.getHeadersSize() + res.getBodySizeAsLong();
                 log.debug("ResponseHeadersSize={} Content-Length={} Total={}",
-                        Integer.valueOf(res.getHeadersSize()), Long.valueOf(res.getBodySizeAsLong()), Long.valueOf(total));
+                        res.getHeadersSize(), res.getBodySizeAsLong(), total);
             }
 
             // If we redirected automatically, the URL may have changed
@@ -1051,31 +1136,37 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
             }
 
             // Set up proxy details
+            AuthScope proxyAuthScope = null;
+            NTCredentials proxyCredentials = null;
             if (key.hasProxy) {
                 HttpHost proxy = new HttpHost(key.proxyHost, key.proxyPort, key.proxyScheme);
                 builder.setProxy(proxy);
 
                 CredentialsProvider credsProvider = new BasicCredentialsProvider();
                 if (!key.proxyUser.isEmpty()) {
+                    proxyAuthScope = new AuthScope(key.proxyHost, key.proxyPort);
+                    proxyCredentials = new NTCredentials(key.proxyUser, key.proxyPass, LOCALHOST, PROXY_DOMAIN);
                     credsProvider.setCredentials(
-                            new AuthScope(key.proxyHost, key.proxyPort),
-                            new NTCredentials(key.proxyUser, key.proxyPass, LOCALHOST, PROXY_DOMAIN));
+                            proxyAuthScope,
+                            proxyCredentials);
                 }
                 builder.setDefaultCredentialsProvider(credsProvider);
             }
             builder.disableContentCompression().addInterceptorLast(RESPONSE_CONTENT_ENCODING);
             if(BASIC_AUTH_PREEMPTIVE) {
                 builder.addInterceptorFirst(PREEMPTIVE_AUTH_INTERCEPTOR);
+            } else {
+                builder.setDefaultCredentialsProvider(new ManagedCredentialsProvider(getAuthManager(), proxyAuthScope, proxyCredentials));
             }
             httpClient = builder.build();
             if (log.isDebugEnabled()) {
-                log.debug("Created new HttpClient: @{} {}", Integer.valueOf(System.identityHashCode(httpClient)), key);
+                log.debug("Created new HttpClient: @{} {}", System.identityHashCode(httpClient), key);
             }
             triple = MutableTriple.of(httpClient, null, pHCCM);
             mapHttpClientPerHttpClientKey.put(key, triple); // save the agent for next time round
         } else {
             if (log.isDebugEnabled()) {
-                log.debug("Reusing the HttpClient: @{} {}", Integer.valueOf(System.identityHashCode(httpClient)),key);
+                log.debug("Reusing the HttpClient: @{} {}", System.identityHashCode(httpClient),key);
             }
         }
 
@@ -1133,7 +1224,7 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
             JMeterVariables jMeterVariables,
             HttpClientContext clientContext,
             Map<HttpClientKey, MutableTriple<CloseableHttpClient, AuthState, PoolingHttpClientConnectionManager>> mapHttpClientPerHttpClientKey) {
-        if (resetStateOnThreadGroupIteration.get().booleanValue()) {
+        if (resetStateOnThreadGroupIteration.get()) {
             closeCurrentConnections(mapHttpClientPerHttpClientKey);
             clientContext.removeAttribute(HttpClientContext.USER_TOKEN);
             clientContext.removeAttribute(HttpClientContext.PROXY_AUTH_STATE);
@@ -1376,7 +1467,7 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
     private String getOnlyCookieFromHeaders(HttpRequest method) {
         String cookieHeader= getFromHeadersMatchingPredicate(method, ONLY_COOKIE).trim();
         if(!cookieHeader.isEmpty()) {
-            return cookieHeader.substring((HTTPConstants.HEADER_COOKIE_IN_REQUEST).length(), cookieHeader.length()).trim();
+            return cookieHeader.substring(HTTPConstants.HEADER_COOKIE_IN_REQUEST.length()).trim();
         }
         return "";
     }
@@ -1417,7 +1508,7 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
         @Override
         public void writeTo(final OutputStream out) throws IOException {
             if (hideFileData) {
-                out.write("<actual file content, not shown here>".getBytes());// encoding does not really matter here
+                out.write("<actual file content, not shown here>".getBytes(StandardCharsets.UTF_8));
             } else {
                 super.writeTo(out);
             }
@@ -1451,7 +1542,7 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
 
             if(log.isDebugEnabled()) {
                 log.debug("Building multipart with:getDoBrowserCompatibleMultipart(): {}, with charset:{}, haveContentEncoding:{}",
-                        Boolean.valueOf(getDoBrowserCompatibleMultipart()), charset, Boolean.valueOf(haveContentEncoding));
+                        getDoBrowserCompatibleMultipart(), charset, haveContentEncoding);
             }
             // Write the request to our own stream
             MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create();
@@ -1468,7 +1559,15 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
                 if (arg.isSkippable(parameterName)) {
                     continue;
                 }
-                StringBody stringBody = new StringBody(arg.getValue(), ContentType.create(arg.getContentType(), charset));
+                ContentType contentType;
+                if (arg.getContentType().indexOf(';') >= 0) {
+                    // assume, that the content type contains charset info
+                    // don't add another charset and use parse to cope with the semicolon
+                    contentType = ContentType.parse(arg.getContentType());
+                } else {
+                    contentType = ContentType.create(arg.getContentType(), charset);
+                }
+                StringBody stringBody = new StringBody(arg.getValue(), contentType);
                 FormBodyPart formPart = FormBodyPartBuilder.create(
                         parameterName, stringBody).build();
                 multipartEntityBuilder.addPart(formPart);
@@ -1481,7 +1580,7 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
                 HTTPFileArg file = files[i];
 
                 File reservedFile = FileServer.getFileServer().getResolvedFile(file.getPath());
-                fileBodies[i] = new ViewableFileBody(reservedFile, ContentType.create(file.getMimeType()));
+                fileBodies[i] = new ViewableFileBody(reservedFile, ContentType.parse(file.getMimeType()));
                 multipartEntityBuilder.addPart(file.getParamName(), fileBodies[i] );
             }
 
@@ -1749,7 +1848,7 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
     protected void notifyFirstSampleAfterLoopRestart() {
         log.debug("notifyFirstSampleAfterLoopRestart called "
                 + "with config(httpclient.reset_state_on_thread_group_iteration={})",
-                Boolean.valueOf(RESET_STATE_ON_THREAD_GROUP_ITERATION));
+                RESET_STATE_ON_THREAD_GROUP_ITERATION);
         JMeterVariables jMeterVariables = JMeterContextService.getContext().getVariables();
         if (jMeterVariables.isSameUserOnNextIteration()) {
             log.debug("Thread Group is configured to simulate a returning visitor on each iteration, ignoring property value {}",
@@ -1758,7 +1857,7 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
         } else {
             log.debug("Thread Group is configured to simulate a new visitor on each iteration, using property value {}",
                     RESET_STATE_ON_THREAD_GROUP_ITERATION);
-            resetStateOnThreadGroupIteration.set(Boolean.valueOf(RESET_STATE_ON_THREAD_GROUP_ITERATION));
+            resetStateOnThreadGroupIteration.set(RESET_STATE_ON_THREAD_GROUP_ITERATION);
         }
         log.debug("Thread state will be reset ?: {}", RESET_STATE_ON_THREAD_GROUP_ITERATION);
     }

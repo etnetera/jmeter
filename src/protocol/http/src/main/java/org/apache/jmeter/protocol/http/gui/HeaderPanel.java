@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.http.gui;
@@ -38,6 +37,7 @@ import javax.swing.table.AbstractTableModel;
 
 import org.apache.jmeter.config.gui.AbstractConfigGui;
 import org.apache.jmeter.gui.GUIMenuSortOrder;
+import org.apache.jmeter.gui.TestElementMetadata;
 import org.apache.jmeter.gui.util.FileDialoger;
 import org.apache.jmeter.gui.util.HeaderAsPropertyRenderer;
 import org.apache.jmeter.protocol.http.control.Header;
@@ -53,6 +53,7 @@ import org.slf4j.LoggerFactory;
  * parameters for this service.
  */
 @GUIMenuSortOrder(2)
+@TestElementMetadata(labelResource = "header_manager_title")
 public class HeaderPanel extends AbstractConfigGui implements ActionListener {
 
     private static final Logger log = LoggerFactory.getLogger(HeaderPanel.class);
@@ -275,7 +276,7 @@ public class HeaderPanel extends AbstractConfigGui implements ActionListener {
         headerTable.setPreferredScrollableViewportSize(new Dimension(100, 70));
 
         JPanel panel = new JPanel(new BorderLayout(0, 5));
-        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+        panel.setBorder(BorderFactory.createTitledBorder(
                 JMeterUtils.getResString("headers_stored"))); // $NON-NLS-1$
         panel.add(GuiUtils.emptyBorder(new JScrollPane(headerTable)), BorderLayout.CENTER);
         panel.add(createButtonPanel(), BorderLayout.SOUTH);

@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.visualizers;
@@ -27,6 +26,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -49,6 +50,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTree;
 import javax.swing.Timer;
+import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
@@ -59,19 +61,19 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
-import org.apache.commons.collections.Buffer;
-import org.apache.commons.collections.EnumerationUtils;
-import org.apache.commons.collections.buffer.CircularFifoBuffer;
-import org.apache.commons.collections.buffer.UnboundedFifoBuffer;
+import org.apache.commons.collections4.EnumerationUtils;
+import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.JMeter;
 import org.apache.jmeter.assertions.AssertionResult;
 import org.apache.jmeter.gui.GUIMenuSortOrder;
+import org.apache.jmeter.gui.TestElementMetadata;
 import org.apache.jmeter.gui.util.VerticalPanel;
 import org.apache.jmeter.samplers.Clearable;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.visualizers.gui.AbstractVisualizer;
+import org.apache.jorphan.gui.JMeterUIDefaults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,10 +81,11 @@ import org.slf4j.LoggerFactory;
  * Base for ViewResults
  */
 @GUIMenuSortOrder(1)
+@TestElementMetadata(labelResource = "view_results_tree_title")
 public class ViewResultsFullVisualizer extends AbstractVisualizer
 implements ActionListener, TreeSelectionListener, Clearable, ItemListener {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private static final Logger log = LoggerFactory.getLogger(ViewResultsFullVisualizer.class);
 
@@ -126,7 +129,7 @@ implements ActionListener, TreeSelectionListener, Clearable, ItemListener {
     private Object resultsObject = null;
     private TreeSelectionEvent lastSelectionEvent;
     private JCheckBox autoScrollCB;
-    private Buffer buffer;
+    private final Queue<SampleResult> buffer;
     private boolean dataChanged;
 
     /**
@@ -136,16 +139,15 @@ implements ActionListener, TreeSelectionListener, Clearable, ItemListener {
         super();
         final int maxResults = JMeterUtils.getPropDefault("view.results.tree.max_results", 500);
         if (maxResults > 0) {
-            buffer = new CircularFifoBuffer(maxResults);
+            buffer = new CircularFifoQueue<>(maxResults);
         } else {
-            buffer = new UnboundedFifoBuffer();
+            buffer = new ArrayDeque<>();
         }
         init();
         new Timer(REFRESH_PERIOD, e -> updateGui()).start();
     }
 
     /** {@inheritDoc} */
-    @SuppressWarnings("unchecked")
     @Override
     public void add(final SampleResult sample) {
         synchronized (buffer) {
@@ -171,8 +173,8 @@ implements ActionListener, TreeSelectionListener, Clearable, ItemListener {
             oldExpandedElements = extractExpandedObjects(expandedElements);
             oldSelectedElement = getSelectedObject();
             root.removeAllChildren();
-            for (Object sampler: buffer) {
-                SampleResult res = (SampleResult) sampler;
+            for (SampleResult sampler: buffer) {
+                SampleResult res = sampler;
                 // Add sample
                 DefaultMutableTreeNode currNode = new SearchableTreeNode(res, treeModel);
                 treeModel.insertNodeInto(currNode, root, root.getChildCount());
@@ -252,7 +254,6 @@ implements ActionListener, TreeSelectionListener, Clearable, ItemListener {
 
     private Set<Object> extractExpandedObjects(final Enumeration<TreePath> expandedElements) {
         if (expandedElements != null) {
-            @SuppressWarnings("unchecked")
             final List<TreePath> list = EnumerationUtils.toList(expandedElements);
             log.debug("Expanded: {}", list);
             Set<Object> result = list.stream()
@@ -402,7 +403,7 @@ implements ActionListener, TreeSelectionListener, Clearable, ItemListener {
      * @return true if sampleResult is text or has empty content type
      */
     protected static boolean isTextDataType(SampleResult sampleResult) {
-        return (SampleResult.TEXT).equals(sampleResult.getDataType())
+        return SampleResult.TEXT.equals(sampleResult.getDataType())
                 || StringUtils.isEmpty(sampleResult.getDataType());
     }
 
@@ -450,15 +451,20 @@ implements ActionListener, TreeSelectionListener, Clearable, ItemListener {
         } catch (IOException e1) {
             // ignored
         }
-        String textRenderer = JMeterUtils.getResString("view_results_render_text"); // $NON-NLS-1$
-        Object textObject = null;
+        String defaultRenderer = expandToClassname(".RenderAsText"); // $NON-NLS-1$
+        if (VIEWERS_ORDER.length() > 0) {
+            defaultRenderer = expandToClassname(VIEWERS_ORDER.split(",", 2)[0]);
+        }
+        Object defaultObject = null;
         Map<String, ResultRenderer> map = new HashMap<>(classesToAdd.size());
         for (String clazz : classesToAdd) {
             try {
                 // Instantiate render classes
-                final ResultRenderer renderer = (ResultRenderer) Class.forName(clazz).getDeclaredConstructor().newInstance();
-                if (textRenderer.equals(renderer.toString())){
-                    textObject=renderer;
+                final ResultRenderer renderer = Class.forName(clazz)
+                        .asSubclass(ResultRenderer.class)
+                        .getDeclaredConstructor().newInstance();
+                if (defaultRenderer.equals(clazz)) {
+                    defaultObject=renderer;
                 }
                 renderer.setBackgroundColor(getBackground());
                 map.put(renderer.getClass().getName(), renderer);
@@ -474,9 +480,7 @@ implements ActionListener, TreeSelectionListener, Clearable, ItemListener {
         }
         if (VIEWERS_ORDER.length() > 0) {
             Arrays.stream(VIEWERS_ORDER.split(","))
-                    .map(key -> key.startsWith(".")
-                            ? "org.apache.jmeter.visualizers" + key //$NON-NLS-1$
-                            : key)
+                    .map(this::expandToClassname)
                     .forEach(key -> {
                         ResultRenderer renderer = map.remove(key);
                         if (renderer != null) {
@@ -491,8 +495,15 @@ implements ActionListener, TreeSelectionListener, Clearable, ItemListener {
         }
         // Add remaining (plugins or missed in property)
         map.values().forEach(renderer -> selectRenderPanel.addItem(renderer));
-        nodesModel.setSelectedItem(textObject); // preset to "Text" option
+        nodesModel.setSelectedItem(defaultObject); // preset to "Text" option or the first option from the view.results.tree.renderers_order property
         return selectRenderPanel;
+    }
+
+    private String expandToClassname(String name) {
+        if (name.startsWith(".")) {
+            return "org.apache.jmeter.visualizers" + name; // $NON-NLS-1$
+        }
+        return name;
     }
 
     /** {@inheritDoc} */
@@ -507,12 +518,14 @@ implements ActionListener, TreeSelectionListener, Clearable, ItemListener {
                 if (rightSide != null) {
                     // to restore last selected tab (better user-friendly)
                     selectedTab = rightSide.getSelectedIndex();
-                    // Remove old right side
+                    // Remove old right side and keep the position of the divider
+                    int dividerLocation = mainSplit.getDividerLocation();
                     mainSplit.remove(rightSide);
 
-                    // create and add a new right side
+                    // create and add a new right side at the old position
                     rightSide = new JTabbedPane();
                     mainSplit.add(rightSide);
+                    mainSplit.setDividerLocation(dividerLocation);
                     resultsRender.setRightSide(rightSide);
                     resultsRender.setLastSelectedTab(selectedTab);
                     log.debug("selectedTab={}", selectedTab);
@@ -560,7 +573,7 @@ implements ActionListener, TreeSelectionListener, Clearable, ItemListener {
             boolean failure = true;
             Object userObject = ((DefaultMutableTreeNode) value).getUserObject();
             if (userObject instanceof SampleResult) {
-                failure = !(((SampleResult) userObject).isSuccessful());
+                failure = !((SampleResult) userObject).isSuccessful();
             } else if (userObject instanceof AssertionResult) {
                 AssertionResult assertion = (AssertionResult) userObject;
                 failure = assertion.isError() || assertion.isFailure();
@@ -568,7 +581,7 @@ implements ActionListener, TreeSelectionListener, Clearable, ItemListener {
 
             // Set the status for the node
             if (failure) {
-                this.setForeground(Color.red);
+                this.setForeground(UIManager.getColor(JMeterUIDefaults.LABEL_ERROR_FOREGROUND));
                 this.setIcon(imageFailure);
             } else {
                 this.setIcon(imageSuccess);

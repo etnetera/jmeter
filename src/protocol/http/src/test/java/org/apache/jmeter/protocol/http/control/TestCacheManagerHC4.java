@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.http.control;
@@ -63,10 +62,19 @@ public class TestCacheManagerHC4 extends TestCacheManagerBase {
         private List<org.apache.http.Header> headers;
 
         public HttpResponseStub() {
+            this(true);
+        }
+
+        public HttpResponseStub(boolean cachingHeaders) {
             this.headers = new ArrayList<>();
-            this.lastModifiedHeader = new BasicHeader(HTTPConstants.LAST_MODIFIED, currentTimeInGMT);
             this.dateHeader = new BasicHeader(HTTPConstants.DATE, currentTimeInGMT);
-            this.etagHeader = new BasicHeader(HTTPConstants.ETAG, EXPECTED_ETAG);
+            if (cachingHeaders) {
+                this.lastModifiedHeader = new BasicHeader(HTTPConstants.LAST_MODIFIED, currentTimeInGMT);
+                this.etagHeader = new BasicHeader(HTTPConstants.ETAG, EXPECTED_ETAG);
+            } else {
+                this.lastModifiedHeader = null;
+                this.etagHeader = null;
+            }
         }
 
         /* (non-Javadoc)
@@ -237,7 +245,16 @@ public class TestCacheManagerHC4 extends TestCacheManagerBase {
 
     @Override
     protected void cacheResult(HTTPSampleResult result) {
-        this.cacheManager.saveDetails(httpResponse, result);
+        cacheResult(result, true);
+    }
+
+    @Override
+    protected void cacheResult(HTTPSampleResult result, boolean hasCachingHeaders) {
+        if (hasCachingHeaders) {
+            this.cacheManager.saveDetails(httpResponse, result);
+        } else {
+            this.cacheManager.saveDetails(new HttpResponseStub(false), result);
+        }
     }
 
     @Override
@@ -259,6 +276,7 @@ public class TestCacheManagerHC4 extends TestCacheManagerBase {
     }
 
     @Test
+    @SuppressWarnings("deprecation")
     public void testBug61321() throws Exception {
         this.cacheManager.setUseExpires(false);
         this.cacheManager.testIterationStart(null);

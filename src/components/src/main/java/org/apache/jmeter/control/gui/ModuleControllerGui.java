@@ -2,27 +2,24 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.control.gui;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Collection;
@@ -50,6 +47,7 @@ import org.apache.jmeter.control.ModuleController;
 import org.apache.jmeter.control.TestFragmentController;
 import org.apache.jmeter.gui.GUIMenuSortOrder;
 import org.apache.jmeter.gui.GuiPackage;
+import org.apache.jmeter.gui.TestElementMetadata;
 import org.apache.jmeter.gui.tree.JMeterTreeNode;
 import org.apache.jmeter.gui.util.MenuFactory;
 import org.apache.jmeter.gui.util.MenuInfo;
@@ -57,6 +55,7 @@ import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.TestPlan;
 import org.apache.jmeter.threads.AbstractThreadGroup;
 import org.apache.jmeter.util.JMeterUtils;
+import org.apache.jorphan.gui.JFactory;
 import org.apache.jorphan.gui.layout.VerticalLayout;
 
 /**
@@ -71,6 +70,7 @@ import org.apache.jorphan.gui.layout.VerticalLayout;
  *
  */
 @GUIMenuSortOrder(MenuInfo.SORT_ORDER_DEFAULT+2)
+@TestElementMetadata(labelResource = "module_controller_title")
 public class ModuleControllerGui extends AbstractControllerGui implements ActionListener { // NOSONAR Ignore parent warning
     private static final long serialVersionUID = -4195441608252523573L;
 
@@ -166,9 +166,7 @@ public class ModuleControllerGui extends AbstractControllerGui implements Action
 
         ImageIcon image = JMeterUtils.getImage("warning.png");
         warningLabel = new JLabel("", image, SwingConstants.LEFT); // $NON-NLS-1$
-        warningLabel.setForeground(Color.RED);
-        Font font = warningLabel.getFont();
-        warningLabel.setFont(new Font(font.getFontName(), Font.BOLD, (int)(font.getSize()*1.1)));
+        JFactory.error(warningLabel);
         warningLabel.setVisible(false);
 
         init();

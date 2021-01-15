@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 plugins {
@@ -40,7 +39,13 @@ fun DependencyConstraintHandlerScope.runtimev(
 ) =
     "runtime"(notation + ":" + versionProp.v)
 
+javaPlatform {
+    allowDependencies()
+}
+
 dependencies {
+    api(platform("org.codehaus.groovy:groovy-bom:${"groovy".v}"))
+
     // Parenthesis are needed here: https://github.com/gradle/gradle/issues/9248
     (constraints) {
         // api means "the dependency is for both compilation and runtime"
@@ -49,7 +54,6 @@ dependencies {
         // dependency on it during compilation
         runtimev("org.apache.tika:tika-parsers", "tika")
         runtimev("org.ow2.asm:asm")
-        runtimev("com.github.bulenkov.darcula:darcula")
 
         // activemq-all should not be used as it provides secondary slf4j binding
         runtimev("org.apache.activemq:activemq-broker", "activemq")
@@ -64,8 +68,13 @@ dependencies {
         apiv("com.fasterxml.jackson.core:jackson-core", "jackson")
         apiv("com.fasterxml.jackson.core:jackson-databind", "jackson-databind")
         apiv("com.fifesoft:rsyntaxtextarea")
+        apiv("com.formdev:svgSalamander")
         apiv("com.github.ben-manes.caffeine:caffeine")
         apiv("com.github.tomakehurst:wiremock-jre8")
+        apiv("com.github.weisj:darklaf-core", "darklaf")
+        apiv("com.github.weisj:darklaf-theme", "darklaf")
+        apiv("com.github.weisj:darklaf-property-loader", "darklaf")
+        apiv("com.github.weisj:darklaf-extensions-rsyntaxarea", "darklaf.extensions")
         apiv("com.helger:ph-commons")
         apiv("com.helger:ph-css")
         apiv("com.jayway.jsonpath:json-path")
@@ -85,7 +94,6 @@ dependencies {
         apiv("javax.mail:mail")
         apiv("jcharts:jcharts")
         apiv("junit:junit", "junit4")
-        apiv("org.codehaus.groovy:groovy-all")
         apiv("org.junit.jupiter:junit-jupiter-api", "junit5")
         apiv("org.junit.jupiter:junit-jupiter-params", "junit5")
         runtimev("org.junit.jupiter:junit-jupiter-engine", "junit5")
@@ -96,6 +104,7 @@ dependencies {
         apiv("net.sf.saxon:Saxon-HE")
         apiv("nl.jqno.equalsverifier:equalsverifier")
         apiv("org.apache-extras.beanshell:bsh")
+        apiv("org.apache.commons:commons-collections4")
         apiv("org.apache.commons:commons-dbcp2")
         apiv("org.apache.commons:commons-jexl3")
         apiv("org.apache.commons:commons-jexl")

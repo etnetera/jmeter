@@ -2,30 +2,30 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 import com.github.vlsi.gradle.crlf.CrLfSpec
 import com.github.vlsi.gradle.crlf.LineEndings
 import com.github.vlsi.gradle.git.FindGitAttributes
 import com.github.vlsi.gradle.git.dsl.gitignore
+import com.github.vlsi.gradle.properties.dsl.props
+import kotlin.math.absoluteValue
 import org.gradle.api.internal.TaskOutputsInternal
 
 plugins {
     id("com.github.vlsi.crlf")
     id("com.github.vlsi.stage-vote-release")
-    signing
 }
 
 var jars = arrayOf(
@@ -53,6 +53,12 @@ var jars = arrayOf(
 val buildDocs by configurations.creating {
     isCanBeConsumed = false
 }
+val generatorJar by configurations.creating {
+    isCanBeConsumed = false
+}
+val junitSampleJar by configurations.creating {
+    isCanBeConsumed = false
+}
 val binLicense by configurations.creating {
     isCanBeConsumed = false
 }
@@ -60,26 +66,28 @@ val srcLicense by configurations.creating {
     isCanBeConsumed = false
 }
 
+val allTestClasses by configurations.creating {
+    isCanBeConsumed = true
+    isCanBeResolved = false
+}
+
 // Note: you can inspect final classpath (list of jars in the binary distribution)  via
 // gw dependencies --configuration runtimeClasspath
 dependencies {
     for (p in jars) {
         api(project(p))
-        testCompile(project(p, "testClasses"))
-    }
-    runtimeOnly("com.github.bulenkov.darcula:darcula") {
-        because("""
-            It just looks good, however Darcula is not used explicitly,
-             so the dependency is added for distribution only""".trimIndent())
+        allTestClasses(project(p, "testClasses"))
     }
 
     binLicense(project(":src:licenses", "binLicense"))
     srcLicense(project(":src:licenses", "srcLicense"))
+    generatorJar(project(":src:generator", "archives"))
+    junitSampleJar(project(":src:protocol:junit-sample", "archives"))
 
     buildDocs(platform(project(":src:bom")))
     buildDocs("org.apache.velocity:velocity")
     buildDocs("commons-lang:commons-lang")
-    buildDocs("commons-collections:commons-collections")
+    buildDocs("org.apache.commons:commons-collections4")
     buildDocs("org.jdom:jdom")
 }
 
@@ -122,22 +130,108 @@ val populateLibs by tasks.registering {
         }
         for (dep in deps) {
             val compId = dep.id.componentIdentifier
-            // The path is "relative" to rootDir/lib
-            when (compId) {
-                is ProjectComponentIdentifier ->
-                    (when (compId.projectPath) {
-                        launcherProject -> binLibs
-                        jorphanProject, bshclientProject -> libs
-                        else -> libsExt
-                    }).from(dep.file) {
-                        // Technically speaking, current JMeter artifacts do not have version in the name
-                        // however rename is here just in case
-                        rename { dep.name + "." + dep.extension }
-                    }
-                else -> libs.from(dep.file)
+            if (compId !is ProjectComponentIdentifier || !compId.build.isCurrentBuild) {
+                // Move all non-JMeter jars to lib folder
+                libs.from(dep.file)
+                continue
+            }
+            // JMeter jars are spread across $root/bin, $root/libs, and $root/libs/ext
+            // for historical reasons
+            when (compId.projectPath) {
+                launcherProject -> binLibs
+                jorphanProject, bshclientProject -> libs
+                else -> libsExt
+            }.from(dep.file) {
+                // Remove version from the file name
+                rename { dep.name + "." + dep.extension }
             }
         }
     }
+}
+
+val updateExpectedJars by props()
+
+val verifyReleaseDependencies by tasks.registering {
+    description = "Verifies if binary release archive contains the expected set of external jars"
+    group = LifecycleBasePlugin.VERIFICATION_GROUP
+
+    dependsOn(configurations.runtimeClasspath)
+    val expectedLibs = file("src/dist/expected_release_jars.csv")
+    inputs.file(expectedLibs)
+    val actualLibs = File(buildDir, "dist/expected_release_jars.csv")
+    outputs.file(actualLibs)
+    doLast {
+        val caseInsensitive: Comparator<String> = compareBy(String.CASE_INSENSITIVE_ORDER, { it })
+
+        val deps = configurations.runtimeClasspath.get().resolvedConfiguration.resolvedArtifacts
+        val libs = deps.asSequence()
+            .filter {
+                val compId = it.id.componentIdentifier
+                compId !is ProjectComponentIdentifier || !compId.build.isCurrentBuild
+            }
+            .map { it.file.name to it.file.length() }
+            .sortedWith(compareBy(caseInsensitive) { it.first })
+            .associate { it }
+
+        val expected = expectedLibs.readLines().asSequence()
+            .filter { "," in it }
+            .map {
+                val (length, name) = it.split(",", limit = 2)
+                name to length.toLong()
+            }
+            .associate { it }
+
+        if (libs == expected) {
+            return@doLast
+        }
+
+        val sb = StringBuilder()
+        sb.append("External dependencies differ (you could update ${expectedLibs.relativeTo(rootDir)} if you add -PupdateExpectedJars):")
+
+        val sizeBefore = expected.values.sum()
+        val sizeAfter = libs.values.sum()
+        if (sizeBefore != sizeAfter) {
+            sb.append("\n  $sizeBefore => $sizeAfter bytes")
+            sb.append(" (${if (sizeAfter > sizeBefore) "+" else "-"}${(sizeAfter - sizeBefore).absoluteValue} byte")
+            if ((sizeAfter - sizeBefore).absoluteValue > 1) {
+                sb.append("s")
+            }
+            sb.append(")")
+        }
+        if (libs.size != expected.size) {
+            sb.append("\n  ${expected.size} => ${libs.size} files")
+            sb.append(" (${if (libs.size > expected.size) "+" else "-"}${(libs.size - expected.size).absoluteValue})")
+        }
+        sb.appendln()
+        for (dep in (libs.keys + expected.keys).sortedWith(caseInsensitive)) {
+            val old = expected[dep]
+            val new = libs[dep]
+            if (old == new) {
+                continue
+            }
+            sb.append("\n")
+            if (old != null) {
+                sb.append("-").append(old.toString().padStart(8))
+            } else {
+                sb.append("+").append(new.toString().padStart(8))
+            }
+            sb.append(" ").append(dep)
+        }
+        val newline = System.getProperty("line.separator")
+        actualLibs.writeText(
+            libs.map { "${it.value},${it.key}" }.joinToString(newline, postfix = newline)
+        )
+        if (updateExpectedJars) {
+            println("Updating ${expectedLibs.relativeTo(rootDir)}")
+            actualLibs.copyTo(expectedLibs, overwrite = true)
+        } else {
+            throw GradleException(sb.toString())
+        }
+    }
+}
+
+tasks.check {
+    dependsOn(verifyReleaseDependencies)
 }
 
 // This adds dependency on "populateLibs" task
@@ -147,9 +241,6 @@ libsExt.from(populateLibs)
 binLibs.from(populateLibs)
 
 val copyLibs by tasks.registering(Sync::class) {
-    val junitSampleJar = project(":src:protocol:junit-sample").tasks.named(JavaPlugin.JAR_TASK_NAME)
-    dependsOn(junitSampleJar)
-    val generatorJar = project(":src:generator").tasks.named(JavaPlugin.JAR_TASK_NAME)
     // Can't use $rootDir since Gradle somehow reports .gradle/caches/ as "always modified"
     rootSpec.into("$rootDir/lib")
     with(libs)
@@ -158,15 +249,18 @@ val copyLibs by tasks.registering(Sync::class) {
         // it just removes everything it sees.
         // We configure it to keep txt files that should be present there (the files come from Git source tree)
         include("**/*.txt")
-        // Keep jars in lib/ext so developers don't have to re-install the plugsin again and again
+        // Keep jars in lib/ext so developers don't have to re-install the plugins again and again
         include("ext/*.jar")
+        exclude("ext/ApacheJMeter*.jar")
     }
     into("ext") {
         with(libsExt)
-        from(generatorJar)
+        from(files(generatorJar)) {
+            rename { "ApacheJMeter_generator.jar" }
+        }
     }
     into("junit") {
-        from(junitSampleJar) {
+        from(files(junitSampleJar)) {
             rename { "test.jar" }
         }
     }
@@ -269,6 +363,7 @@ val xdocs = "$rootDir/xdocs"
 
 fun CopySpec.docCssAndImages() {
     from(xdocs) {
+        include(".htaccess")
         include("css/**")
         include("images/**")
     }
@@ -395,6 +490,7 @@ fun CrLfSpec.binaryLayout() = copySpec {
         from(rootDir) {
             gitignore(gitProps)
             exclude("bin/testfiles")
+            exclude("bin/rmi_keystore.jks")
             include("bin/**")
             include("lib/ext/**")
             include("lib/junit/**")
@@ -472,6 +568,8 @@ for (type in listOf("binary", "source")) {
             // Gradle defaults to the following pattern, and JMeter was using apache-jmeter-5.1_src.zip
             // [baseName]-[appendix]-[version]-[classifier].[extension]
             archiveBaseName.set("apache-jmeter-${rootProject.version}${if (type == "source") "_src" else ""}")
+            // Discard project version since we want it to be added before "_src"
+            archiveVersion.set("")
             CrLfSpec(eol).run {
                 wa1191SetInputs(gitProps)
                 with(if (type == "source") sourceLayout() else binaryLayout())
@@ -491,26 +589,42 @@ releaseArtifacts {
     }
 }
 
-val runGui by tasks.registering() {
+val runGui by tasks.registering(JavaExec::class) {
     group = "Development"
     description = "Builds and starts JMeter GUI"
     dependsOn(createDist)
 
-    doLast {
-        javaexec {
-            workingDir = File(project.rootDir, "bin")
-            main = "org.apache.jmeter.NewDriver"
-            classpath("$rootDir/bin/ApacheJMeter.jar")
-            jvmArgs("-Xss256k")
-            jvmArgs("-XX:MaxMetaspaceSize=256m")
+    workingDir = File(project.rootDir, "bin")
+    main = "org.apache.jmeter.NewDriver"
+    classpath("$rootDir/bin/ApacheJMeter.jar")
+    jvmArgs("-Xss256k")
+    jvmArgs("-XX:MaxMetaspaceSize=256m")
 
-            val osName = System.getProperty("os.name")
-            if (osName.contains(Regex("mac os x|darwin|osx", RegexOption.IGNORE_CASE))) {
-                jvmArgs("-Xdock:name=JMeter")
-                jvmArgs("-Xdock:icon=$rootDir/xdocs/images/jmeter_square.png")
-                jvmArgs("-Dapple.laf.useScreenMenuBar=true")
-                jvmArgs("-Dapple.eawt.quitStrategy=CLOSE_ALL_WINDOWS")
-            }
+    val osName = System.getProperty("os.name")
+    if (osName.contains(Regex("mac os x|darwin|osx", RegexOption.IGNORE_CASE))) {
+        jvmArgs("-Xdock:name=JMeter")
+        jvmArgs("-Xdock:icon=$rootDir/xdocs/images/jmeter_square.png")
+        jvmArgs("-Dapple.laf.useScreenMenuBar=true")
+        jvmArgs("-Dapple.eawt.quitStrategy=CLOSE_ALL_WINDOWS")
+    }
+
+    fun passProperty(name: String, default: String? = null) {
+        val value = System.getProperty(name) ?: default
+        value?.let { systemProperty(name, it) }
+    }
+
+    passProperty("java.awt.headless")
+
+    val props = System.getProperties()
+    @Suppress("UNCHECKED_CAST")
+    for (e in props.propertyNames() as `java.util`.Enumeration<String>) {
+        // Pass -Djmeter.* and -Ddarklaf.* properties to the JMeter process
+        if (e.startsWith("jmeter.") || e.startsWith("darklaf.")) {
+            passProperty(e)
+        }
+        if (e == "darklaf.native") {
+            systemProperty("darklaf.decorations", "true")
+            systemProperty("darklaf.allowNativeCode", "true")
         }
     }
 }

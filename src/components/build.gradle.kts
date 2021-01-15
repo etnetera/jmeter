@@ -2,25 +2,24 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 dependencies {
     api(project(":src:core"))
-    testCompile(project(":src:core", "testClasses"))
+    testImplementation(project(":src:core", "testClasses"))
 
-    api("org.apache-extras.beanshell:bsh:2.0b6") {
+    api("org.apache-extras.beanshell:bsh") {
         because("""
             BeanShell is not required for JMeter, however it is commonly used in the jmx scripts.
             New scripts should refrain from using BeanShell though and migrate to Groovy or other
@@ -28,7 +27,7 @@ dependencies {
         """.trimIndent())
     }
 
-    api("javax.mail:mail:1.5.0-b01") {
+    api("javax.mail:mail") {
         exclude("javax.activation", "activation")
     }
     // There's no javax.activation:activation:1.2.0, so we use com.sun...
@@ -36,7 +35,6 @@ dependencies {
     // This is an API-only jar. javax.activation is present in Java 8,
     // however it is not there in Java 9
     compileOnly("javax.activation:javax.activation-api")
-
     implementation("com.github.ben-manes.caffeine:caffeine")
     implementation("io.burt:jmespath-core")
     implementation("io.burt:jmespath-jackson")
@@ -46,6 +44,7 @@ dependencies {
     implementation("net.minidev:accessors-smart")
     implementation("org.apache.commons:commons-pool2")
     implementation("commons-codec:commons-codec")
+    implementation("org.ow2.asm:asm")
     implementation("org.jodd:jodd-log")
     implementation("org.jodd:jodd-lagarto")
     implementation("com.jayway.jsonpath:json-path")
@@ -54,7 +53,7 @@ dependencies {
     implementation("org.jsoup:jsoup")
     implementation("org.apache.commons:commons-lang3")
     implementation("net.sf.jtidy:jtidy")
-    implementation("commons-collections:commons-collections")
+    implementation("org.apache.commons:commons-collections4")
     implementation("org.apache.commons:commons-math3")
     implementation("commons-io:commons-io") {
         because("IOUtils")
@@ -62,6 +61,7 @@ dependencies {
     implementation("org.apache.commons:commons-text") {
         because("StringEscapeUtils")
     }
+    implementation("com.miglayout:miglayout-swing")
     // we use bcmail for compilation only, and bcmail is not shipped in the release
     compileOnly("org.bouncycastle:bcmail-jdk15on")
     compileOnly("org.bouncycastle:bcpkix-jdk15on")

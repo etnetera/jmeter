@@ -2,45 +2,47 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.modifiers.gui;
 
+import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JCheckBox;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 import org.apache.jmeter.config.gui.AbstractConfigGui;
-import org.apache.jmeter.gui.util.CheckBoxPanel;
+import org.apache.jmeter.gui.TestElementMetadata;
 import org.apache.jmeter.modifiers.CounterConfig;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.util.JMeterUtils;
-import org.apache.jorphan.gui.JLabeledTextField;
-import org.apache.jorphan.gui.layout.VerticalLayout;
 
+import net.miginfocom.swing.MigLayout;
+
+@TestElementMetadata(labelResource = "counter_config_title")
 public class CounterConfigGui extends AbstractConfigGui implements ActionListener {
     private static final long serialVersionUID = 240L;
 
-    private JLabeledTextField startField;
-    private JLabeledTextField incrField;
-    private JLabeledTextField endField;
-    private JLabeledTextField varNameField;
-    private JLabeledTextField formatField;
+    private JTextField startField;
+    private JTextField incrField;
+    private JTextField endField;
+    private JTextField varNameField;
+    private JTextField formatField;
     private JCheckBox resetCounterOnEachThreadGroupIteration;
-
     private JCheckBox perUserField;
 
     public CounterConfigGui() {
@@ -120,25 +122,39 @@ public class CounterConfigGui extends AbstractConfigGui implements ActionListene
 
     private void init() { // WARNING: called from ctor so must not be overridden (i.e. must be private or final)
         setBorder(makeBorder());
-        setLayout(new VerticalLayout(5, VerticalLayout.BOTH));
+        setLayout(new BorderLayout());
 
-        startField = new JLabeledTextField(JMeterUtils.getResString("start_value"));//$NON-NLS-1$
-        incrField = new JLabeledTextField(JMeterUtils.getResString("increment"));//$NON-NLS-1$
-        endField = new JLabeledTextField(JMeterUtils.getResString("max_value"));//$NON-NLS-1$
-        varNameField = new JLabeledTextField(JMeterUtils.getResString("var_name"));//$NON-NLS-1$
-        formatField = new JLabeledTextField(JMeterUtils.getResString("format"));//$NON-NLS-1$
+        JPanel counterPanel = new JPanel(new MigLayout("fillx, wrap 2, insets 0", "[][fill,grow]"));
+
+        startField = new JTextField(20);
+        counterPanel.add(JMeterUtils.labelFor(startField, "start_value"));
+        counterPanel.add(startField);
+
+        incrField = new JTextField(20);
+        counterPanel.add(JMeterUtils.labelFor(incrField, "increment"));
+        counterPanel.add(incrField);
+
+        endField = new JTextField(20);
+        counterPanel.add(JMeterUtils.labelFor(endField, "max_value"));
+        counterPanel.add(endField);
+
+        formatField = new JTextField(20);
+        counterPanel.add(JMeterUtils.labelFor(formatField, "format"));
+        counterPanel.add(formatField);
+
+        varNameField = new JTextField(20);
+        counterPanel.add(JMeterUtils.labelFor(varNameField, "var_name"));
+        counterPanel.add(varNameField);
+
         perUserField = new JCheckBox(JMeterUtils.getResString("counter_per_user"));//$NON-NLS-1$
-        resetCounterOnEachThreadGroupIteration = new JCheckBox(JMeterUtils.getResString("counter_reset_per_tg_iteration"));//$NON-NLS-1$
-        add(makeTitlePanel());
-        add(startField);
-        add(incrField);
-        add(endField);
-        add(formatField);
-        add(varNameField);
-        add(CheckBoxPanel.wrap(perUserField));
-        add(CheckBoxPanel.wrap(resetCounterOnEachThreadGroupIteration));
-
         perUserField.addActionListener(this);
+        counterPanel.add(perUserField, "span 2");
+
+        resetCounterOnEachThreadGroupIteration = new JCheckBox(JMeterUtils.getResString("counter_reset_per_tg_iteration"));//$NON-NLS-1$
+        counterPanel.add(resetCounterOnEachThreadGroupIteration, "span 2");
+
+        add(makeTitlePanel(), BorderLayout.NORTH);
+        add(counterPanel, BorderLayout.CENTER);
     }
 
     /**

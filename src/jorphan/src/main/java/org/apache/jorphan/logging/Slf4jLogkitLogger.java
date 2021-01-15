@@ -2,23 +2,21 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jorphan.logging;
 
-import org.apache.log.Priority;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,16 +108,16 @@ class Slf4jLogkitLogger extends org.apache.log.Logger {
     }
 
     @Override
-    public boolean isPriorityEnabled(Priority priority) {
-        if (priority == Priority.FATAL_ERROR) {
+    public boolean isPriorityEnabled(org.apache.log.Priority priority) {
+        if (priority == org.apache.log.Priority.FATAL_ERROR) {
             return slf4jLogger.isErrorEnabled();
-        } else if (priority == Priority.ERROR) {
+        } else if (priority == org.apache.log.Priority.ERROR) {
             return slf4jLogger.isErrorEnabled();
-        } else if (priority == Priority.WARN) {
+        } else if (priority == org.apache.log.Priority.WARN) {
             return slf4jLogger.isWarnEnabled();
-        } else if (priority == Priority.INFO) {
+        } else if (priority == org.apache.log.Priority.INFO) {
             return slf4jLogger.isInfoEnabled();
-        } else if (priority == Priority.DEBUG) {
+        } else if (priority == org.apache.log.Priority.DEBUG) {
             return slf4jLogger.isDebugEnabled();
         }
 
@@ -127,31 +125,31 @@ class Slf4jLogkitLogger extends org.apache.log.Logger {
     }
 
     @Override
-    public void log(Priority priority, String message, Throwable throwable) {
-        if (priority == Priority.FATAL_ERROR) {
+    public void log(org.apache.log.Priority priority, String message, Throwable throwable) {
+        if (priority == org.apache.log.Priority.FATAL_ERROR) {
             slf4jLogger.error(message, throwable);
-        } else if (priority == Priority.ERROR) {
+        } else if (priority == org.apache.log.Priority.ERROR) {
             slf4jLogger.error(message, throwable);
-        } else if (priority == Priority.WARN) {
+        } else if (priority == org.apache.log.Priority.WARN) {
             slf4jLogger.warn(message, throwable);
-        } else if (priority == Priority.INFO) {
+        } else if (priority == org.apache.log.Priority.INFO) {
             slf4jLogger.info(message, throwable);
-        } else if (priority == Priority.DEBUG) {
+        } else if (priority == org.apache.log.Priority.DEBUG) {
             slf4jLogger.debug(message, throwable);
         }
     }
 
     @Override
-    public void log(Priority priority, String message) {
-        if (priority == Priority.FATAL_ERROR) {
+    public void log(org.apache.log.Priority priority, String message) {
+        if (priority == org.apache.log.Priority.FATAL_ERROR) {
             slf4jLogger.error(message);
-        } else if (priority == Priority.ERROR) {
+        } else if (priority == org.apache.log.Priority.ERROR) {
             slf4jLogger.error(message);
-        } else if (priority == Priority.WARN) {
+        } else if (priority == org.apache.log.Priority.WARN) {
             slf4jLogger.warn(message);
-        } else if (priority == Priority.INFO) {
+        } else if (priority == org.apache.log.Priority.INFO) {
             slf4jLogger.info(message);
-        } else if (priority == Priority.DEBUG) {
+        } else if (priority == org.apache.log.Priority.DEBUG) {
             slf4jLogger.debug(message);
         }
     }

@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.jdbc.config;
@@ -30,6 +29,7 @@ import java.util.Set;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.config.ConfigElement;
+import org.apache.jmeter.gui.TestElementMetadata;
 import org.apache.jmeter.testbeans.TestBean;
 import org.apache.jmeter.testbeans.TestBeanHelper;
 import org.apache.jmeter.testelement.AbstractTestElement;
@@ -40,6 +40,7 @@ import org.apache.jorphan.util.JOrphanUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@TestElementMetadata(labelResource = "displayName")
 public class DataSourceElement extends AbstractTestElement
     implements ConfigElement, TestStateListener, TestBean {
     private static final Logger log = LoggerFactory.getLogger(DataSourceElement.class);
@@ -52,6 +53,7 @@ public class DataSourceElement extends AbstractTestElement
     private transient String username;
     private transient String password;
     private transient String checkQuery;
+    private transient String connectionProperties;
     private transient String initQuery;
     private transient String poolMax;
     private transient String connectionAge;
@@ -112,8 +114,8 @@ public class DataSourceElement extends AbstractTestElement
         TestBeanHelper.prepare(this);
         JMeterVariables variables = getThreadContext().getVariables();
         String poolName = getDataSource();
-        if(JOrphanUtils.isBlank(poolName)) {
-            throw new IllegalArgumentException("Variable Name must not be empty for element:"+getName());
+        if (JOrphanUtils.isBlank(poolName)) {
+            throw new IllegalArgumentException("Name for DataSoure must not be empty in " + getName());
         } else if (variables.getObject(poolName) != null) {
             log.error("JDBC data source already defined for: {}", poolName);
         } else {
@@ -228,19 +230,22 @@ public class DataSourceElement extends AbstractTestElement
         int poolSize = Integer.parseInt(maxPool);
         dataSource.setMinIdle(0);
         dataSource.setInitialSize(poolSize);
-        dataSource.setEnableAutoCommitOnReturn(false);
+        dataSource.setAutoCommitOnReturn(false);
         if(StringUtils.isNotEmpty(initQuery)) {
             String[] sqls = initQuery.split("\n");
             dataSource.setConnectionInitSqls(Arrays.asList(sqls));
         } else {
             dataSource.setConnectionInitSqls(Collections.emptyList());
         }
+        if(StringUtils.isNotEmpty(connectionProperties)) {
+            dataSource.setConnectionProperties(connectionProperties);
+        }
         dataSource.setRollbackOnReturn(false);
         dataSource.setMaxIdle(poolSize);
         dataSource.setMaxTotal(poolSize);
         dataSource.setMaxWaitMillis(Long.parseLong(getTimeout()));
 
-        dataSource.setDefaultAutoCommit(Boolean.valueOf(isAutocommit()));
+        dataSource.setDefaultAutoCommit(isAutocommit());
 
         if (log.isDebugEnabled()) {
             StringBuilder sb = new StringBuilder(40);
@@ -623,5 +628,19 @@ public class DataSourceElement extends AbstractTestElement
      */
     public void setInitQuery(String initQuery) {
         this.initQuery = initQuery;
+    }
+
+    /**
+     * @return the connectionProperties
+     */
+    public String getConnectionProperties() {
+        return connectionProperties;
+    }
+
+    /**
+     * @param connectionProperties the connectionProperties to set
+     */
+    public void setConnectionProperties(String connectionProperties) {
+        this.connectionProperties = connectionProperties;
     }
 }

@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.gui.action;
@@ -41,7 +40,7 @@ public class HtmlReportGenerator {
     public static final String CANNOT_CREATE_DIRECTORY = "generate_report_ui.cannot_create_directory";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HtmlReportGenerator.class);
-    private static final long COMMAND_TIMEOUT = JMeterUtils.getPropDefault("generate_report_ui.generation_timeout", 120_000L);
+    private static final long COMMAND_TIMEOUT = JMeterUtils.getPropDefault("generate_report_ui.generation_timeout", 300_000L);
 
     private String csvFilePath;
     private String userPropertiesFilePath;
@@ -88,9 +87,15 @@ public class HtmlReportGenerator {
                 LOGGER.info("The HTML report generation failed and returned: {}", commandExecutionOutput);
                 return errorMessageList;
             }
-        } catch (InterruptedException | TimeoutException | IOException e) {
-            errorMessageList.add(commandExecutionOutput.toString());
-            LOGGER.error("Error during HTML report generation:", e);
+        } catch (TimeoutException e) {
+            errorMessageList.add(MessageFormat.format(JMeterUtils.getResString("generate_report_ui.html_report_timeout_error"),
+                    COMMAND_TIMEOUT, e.getMessage(), commandExecutionOutput));
+            LOGGER.error("Report generation took more time than configured timeout (Property {}={}, command output=[{}])",
+                    "generate_report_ui.generation_timeout", COMMAND_TIMEOUT, commandExecutionOutput, e);
+        } catch (InterruptedException | IOException e) {
+            errorMessageList.add(MessageFormat.format(JMeterUtils.getResString("generate_report_ui.html_report_unknown_error"),
+                    e.getMessage(), commandExecutionOutput));
+            LOGGER.error("Error during HTML report generation, executing {}", commandExecutionOutput, e);
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }

@@ -2,23 +2,22 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jorphan.util;
 
-import org.apache.commons.collections.ArrayStack;
+import java.util.ArrayDeque;
 
 // @see org.apache.jorphan.util.TestXMLBuffer for unit tests
 
@@ -30,7 +29,7 @@ import org.apache.commons.collections.ArrayStack;
 public class XMLBuffer{
     private final StringBuilder sb = new StringBuilder(); // the string so far
 
-    private final ArrayStack tags = new ArrayStack(); // opened tags
+    private final ArrayDeque<String> tags = new ArrayDeque<>(); // opened tags
 
     public XMLBuffer() {
 
@@ -78,7 +77,7 @@ public class XMLBuffer{
      * @throws IllegalArgumentException if the tag names do not match
      */
     public XMLBuffer closeTag(String tagName) {
-        String tag = (String) tags.pop();
+        String tag = tags.pop();
         if (!tag.equals(tagName)) {
             throw new IllegalArgumentException(
                     "Trying to close tag: " + tagName + " ; should be " + tag);
@@ -111,7 +110,7 @@ public class XMLBuffer{
     @Override
     public String toString() {
         while (!tags.isEmpty()) {
-            endTag((String) tags.pop());
+            endTag(tags.pop());
         }
         return sb.toString();
     }

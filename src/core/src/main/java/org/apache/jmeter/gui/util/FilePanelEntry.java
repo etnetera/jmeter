@@ -2,44 +2,38 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.gui.util;
 
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
-import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.apache.jmeter.util.JMeterUtils;
+import org.apache.jorphan.gui.JFactory;
 
 public class FilePanelEntry extends HorizontalPanel implements ActionListener {
     private static final long serialVersionUID = 280L;
-
-    private static final Font FONT_DEFAULT = UIManager.getDefaults().getFont("TextField.font"); //$NON-NLS-1$
-
-    private static final Font FONT_SMALL = new Font("SansSerif", Font.PLAIN, (int) Math.round(FONT_DEFAULT.getSize() * 0.8)); //$NON-NLS-1$
 
     private final JTextField filename = new JTextField(10);
 
@@ -49,7 +43,7 @@ public class FilePanelEntry extends HorizontalPanel implements ActionListener {
 
     private static final String ACTION_BROWSE = "browse"; //$NON-NLS-1$
 
-    private final List<ChangeListener> listeners = new LinkedList<>();
+    private final List<ChangeListener> listeners = new ArrayList<>();
 
     private final String[] filetypes;
 
@@ -101,7 +95,7 @@ public class FilePanelEntry extends HorizontalPanel implements ActionListener {
         add(label);
         add(filename);
         filename.addActionListener(this);
-        browse.setFont(FONT_SMALL);
+        JFactory.small(browse);
         add(browse);
         browse.setActionCommand(ACTION_BROWSE);
         browse.addActionListener(this);

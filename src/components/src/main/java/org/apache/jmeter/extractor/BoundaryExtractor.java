@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.extractor;
@@ -204,17 +203,34 @@ public class BoundaryExtractor extends AbstractScopedTestElement implements Post
     }
 
     private String getInputString(SampleResult result) {
-        String inputString = useUrl() ? result.getUrlAsString() // Bug 39707
-                : useHeaders() ? result.getResponseHeaders()
-                : useRequestHeaders() ? result.getRequestHeaders()
-                : useCode() ? result.getResponseCode() // Bug 43451
-                : useMessage() ? result.getResponseMessage() // Bug 43451
-                : useUnescapedBody() ? StringEscapeUtils.unescapeHtml4(result.getResponseDataAsString())
-                : useBodyAsDocument() ? Document.getTextFromDocument(result.getResponseData())
-                : result.getResponseDataAsString() // Bug 36898
-                ;
+        String inputString = chosenInput(result);
         log.debug("Input = '{}'", inputString);
         return inputString;
+    }
+
+    private String chosenInput(SampleResult result) {
+        if (useUrl()) {
+            return result.getUrlAsString(); // Bug 39707;
+        }
+        if (useHeaders()) {
+            return result.getResponseHeaders();
+        }
+        if (useRequestHeaders()) {
+            return result.getRequestHeaders();
+        }
+        if (useCode()) {
+            return result.getResponseCode(); // Bug 43451
+        }
+        if (useMessage()) {
+            return result.getResponseMessage(); // Bug 43451
+        }
+        if (useUnescapedBody()) {
+            return StringEscapeUtils.unescapeHtml4(result.getResponseDataAsString());
+        }
+        if (useBodyAsDocument()) {
+            return Document.getTextFromDocument(result.getResponseData());
+        }
+        return result.getResponseDataAsString(); // Bug 36898
     }
 
     private List<String> extract(
@@ -280,7 +296,7 @@ public class BoundaryExtractor extends AbstractScopedTestElement implements Post
             }
         }
 
-        return matches;
+        return Collections.unmodifiableList(matches);
     }
 
     public List<String> extractAll(

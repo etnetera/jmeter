@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.functions.gui;
@@ -25,8 +24,10 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -35,7 +36,6 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRootPane;
 import javax.swing.event.ChangeEvent;
@@ -53,7 +53,6 @@ import org.apache.jmeter.gui.action.Help;
 import org.apache.jmeter.gui.action.KeyStrokes;
 import org.apache.jmeter.gui.util.JSyntaxTextArea;
 import org.apache.jmeter.gui.util.JTextScrollPane;
-import org.apache.jmeter.gui.util.VerticalPanel;
 import org.apache.jmeter.testelement.property.PropertyIterator;
 import org.apache.jmeter.threads.JMeterContext;
 import org.apache.jmeter.threads.JMeterContextService;
@@ -71,6 +70,8 @@ import org.apache.jorphan.gui.JLabeledTextField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.miginfocom.swing.MigLayout;
+
 public class FunctionHelper extends JDialog implements ActionListener, ChangeListener, LocaleChangeListener {
     private static final long serialVersionUID = 240L;
 
@@ -79,6 +80,8 @@ public class FunctionHelper extends JDialog implements ActionListener, ChangeLis
     private static final String GENERATE = "GENERATE";
 
     private static final String RESET_VARS = "RESET_VARS";
+
+    private static final String FUNCTION_PREFIX = "__";
 
     private JLabeledChoice functionList;
 
@@ -135,11 +138,10 @@ public class FunctionHelper extends JDialog implements ActionListener, ChangeLis
         comboPanel.add(helpButton);
         this.getContentPane().add(comboPanel, BorderLayout.NORTH);
         this.getContentPane().add(parameterPanel, BorderLayout.CENTER);
-        JPanel resultsPanel = new VerticalPanel();
+        JPanel resultsPanel = new JPanel(new MigLayout("fillx, wrap 2", "[][fill,grow]"));
         JPanel generatePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        JPanel displayPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JPanel variablesPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         cutPasteFunction = new JLabeledTextField(JMeterUtils.getResString("cut_paste_function"), 35, null, false); //$NON-NLS-1$
+        cutPasteFunction.setEnabled(false);
         generatePanel.add(cutPasteFunction);
         JButton generateButton = new JButton(JMeterUtils.getResString("generate")); //$NON-NLS-1$
         generateButton.setActionCommand(GENERATE);
@@ -152,17 +154,19 @@ public class FunctionHelper extends JDialog implements ActionListener, ChangeLis
         generatePanel.add(resetVarsButton);
 
         resultTextArea = JSyntaxTextArea.getInstance(5,60);
+        resultTextArea.setEditable(false);
         resultTextArea.setToolTipText(JMeterUtils.getResString("function_helper_dialog_result_warn"));
-        displayPanel.add(new JLabel(JMeterUtils.getResString("result_function")));
-        displayPanel.add(JTextScrollPane.getInstance(resultTextArea));
 
         variablesTextArea = JSyntaxTextArea.getInstance(10,60);
-        variablesPanel.add(new JLabel(JMeterUtils.getResString("function_helper_dialog_variables")));
-        variablesPanel.add(JTextScrollPane.getInstance(variablesTextArea));
+        variablesTextArea.setEditable(false);
 
-        resultsPanel.add(generatePanel);
-        resultsPanel.add(displayPanel);
-        resultsPanel.add(variablesPanel);
+        resultsPanel.add(generatePanel, "span 2");
+        JTextScrollPane resultTextAreaJSP = JTextScrollPane.getInstance(resultTextArea);
+        resultsPanel.add(JMeterUtils.labelFor(resultTextAreaJSP, "result_function"));
+        resultsPanel.add(resultTextAreaJSP);
+        JTextScrollPane variablesTextAreaJSP = JTextScrollPane.getInstance(variablesTextArea);
+        resultsPanel.add(JMeterUtils.labelFor(variablesTextAreaJSP, "function_helper_dialog_variables"));
+        resultsPanel.add(variablesTextAreaJSP);
 
         this.getContentPane().add(resultsPanel, BorderLayout.SOUTH);
         this.pack();
@@ -172,7 +176,9 @@ public class FunctionHelper extends JDialog implements ActionListener, ChangeLis
     private void initializeFunctionList() {
         String[] functionNames = CompoundVariable.getFunctionNames();
         Arrays.sort(functionNames, String::compareToIgnoreCase);
-        functionList = new JLabeledChoice(JMeterUtils.getResString("choose_function"), functionNames); //$NON-NLS-1$
+        functionList = new JLabeledChoice(JMeterUtils.getResString("choose_function"), //$NON-NLS-1$
+                Arrays.stream(functionNames).map(
+                        e -> e.substring(FUNCTION_PREFIX.length())).collect(Collectors.toList()).toArray(new String[0]));
         functionList.addChangeListener(this);
     }
 
@@ -198,7 +204,17 @@ public class FunctionHelper extends JDialog implements ActionListener, ChangeLis
      */
     protected void initParameterPanel() throws InstantiationException, IllegalAccessException {
         Arguments args = new Arguments();
-        Function function = CompoundVariable.getFunctionClass(functionList.getText()).newInstance();
+        Function function;
+        String functionName = getFunctionName(functionList.getText());
+        try {
+            function = CompoundVariable.getFunctionClass(functionName)
+                    .getDeclaredConstructor()
+                    .newInstance();
+        } catch (InvocationTargetException | NoSuchMethodException e) {
+            InstantiationException ex = new InstantiationException("Unable to instantiate " + functionName);
+            ex.initCause(e instanceof InvocationTargetException ? e.getCause() : e);
+            throw ex;
+        }
         List<String> argumentDesc = function.getArgumentDesc();
         for (String help : argumentDesc) {
             args.addArgument(help, ""); //$NON-NLS-1$
@@ -207,11 +223,19 @@ public class FunctionHelper extends JDialog implements ActionListener, ChangeLis
         parameterPanel.revalidate();
     }
 
+    /**
+     * @param text Function name without __ prefix
+     * @return String function name with __ prefix
+     */
+    private static final String getFunctionName(String text) {
+        return FUNCTION_PREFIX+text;
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         String actionCommand = e.getActionCommand();
         if(GENERATE.equals(actionCommand)) {
-            String functionName = functionList.getText();
+            String functionName = getFunctionName(functionList.getText());
             Arguments args = (Arguments) parameterPanel.createTestElement();
             String functionCall = buildFunctionCallString(functionName, args);
             cutPasteFunction.setText(functionCall);
@@ -310,7 +334,7 @@ public class FunctionHelper extends JDialog implements ActionListener, ChangeLis
     private class HelpListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            String[] source = new String[] { Help.HELP_FUNCTIONS, functionList.getText() };
+            String[] source = new String[] { Help.HELP_FUNCTIONS, getFunctionName(functionList.getText()) };
             ActionRouter.getInstance().doActionNow(
                     new ActionEvent(source, e.getID(), ActionNames.HELP));
 

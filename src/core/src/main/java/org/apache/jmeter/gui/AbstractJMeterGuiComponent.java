@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.gui;
@@ -25,7 +24,6 @@ import static org.apiguardian.api.API.Status.INTERNAL;
 
 import java.awt.Component;
 import java.awt.Container;
-import java.awt.Font;
 import java.util.Locale;
 
 import javax.swing.BorderFactory;
@@ -42,6 +40,7 @@ import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.property.StringProperty;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.visualizers.Printable;
+import org.apache.jorphan.gui.JFactory;
 import org.apiguardian.api.API;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,14 +81,14 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
     @SuppressWarnings("DeprecatedIsStillUsed")
     protected NamePanel namePanel;
 
-    private final JTextArea commentField = new JTextArea();
+    private final JTextArea commentField = JFactory.tabMovesFocus(new JTextArea());
 
     /**
      * When constructing a new component, this takes care of basic tasks like
      * setting up the Name Panel and assigning the class's static label as the
      * name to start.
      */
-    public AbstractJMeterGuiComponent() {
+    protected AbstractJMeterGuiComponent() {
         namePanel = new NamePanel();
         init();
     }
@@ -184,10 +183,7 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
      * @return a JLabel which subclasses can add to their GUI
      */
     protected Component createTitleLabel() {
-        JLabel titleLabel = new JLabel(getStaticLabel());
-        Font curFont = titleLabel.getFont();
-        titleLabel.setFont(curFont.deriveFont((float) curFont.getSize() + 4));
-        return titleLabel;
+        return JFactory.big(new JLabel(getStaticLabel()));
     }
 
     /**
@@ -230,10 +226,6 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
 
     private void init() {
         initGui();
-        // JTextArea does not have border by default (see https://bugs.openjdk.java.net/browse/JDK-4139076)
-        // However we want it to look like a text field. So we borrow a border from there
-        Border border = new JTextField().getBorder();
-        commentField.setBorder(border);
     }
 
     /**
@@ -277,6 +269,8 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
         titlePanel.add(nameField);
 
         titlePanel.add(labelFor(nameField, "testplan_comments"));
+        commentField.setWrapStyleWord(true);
+        commentField.setLineWrap(true);
         titlePanel.add(commentField);
 
         // Note: VerticalPanel has a workaround for Box layout which aligns elements, so we can't

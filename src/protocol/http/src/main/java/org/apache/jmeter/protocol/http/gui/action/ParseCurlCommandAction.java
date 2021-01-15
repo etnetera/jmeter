@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.http.gui.action;
@@ -39,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.activation.MimetypesFileTypeMap;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -48,10 +46,12 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.MenuElement;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.tree.TreePath;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.config.KeystoreConfig;
 import org.apache.jmeter.control.Controller;
@@ -79,8 +79,10 @@ import org.apache.jmeter.protocol.http.control.Header;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.protocol.http.control.StaticHost;
 import org.apache.jmeter.protocol.http.control.gui.HttpTestSampleGui;
+import org.apache.jmeter.protocol.http.curl.ArgumentHolder;
 import org.apache.jmeter.protocol.http.curl.BasicCurlParser;
 import org.apache.jmeter.protocol.http.curl.BasicCurlParser.Request;
+import org.apache.jmeter.protocol.http.curl.FileArgumentHolder;
 import org.apache.jmeter.protocol.http.gui.AuthPanel;
 import org.apache.jmeter.protocol.http.gui.CookiePanel;
 import org.apache.jmeter.protocol.http.gui.DNSCachePanel;
@@ -100,6 +102,8 @@ import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.visualizers.ViewResultsFullVisualizer;
 import org.apache.jorphan.collections.HashTree;
 import org.apache.jorphan.gui.ComponentUtil;
+import org.apache.jorphan.gui.JMeterUIDefaults;
+import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,6 +121,7 @@ public class ParseCurlCommandAction extends AbstractAction implements MenuCreato
     private static final String CREATE_REQUEST = "CREATE_REQUEST";
     private static final String TYPE_FORM = ";type=";
     private static final String CERT = "cert";
+    private Logger log = LoggerFactory.getLogger(getClass());
     /** A panel allowing results to be saved. */
     private FilePanel filePanel = null;
     static {
@@ -125,6 +130,7 @@ public class ParseCurlCommandAction extends AbstractAction implements MenuCreato
     private JSyntaxTextArea cURLCommandTA;
     private JLabel statusText;
     private JCheckBox uploadCookiesCheckBox;
+    private final Tika tika = new Tika();
     public ParseCurlCommandAction() {
         super();
     }
@@ -147,7 +153,7 @@ public class ParseCurlCommandAction extends AbstractAction implements MenuCreato
         Container contentPane = messageDialog.getContentPane();
         contentPane.setLayout(new BorderLayout());
         statusText = new JLabel("",JLabel.CENTER);
-        statusText.setForeground(Color.RED);
+        statusText.setForeground(UIManager.getColor(JMeterUIDefaults.LABEL_ERROR_FOREGROUND));
         contentPane.add(statusText, BorderLayout.NORTH);
         cURLCommandTA = JSyntaxTextArea.getInstance(20, 80, false);
         cURLCommandTA.setCaretPosition(0);
@@ -279,8 +285,7 @@ public class ParseCurlCommandAction extends AbstractAction implements MenuCreato
         if (!commentText.isEmpty()) {
             httpSampler.setProperty(TestElement.COMMENTS,commentText); // NOSONAR
         } else {
-            httpSampler.setProperty(TestElement.COMMENTS,
-                    "Created from cURL on " + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
+            httpSampler.setProperty(TestElement.COMMENTS, getDefaultComment());
         } // NOSONAR
         URL url = new URL(request.getUrl());
         httpSampler.setProtocol(url.getProtocol());
@@ -343,11 +348,9 @@ public class ParseCurlCommandAction extends AbstractAction implements MenuCreato
         HeaderManager headerManager = new HeaderManager();
         headerManager.setProperty(TestElement.GUI_CLASS, HeaderPanel.class.getName());
         headerManager.setProperty(TestElement.NAME, "HTTP HeaderManager");
-        headerManager.setProperty(TestElement.COMMENTS,
-                "Created from cURL on " + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
-        Map<String, String> map = request.getHeaders();
+        headerManager.setProperty(TestElement.COMMENTS, getDefaultComment());
         boolean hasAcceptEncoding = false;
-        for (Map.Entry<String, String> header : map.entrySet()) {
+        for (Pair<String, String> header : request.getHeaders()) {
             String key = header.getKey();
             hasAcceptEncoding = hasAcceptEncoding || key.equalsIgnoreCase(ACCEPT_ENCODING);
             headerManager.getHeaders().addItem(new Header(key, header.getValue()));
@@ -359,22 +362,21 @@ public class ParseCurlCommandAction extends AbstractAction implements MenuCreato
     }
 
     /**
-     * Create Cookie Manager
+     * Configures a given Cookie Manager.
      *
-     * @param request {@link Request}
-     * @return {@link CookieManager} element
+     * @param cookieManager the manager to configure
+     * @param request to copy information about cookies from
      */
-    private void createCookieManager(CookieManager cookieManager,Request request) {
+    private void createCookieManager(CookieManager cookieManager, Request request) {
         cookieManager.setProperty(TestElement.GUI_CLASS, CookiePanel.class.getName());
         cookieManager.setProperty(TestElement.NAME, "HTTP CookieManager");
-        cookieManager.setProperty(TestElement.COMMENTS,
-                "Created from cURL on " + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
+        cookieManager.setProperty(TestElement.COMMENTS, getDefaultComment());
         if (!request.getCookies(request.getUrl()).isEmpty()) {
             for (Cookie c : request.getCookies(request.getUrl())) {
                 cookieManager.getCookies().addItem(c);
             }
         }
-        if (!request.getCookieInHeaders(request.getUrl()).isEmpty()&&uploadCookiesCheckBox.isSelected()) {
+        if (!request.getCookieInHeaders(request.getUrl()).isEmpty() && uploadCookiesCheckBox.isSelected()) {
             for (Cookie c : request.getCookieInHeaders(request.getUrl())) {
                 cookieManager.getCookies().addItem(c);
             }
@@ -400,8 +402,7 @@ public class ParseCurlCommandAction extends AbstractAction implements MenuCreato
         KeystoreConfig keystoreConfig = new KeystoreConfig();
         keystoreConfig.setProperty(TestElement.GUI_CLASS, TestBeanGUI.class.getName());
         keystoreConfig.setProperty(TestElement.NAME, "Keystore Configuration");
-        keystoreConfig.setProperty(TestElement.COMMENTS,
-                "Created from cURL on " + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
+        keystoreConfig.setProperty(TestElement.COMMENTS, getDefaultComment());
         return keystoreConfig;
     }
 
@@ -414,8 +415,7 @@ public class ParseCurlCommandAction extends AbstractAction implements MenuCreato
         Authorization auth = request.getAuthorization();
         authManager.setProperty(TestElement.GUI_CLASS, AuthPanel.class.getName());
         authManager.setProperty(TestElement.NAME, "HTTP AuthorizationManager");
-        authManager.setProperty(TestElement.COMMENTS,
-                "Created from cURL on " + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
+        authManager.setProperty(TestElement.COMMENTS, getDefaultComment());
         authManager.getAuthObjects().addItem(auth);
     }
 
@@ -459,8 +459,7 @@ public class ParseCurlCommandAction extends AbstractAction implements MenuCreato
         Set<String> dnsServers = request.getDnsServers();
         dnsCacheManager.setProperty(TestElement.GUI_CLASS, DNSCachePanel.class.getName());
         dnsCacheManager.setProperty(TestElement.NAME, "DNS Cache Manager");
-        dnsCacheManager.setProperty(TestElement.COMMENTS,
-                "Created from cURL on " + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
+        dnsCacheManager.setProperty(TestElement.COMMENTS, getDefaultComment());
         dnsCacheManager.getServers().clear();
         for (String dnsServer : dnsServers) {
             dnsCacheManager.addServer(dnsServer);
@@ -490,10 +489,14 @@ public class ParseCurlCommandAction extends AbstractAction implements MenuCreato
                     "Custom DNS resolver doesn't support port "+port);
         }
         else {
-            dnsCacheManager.setProperty(TestElement.COMMENTS,
-                    "Created from cURL on " + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
+            dnsCacheManager.setProperty(TestElement.COMMENTS, getDefaultComment());
         }
         dnsCacheManager.addHost(resolveParameters[0], resolveParameters[2]);
+    }
+
+    @SuppressWarnings("JavaTimeDefaultTimeZone")
+    private static String getDefaultComment() {
+        return "Created from cURL on " + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);
     }
 
     private boolean canAddDnsResolverInHttpRequest(Request request, DNSCacheManager dnsCacheManager) {
@@ -516,33 +519,39 @@ public class ParseCurlCommandAction extends AbstractAction implements MenuCreato
             throw new IllegalArgumentException("--form and --data can't appear in the same command");
         }
         List<HTTPFileArg> httpFileArgs = new ArrayList<>();
-        for (Map.Entry<String, String> entry : request.getFormStringData().entrySet()) {
+        for (Pair<String, String> entry : request.getFormStringData()) {
             String formName = entry.getKey();
             String formValue = entry.getValue();
             httpSampler.addNonEncodedArgument(formName, formValue, "");
         }
-        for (Map.Entry<String, String> entry : request.getFormData().entrySet()) {
+        for (Pair<String, ArgumentHolder> entry : request.getFormData()) {
             String formName = entry.getKey();
-            String formValue = entry.getValue();
-            boolean isContainsFile = "@".equals(formValue.substring(0, 1));
-            boolean isContainsContentType = formValue.toLowerCase().contains(TYPE_FORM);
-            if (isContainsFile) {
-                formValue = formValue.substring(1, formValue.length());
+            ArgumentHolder formValueObject = entry.getValue();
+            String formValue = formValueObject.getName();
+            if (formValueObject instanceof FileArgumentHolder) {
                 String contentType;
-                if (isContainsContentType) {
-                    String[] formValueWithType = formValue.split(TYPE_FORM);
-                    formValue = formValueWithType[0];
-                    contentType = formValueWithType[1];
+                if (formValueObject.hasContenType()) {
+                    contentType = formValueObject.getContentType();
                 } else {
-                    contentType = new MimetypesFileTypeMap().getContentType(formValue);
+                    try {
+                        final File contentFile = new File(formValue);
+                        if (contentFile.canRead()) {
+                            contentType = tika.detect(contentFile);
+                        } else {
+                            log.info("Can not read file {}, so guessing contentType by extension.", formValue);
+                            contentType = tika.detect(formValue);
+                        }
+                    } catch (IOException e) {
+                        log.info(
+                                "Could not detect contentType for file {} by content, so falling back to detection by filename",
+                                formValue);
+                        contentType = tika.detect(formValue);
+                    }
                 }
                 httpFileArgs.add(new HTTPFileArg(formValue, formName, contentType));
             } else {
-                if (isContainsContentType) {
-                    String[] formValueWithType = formValue.split(TYPE_FORM);
-                    formValue = formValueWithType[0];
-                    String contentType = formValueWithType[1];
-                    httpSampler.addNonEncodedArgument(formName, formValue, "", contentType);
+                if (formValueObject.hasContenType()) {
+                    httpSampler.addNonEncodedArgument(formName, formValue, "", formValueObject.getContentType());
                 } else {
                     httpSampler.addNonEncodedArgument(formName, formValue, "");
                 }
@@ -582,7 +591,8 @@ public class ParseCurlCommandAction extends AbstractAction implements MenuCreato
     @Override
     public JMenuItem[] getMenuItemsAtLocation(MENU_LOCATION location) {
         if (location == MENU_LOCATION.TOOLS) {
-            JMenuItem menuItemIC = new JMenuItem(JMeterUtils.getResString("curl_import_menu"), KeyEvent.VK_UNDEFINED);
+            // Use the action name as resource key because the action name is used by JMeterMenuBar too when changing languages.
+            JMenuItem menuItemIC = new JMenuItem(JMeterUtils.getResString(IMPORT_CURL), KeyEvent.VK_UNDEFINED);
             menuItemIC.setName(IMPORT_CURL);
             menuItemIC.setActionCommand(IMPORT_CURL);
             menuItemIC.setAccelerator(null);
@@ -641,7 +651,7 @@ public class ParseCurlCommandAction extends AbstractAction implements MenuCreato
                                 ex.getMessage(), ex);
                         statusText.setText(
                                 MessageFormat.format(JMeterUtils.getResString("curl_create_failure"), ex.getMessage()));
-                        statusText.setForeground(Color.RED);
+                        statusText.setForeground(UIManager.getColor(JMeterUIDefaults.LABEL_ERROR_FOREGROUND));
                         break;
                     }
                 }
@@ -649,7 +659,7 @@ public class ParseCurlCommandAction extends AbstractAction implements MenuCreato
                 LOGGER.error("Error creating test plan from cURL command list:{}", commandsList, ex);
                 statusText.setText(
                         MessageFormat.format(JMeterUtils.getResString("curl_create_failure"), ex.getMessage()));
-                statusText.setForeground(Color.RED);
+                statusText.setForeground(UIManager.getColor(JMeterUIDefaults.LABEL_ERROR_FOREGROUND));
             }
         }
     }

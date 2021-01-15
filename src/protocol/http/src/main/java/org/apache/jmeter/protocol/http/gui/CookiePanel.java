@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.http.gui;
@@ -36,6 +35,7 @@ import javax.swing.ListSelectionModel;
 
 import org.apache.jmeter.config.gui.AbstractConfigGui;
 import org.apache.jmeter.gui.GUIMenuSortOrder;
+import org.apache.jmeter.gui.TestElementMetadata;
 import org.apache.jmeter.gui.util.FileDialoger;
 import org.apache.jmeter.gui.util.HeaderAsPropertyRenderer;
 import org.apache.jmeter.gui.util.PowerTableModel;
@@ -58,6 +58,7 @@ import org.slf4j.LoggerFactory;
  * for this service.
  */
 @GUIMenuSortOrder(3)
+@TestElementMetadata(labelResource = "cookie_manager_title")
 public class CookiePanel extends AbstractConfigGui implements ActionListener {
 
     private static final long serialVersionUID = 241L;
@@ -189,7 +190,7 @@ public class CookiePanel extends AbstractConfigGui implements ActionListener {
 
     private void addCookieToTable(Cookie cookie) {
         tableModel.addRow(new Object[] { cookie.getName(), cookie.getValue(), cookie.getDomain(), cookie.getPath(),
-                Boolean.valueOf(cookie.getSecure()) });
+                cookie.getSecure()});
     }
 
     /**
@@ -243,7 +244,7 @@ public class CookiePanel extends AbstractConfigGui implements ActionListener {
                 (String) rowData[1],
                 (String) rowData[2],
                 (String) rowData[3],
-                ((Boolean) rowData[4]).booleanValue(),
+                (Boolean) rowData[4],
                 0); // Non-expiring
         return cookie;
     }
@@ -297,7 +298,6 @@ public class CookiePanel extends AbstractConfigGui implements ActionListener {
         northPanel.add(makeTitlePanel());
         JPanel optionsPane = new JPanel();
         optionsPane.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createEtchedBorder(),
                 JMeterUtils.getResString("cookie_options"))); // $NON-NLS-1$
         optionsPane.setLayout(new VerticalLayout(5, VerticalLayout.BOTH));
         optionsPane.add(clearEachIteration);
@@ -322,8 +322,8 @@ public class CookiePanel extends AbstractConfigGui implements ActionListener {
         JPanel buttonPanel = createButtonPanel();
 
         JPanel panel = new JPanel(new BorderLayout(0, 5));
-        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), JMeterUtils
-                .getResString("cookies_stored"))); //$NON-NLS-1$
+        panel.setBorder(BorderFactory.createTitledBorder(
+                JMeterUtils.getResString("cookies_stored"))); //$NON-NLS-1$
 
         panel.add(GuiUtils.emptyBorder(new JScrollPane(cookieTable)), BorderLayout.CENTER);
         panel.add(buttonPanel, BorderLayout.SOUTH);

@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.assertions;
@@ -26,6 +25,7 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.Security;
+import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -150,7 +150,7 @@ class SMIMEAssertion {
         AssertionResult res = new AssertionResult(name);
 
         try {
-            Store certs = s.getCertificates();
+            Store<?> certs = s.getCertificates();
             SignerInformationStore signers = s.getSignerInfos();
             Iterator<?> signerIt = signers.getSigners().iterator();
 
@@ -164,76 +164,16 @@ class SMIMEAssertion {
                     X509CertificateHolder cert = (X509CertificateHolder) certIt.next();
 
                     if (testElement.isVerifySignature()) {
-
-                        SignerInformationVerifier verifier = null;
-                        try {
-                            verifier = new JcaSimpleSignerInfoVerifierBuilder().setProvider("BC")
-                                    .build(cert);
-                        } catch (OperatorCreationException e) {
-                            log.error("Can't create a provider.", e);
-                        }
-                        if (verifier == null || !signer.verify(verifier)) {
-                            res.setFailure(true);
-                            res.setFailureMessage("Signature is invalid");
-                        }
+                        verifySignature(signer, res, cert);
                     }
 
                     if (testElement.isSignerCheckConstraints()) {
                         StringBuilder failureMessage = new StringBuilder();
 
-                        String serial = testElement.getSignerSerial();
-                        if (!JOrphanUtils.isBlank(serial)) {
-                            BigInteger serialNbr = readSerialNumber(serial);
-                            if (!serialNbr.equals(cert.getSerialNumber())) {
-                                res.setFailure(true);
-                                failureMessage
-                                        .append("Serial number ")
-                                        .append(serialNbr)
-                                        .append(" does not match serial from signer certificate: ")
-                                        .append(cert.getSerialNumber()).append("\n");
-                            }
-                        }
-
-                        String email = testElement.getSignerEmail();
-                        if (!JOrphanUtils.isBlank(email)) {
-                            List<String> emailFromCert = getEmailFromCert(cert);
-                            if (!emailFromCert.contains(email)) {
-                                res.setFailure(true);
-                                failureMessage
-                                        .append("Email address \"")
-                                        .append(email)
-                                        .append("\" not present in signer certificate\n");
-                            }
-
-                        }
-
-                        String subject = testElement.getSignerDn();
-                        if (subject.length() > 0) {
-                            final X500Name certPrincipal = cert.getSubject();
-                            log.debug("DN from cert: {}", certPrincipal);
-                            X500Name principal = new X500Name(subject);
-                            log.debug("DN from assertion: {}", principal);
-                            if (!principal.equals(certPrincipal)) {
-                                res.setFailure(true);
-                                failureMessage
-                                        .append("Distinguished name of signer certificate does not match \"")
-                                        .append(subject).append("\"\n");
-                            }
-                        }
-
-                        String issuer = testElement.getIssuerDn();
-                        if (issuer.length() > 0) {
-                            final X500Name issuerX500Name = cert.getIssuer();
-                            log.debug("IssuerDN from cert: {}", issuerX500Name);
-                            X500Name principal = new X500Name(issuer);
-                            log.debug("IssuerDN from assertion: {}", principal);
-                            if (!principal.equals(issuerX500Name)) {
-                                res.setFailure(true);
-                                failureMessage
-                                        .append("Issuer distinguished name of signer certificate does not match \"")
-                                        .append(subject).append("\"\n");
-                            }
-                        }
+                        checkSerial(testElement, res, cert, failureMessage);
+                        checkEmail(testElement, res, cert, failureMessage);
+                        checkSubject(testElement, res, cert, failureMessage);
+                        checkIssuer(testElement, res, cert, failureMessage);
 
                         if (failureMessage.length() > 0) {
                             res.setFailureMessage(failureMessage.toString());
@@ -241,25 +181,7 @@ class SMIMEAssertion {
                     }
 
                     if (testElement.isSignerCheckByFile()) {
-                        CertificateFactory cf = CertificateFactory
-                                .getInstance("X.509");
-                        try (InputStream fis = new FileInputStream(testElement.getSignerCertFile());
-                                InputStream bis = new BufferedInputStream(fis)){
-                            X509CertificateHolder certFromFile = new JcaX509CertificateHolder((X509Certificate) cf.generateCertificate(bis));
-                            if (!certFromFile.equals(cert)) {
-                                res.setFailure(true);
-                                res.setFailureMessage("Signer certificate does not match certificate "
-                                                + testElement.getSignerCertFile());
-                            }
-                        } catch (IOException e) {
-                            if (log.isDebugEnabled()) {
-                                log.debug("Could not read cert file {}", testElement.getSignerCertFile(), e);
-                            }
-                            res.setFailure(true);
-                            res.setFailureMessage("Could not read certificate file " + testElement.getSignerCertFile());
-                        }
-
-
+                        checkSignerByFile(testElement, res, cert);
                     }
 
                 } else {
@@ -281,6 +203,109 @@ class SMIMEAssertion {
         }
 
         return res;
+    }
+
+    private static void verifySignature(SignerInformation signer, AssertionResult res, X509CertificateHolder cert)
+            throws CertificateException, CMSException {
+        SignerInformationVerifier verifier = null;
+        try {
+            verifier = new JcaSimpleSignerInfoVerifierBuilder().setProvider("BC")
+                    .build(cert);
+        } catch (OperatorCreationException e) {
+            log.error("Can't create a provider.", e);
+        }
+        if (verifier == null || !signer.verify(verifier)) {
+            res.setFailure(true);
+            res.setFailureMessage("Signature is invalid");
+        }
+    }
+
+    private static void checkSignerByFile(SMIMEAssertionTestElement testElement, AssertionResult res,
+            X509CertificateHolder cert) throws CertificateException {
+        CertificateFactory cf = CertificateFactory
+                .getInstance("X.509");
+        try (InputStream fis = new FileInputStream(testElement.getSignerCertFile());
+                InputStream bis = new BufferedInputStream(fis)){
+            X509CertificateHolder certFromFile = new JcaX509CertificateHolder((X509Certificate) cf.generateCertificate(bis));
+            if (!certFromFile.equals(cert)) {
+                res.setFailure(true);
+                res.setFailureMessage("Signer certificate does not match certificate "
+                                + testElement.getSignerCertFile());
+            }
+        } catch (IOException e) {
+            if (log.isDebugEnabled()) {
+                log.debug("Could not read cert file {}", testElement.getSignerCertFile(), e);
+            }
+            res.setFailure(true);
+            res.setFailureMessage("Could not read certificate file " + testElement.getSignerCertFile());
+        }
+    }
+
+    private static void checkIssuer(SMIMEAssertionTestElement testElement, AssertionResult res,
+            X509CertificateHolder cert, StringBuilder failureMessage) {
+        String issuer = testElement.getIssuerDn();
+        if (issuer.length() > 0) {
+            String subject = testElement.getSignerDn();
+            final X500Name issuerX500Name = cert.getIssuer();
+            log.debug("IssuerDN from cert: {}", issuerX500Name);
+            X500Name principal = new X500Name(issuer);
+            log.debug("IssuerDN from assertion: {}", principal);
+            if (!principal.equals(issuerX500Name)) {
+                res.setFailure(true);
+                failureMessage
+                        .append("Issuer distinguished name of signer certificate does not match \"")
+                        .append(subject).append("\"\n");
+            }
+        }
+    }
+
+    private static void checkSubject(SMIMEAssertionTestElement testElement, AssertionResult res,
+            X509CertificateHolder cert, StringBuilder failureMessage) {
+        String subject = testElement.getSignerDn();
+        if (subject.length() > 0) {
+            final X500Name certPrincipal = cert.getSubject();
+            log.debug("DN from cert: {}", certPrincipal);
+            X500Name principal = new X500Name(subject);
+            log.debug("DN from assertion: {}", principal);
+            if (!principal.equals(certPrincipal)) {
+                res.setFailure(true);
+                failureMessage
+                        .append("Distinguished name of signer certificate does not match \"")
+                        .append(subject).append("\"\n");
+            }
+        }
+    }
+
+    private static void checkEmail(SMIMEAssertionTestElement testElement, AssertionResult res,
+            X509CertificateHolder cert, StringBuilder failureMessage) {
+        String email = testElement.getSignerEmail();
+        if (!JOrphanUtils.isBlank(email)) {
+            List<String> emailFromCert = getEmailFromCert(cert);
+            if (!emailFromCert.contains(email)) {
+                res.setFailure(true);
+                failureMessage
+                        .append("Email address \"")
+                        .append(email)
+                        .append("\" not present in signer certificate\n");
+            }
+
+        }
+    }
+
+    private static void checkSerial(SMIMEAssertionTestElement testElement, AssertionResult res,
+            X509CertificateHolder cert, StringBuilder failureMessage) {
+        String serial = testElement.getSignerSerial();
+        if (!JOrphanUtils.isBlank(serial)) {
+            BigInteger serialNbr = readSerialNumber(serial);
+            if (!serialNbr.equals(cert.getSerialNumber())) {
+                res.setFailure(true);
+                failureMessage
+                        .append("Serial number ")
+                        .append(serialNbr)
+                        .append(" does not match serial from signer certificate: ")
+                        .append(cert.getSerialNumber()).append("\n");
+            }
+        }
     }
 
     /**

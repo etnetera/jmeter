@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.gui.util;
@@ -22,7 +21,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.AbstractButton;
@@ -127,6 +125,7 @@ public class JLabeledRadioI18N extends JPanel implements JLabeledField, ActionLi
      * @param selected initially selected resource (if not null)
      *
      */
+    @SuppressWarnings("JdkObsolete")
     public void resetButtons(String[] resources, String selected) {
         Enumeration<AbstractButton> buttons = bGroup.getElements();
         List<AbstractButton> buttonsToRemove = new ArrayList<>(this.bGroup.getButtonCount());
@@ -161,6 +160,7 @@ public class JLabeledRadioI18N extends JPanel implements JLabeledField, ActionLi
      * @param resourceName name of resource whose button is to be selected
      */
     @Override
+    @SuppressWarnings("JdkObsolete")
     public void setText(String resourceName) {
         Enumeration<AbstractButton> en = this.bGroup.getElements();
         while (en.hasMoreElements()) {
@@ -205,8 +205,9 @@ public class JLabeledRadioI18N extends JPanel implements JLabeledField, ActionLi
      * excluded from the list.
      */
     @Override
+    @SuppressWarnings("JdkObsolete")
     public List<JComponent> getComponentList() {
-        List<JComponent> comps = new LinkedList<>();
+        List<JComponent> comps = new ArrayList<>();
         comps.add(mLabel);
         Enumeration<AbstractButton> en = this.bGroup.getElements();
         while (en.hasMoreElements()) {

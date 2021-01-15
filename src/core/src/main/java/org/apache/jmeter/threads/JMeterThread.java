@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.threads;
@@ -257,17 +256,17 @@ public class JMeterThread implements Runnable, Interruptible {
                     processSampler(sam, null, threadContext);
                     threadContext.cleanAfterSample();
 
-                    boolean lastSampleInError = TRUE.equals(threadContext.getVariables().get(LAST_SAMPLE_OK));
+                    boolean lastSampleOk = TRUE.equals(threadContext.getVariables().get(LAST_SAMPLE_OK));
                     // restart of the next loop
                     // - was requested through threadContext
                     // - or the last sample failed AND the onErrorStartNextLoop option is enabled
                     if (threadContext.getTestLogicalAction() != TestLogicalAction.CONTINUE
-                            || (onErrorStartNextLoop && !lastSampleInError)) {
+                            || (onErrorStartNextLoop && !lastSampleOk)) {
                         if (log.isDebugEnabled() && onErrorStartNextLoop
                                 && threadContext.getTestLogicalAction() != TestLogicalAction.CONTINUE) {
                             log.debug("Start Next Thread Loop option is on, Last sample failed, starting next thread loop");
                         }
-                        if(onErrorStartNextLoop && !lastSampleInError){
+                        if(onErrorStartNextLoop && !lastSampleOk){
                             triggerLoopLogicalActionOnParentControllers(sam, threadContext, JMeterThread::continueOnThreadLoop);
                         } else {
                             switch (threadContext.getTestLogicalAction()) {
@@ -286,7 +285,7 @@ public class JMeterThread implements Runnable, Interruptible {
                         }
                         threadContext.setTestLogicalAction(TestLogicalAction.CONTINUE);
                         sam = null;
-                        threadContext.getVariables().put(LAST_SAMPLE_OK, TRUE);
+                        setLastSampleOk(threadContext.getVariables(), true);
                     }
                     else {
                         sam = threadGroupLoopController.next();
@@ -322,8 +321,8 @@ public class JMeterThread implements Runnable, Interruptible {
             throw e; // Must not ignore this one
         } finally {
             currentSamplerForInterruption = null; // prevent any further interrupts
+            interruptLock.lock();  // make sure current interrupt is finished, prevent another starting yet
             try {
-                interruptLock.lock();  // make sure current interrupt is finished, prevent another starting yet
                 threadContext.clear();
                 log.info("Thread finished: {}", threadName);
                 threadFinished(iterationListener);
@@ -527,6 +526,14 @@ public class JMeterThread implements Runnable, Interruptible {
         return transactionResult;
     }
 
+    private void fillThreadInformation(SampleResult result,
+            int nbActiveThreadsInThreadGroup,
+            int nbTotalActiveThreads) {
+        result.setGroupThreads(nbActiveThreadsInThreadGroup);
+        result.setAllThreads(nbTotalActiveThreads);
+        result.setThreadName(threadName);
+    }
+
     /**
      * Execute the sampler with its pre/post processors, timers, assertions
      * Broadcast the result to the sample listeners
@@ -551,34 +558,36 @@ public class JMeterThread implements Runnable, Interruptible {
             result = doSampling(threadContext, sampler);
         }
         // If we got any results, then perform processing on the result
-        if (result != null && !result.isIgnore()) {
-            int nbActiveThreadsInThreadGroup = threadGroup.getNumberOfThreads();
-            int nbTotalActiveThreads = JMeterContextService.getNumberOfThreads();
-            result.setGroupThreads(nbActiveThreadsInThreadGroup);
-            result.setAllThreads(nbTotalActiveThreads);
-            result.setThreadName(threadName);
-            SampleResult[] subResults = result.getSubResults();
-            if (subResults != null) {
-                for (SampleResult subResult : subResults) {
-                    subResult.setGroupThreads(nbActiveThreadsInThreadGroup);
-                    subResult.setAllThreads(nbTotalActiveThreads);
-                    subResult.setThreadName(threadName);
-                }
-            }
-            threadContext.setPreviousResult(result);
-            runPostProcessors(pack.getPostProcessors());
-            checkAssertions(pack.getAssertions(), result, threadContext);
+        if (result != null) {
             if (!result.isIgnore()) {
-                // Do not send subsamples to listeners which receive the transaction sample
-                List<SampleListener> sampleListeners = getSampleListeners(pack, transactionPack, transactionSampler);
-                notifyListeners(sampleListeners, result);
+                int nbActiveThreadsInThreadGroup = threadGroup.getNumberOfThreads();
+                int nbTotalActiveThreads = JMeterContextService.getNumberOfThreads();
+                fillThreadInformation(result, nbActiveThreadsInThreadGroup, nbTotalActiveThreads);
+                SampleResult[] subResults = result.getSubResults();
+                if (subResults != null) {
+                    for (SampleResult subResult : subResults) {
+                        fillThreadInformation(subResult, nbActiveThreadsInThreadGroup, nbTotalActiveThreads);
+                    }
+                }
+                threadContext.setPreviousResult(result);
+                runPostProcessors(pack.getPostProcessors());
+                checkAssertions(pack.getAssertions(), result, threadContext);
+                // PostProcessors can call setIgnore, so reevaluate here
+                if (!result.isIgnore()) {
+                    // Do not send subsamples to listeners which receive the transaction sample
+                    List<SampleListener> sampleListeners = getSampleListeners(pack, transactionPack, transactionSampler);
+                    notifyListeners(sampleListeners, result);
+                }
+                compiler.done(pack);
+                // Add the result as subsample of transaction if we are in a transaction
+                if (transactionSampler != null && !result.isIgnore()) {
+                    transactionSampler.addSubSamplerResult(result);
+                }
+            } else {
+                // This call is done by checkAssertions() , as we don't call it
+                // for isIgnore, we explictely call it here
+                setLastSampleOk(threadContext.getVariables(), result.isSuccessful());
             }
-            compiler.done(pack);
-            // Add the result as subsample of transaction if we are in a transaction
-            if (transactionSampler != null && !result.isIgnore()) {
-                transactionSampler.addSubSamplerResult(result);
-            }
-
             // Check if thread or test should be stopped
             if (result.isStopThread() || (!result.isSuccessful() && onErrorStopThread)) {
                 stopThread();
@@ -589,7 +598,9 @@ public class JMeterThread implements Runnable, Interruptible {
             if (result.isStopTestNow() || (!result.isSuccessful() && onErrorStopTestNow)) {
                 stopTestNow();
             }
-            threadContext.setTestLogicalAction(result.getTestLogicalAction());
+            if (result.getTestLogicalAction() != TestLogicalAction.CONTINUE) {
+                threadContext.setTestLogicalAction(result.getTestLogicalAction());
+            }
         } else {
             compiler.done(pack); // Finish up
         }
@@ -600,7 +611,7 @@ public class JMeterThread implements Runnable, Interruptible {
      * <ul>
      *  <li>setting up ThreadContext</li>
      *  <li>initializing sampler if needed</li>
-     *  <li>positionning currentSamplerForInterruption for potential interruption</li>
+     *  <li>positioning currentSamplerForInterruption for potential interruption</li>
      *  <li>Playing SampleMonitor before and after sampling</li>
      *  <li>resetting currentSamplerForInterruption</li>
      * </ul>
@@ -640,9 +651,7 @@ public class JMeterThread implements Runnable, Interruptible {
             SamplePackage transactionPack, JMeterContext threadContext) {
         // Get the transaction sample result
         SampleResult transactionResult = transactionSampler.getTransactionResult();
-        transactionResult.setThreadName(threadName);
-        transactionResult.setGroupThreads(threadGroup.getNumberOfThreads());
-        transactionResult.setAllThreads(JMeterContextService.getNumberOfThreads());
+        fillThreadInformation(transactionResult, threadGroup.getNumberOfThreads(), JMeterContextService.getNumberOfThreads());
 
         // Check assertions for the transaction sample
         checkAssertions(transactionPack.getAssertions(), transactionResult, threadContext);
@@ -689,6 +698,13 @@ public class JMeterThread implements Runnable, Interruptible {
     }
 
     /**
+     * Store {@link JMeterThread#LAST_SAMPLE_OK} in JMeter Variables context
+     */
+    private void setLastSampleOk(JMeterVariables variables, boolean value) {
+        variables.put(LAST_SAMPLE_OK, Boolean.toString(value));
+    }
+
+    /**
      * @param threadContext
      * @return the iteration listener
      */
@@ -696,7 +712,7 @@ public class JMeterThread implements Runnable, Interruptible {
         threadVars.putObject(JMeterVariables.VAR_IS_SAME_USER_KEY, isSameUserOnNextIteration);
         threadContext.setVariables(threadVars);
         threadContext.setThreadNum(getThreadNum());
-        threadContext.getVariables().put(LAST_SAMPLE_OK, TRUE);
+        setLastSampleOk(threadVars, true);
         threadContext.setThread(this);
         threadContext.setThreadGroup(threadGroup);
         threadContext.setEngine(engine);
@@ -806,8 +822,8 @@ public class JMeterThread implements Runnable, Interruptible {
     /** {@inheritDoc} */
     @Override
     public boolean interrupt(){
+        interruptLock.lock();
         try {
-            interruptLock.lock();
             Sampler samp = currentSamplerForInterruption; // fetch once; must be done under lock
             if (samp instanceof Interruptible){ // (also protects against null)
                 if (log.isWarnEnabled()) {
@@ -878,27 +894,35 @@ public class JMeterThread implements Runnable, Interruptible {
                 }
                 if (scopedAssertion.isScopeChildren(scope)
                         || scopedAssertion.isScopeAll(scope)) {
-                    SampleResult[] children = parent.getSubResults();
-                    boolean childError = false;
-                    for (SampleResult childSampleResult : children) {
-                        processAssertion(childSampleResult, assertion);
-                        if (!childSampleResult.isSuccessful()) {
-                            childError = true;
-                        }
-                    }
-                    // If parent is OK, but child failed, add a message and flag the parent as failed
-                    if (childError && parent.isSuccessful()) {
-                        AssertionResult assertionResult = new AssertionResult(((AbstractTestElement) assertion).getName());
-                        assertionResult.setResultForFailure("One or more sub-samples failed");
-                        parent.addAssertionResult(assertionResult);
-                        parent.setSuccessful(false);
-                    }
+                    recurseAssertionChecks(parent, assertion, 3);
                 }
             } else {
                 processAssertion(parent, assertion);
             }
         }
-        threadContext.getVariables().put(LAST_SAMPLE_OK, Boolean.toString(parent.isSuccessful()));
+        setLastSampleOk(threadContext.getVariables(), parent.isSuccessful());
+    }
+
+    private void recurseAssertionChecks(SampleResult parent, Assertion assertion, int level) {
+        if (level < 0) {
+            return;
+        }
+        SampleResult[] children = parent.getSubResults();
+        boolean childError = false;
+        for (SampleResult childSampleResult : children) {
+            processAssertion(childSampleResult, assertion);
+            recurseAssertionChecks(childSampleResult, assertion, level - 1);
+            if (!childSampleResult.isSuccessful()) {
+                childError = true;
+            }
+        }
+        // If parent is OK, but child failed, add a message and flag the parent as failed
+        if (childError && parent.isSuccessful()) {
+            AssertionResult assertionResult = new AssertionResult(((AbstractTestElement) assertion).getName());
+            assertionResult.setResultForFailure("One or more sub-samples failed");
+            parent.addAssertionResult(assertionResult);
+            parent.setSuccessful(false);
+        }
     }
 
     private void processAssertion(SampleResult result, Assertion assertion) {

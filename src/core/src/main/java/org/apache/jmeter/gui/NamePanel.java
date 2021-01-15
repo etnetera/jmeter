@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.gui;
@@ -29,7 +28,6 @@ import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
 
 import org.apache.jmeter.testelement.TestElement;
-import org.apache.jmeter.testelement.WorkBench;
 import org.apache.jmeter.testelement.property.StringProperty;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apiguardian.api.API;
@@ -141,7 +139,8 @@ public class NamePanel extends JPanel implements JMeterGUIComponent {
     /** {@inheritDoc} */
     @Override
     public TestElement createTestElement() {
-        WorkBench wb = new WorkBench();
+        @SuppressWarnings("deprecation")
+        org.apache.jmeter.testelement.WorkBench wb = new org.apache.jmeter.testelement.WorkBench();
         modifyTestElement(wb);
         return wb;
     }
@@ -151,7 +150,9 @@ public class NamePanel extends JPanel implements JMeterGUIComponent {
     public void modifyTestElement(TestElement wb) {
         wb.setName(getName());
         wb.setProperty(new StringProperty(TestElement.GUI_CLASS, this.getClass().getName()));
-        wb.setProperty(new StringProperty(TestElement.TEST_CLASS, WorkBench.class.getName()));
+        @SuppressWarnings("deprecation")
+        String className = org.apache.jmeter.testelement.WorkBench.class.getName();
+        wb.setProperty(new StringProperty(TestElement.TEST_CLASS, className));
     }
 
     /**

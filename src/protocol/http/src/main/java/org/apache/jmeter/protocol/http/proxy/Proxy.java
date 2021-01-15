@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.http.proxy;
@@ -33,6 +32,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +64,9 @@ import org.slf4j.LoggerFactory;
  * JMeter test plan.
  */
 public class Proxy extends Thread {
+    // Mime-types of resources, that are not HTML and not binary that should be skipped on form parsing in JSoup
+    private static final List<String> NOT_HTML_TEXT_TYPES = Arrays.asList("application/javascript", "application/json", "text/javascript");
+
     private static final Logger log = LoggerFactory.getLogger(Proxy.class);
 
     private static final byte[] CRLF_BYTES = { 0x0d, 0x0a };
@@ -158,7 +161,10 @@ public class Proxy extends Thread {
         // Check which HTTPSampler class we should use
         String httpSamplerName = target.getSamplerTypeName();
 
-        HttpRequestHdr request = new HttpRequestHdr(target.getPrefixHTTPSampleName(), httpSamplerName,target.getHTTPSampleNamingMode());
+        HttpRequestHdr request = new HttpRequestHdr(target.getPrefixHTTPSampleName(), httpSamplerName,
+                target.getHTTPSampleNamingMode(), target.getHttpSampleNameFormat());
+        request.setDetectGraphQLRequest(target.getDetectGraphQLRequest());
+
         SampleResult result = null;
         HeaderManager headers = null;
         HTTPSamplerBase sampler = null;
@@ -174,12 +180,14 @@ public class Proxy extends Thread {
                 throw new JMeterException(); // hack to skip processing
             }
             if (isDebug) {
-                log.debug("{} Initial request: {}", port, new String(ba)); // NOSONAR False positive
+                @SuppressWarnings("DefaultCharset")
+                final String reparsed = new String(ba); // NOSONAR False positive
+                log.debug("{} Initial request: {}", port, reparsed);
             }
             // Use with SSL connection
             OutputStream outStreamClient = clientSocket.getOutputStream();
 
-            if ((request.getMethod().startsWith(HTTPConstants.CONNECT)) && (outStreamClient != null)) {
+            if (request.getMethod().startsWith(HTTPConstants.CONNECT) && (outStreamClient != null)) {
                 log.debug("{} Method CONNECT => SSL", port);
                 // write a OK response to browser, to engage SSL exchange
                 outStreamClient.write(
@@ -208,7 +216,9 @@ public class Proxy extends Thread {
                     throw new JMeterException(); // hack to skip processing
                 }
                 if (isDebug) {
-                    log.debug("{} Reparse: {}", port, new String(ba)); // NOSONAR False positive
+                    @SuppressWarnings("DefaultCharset")
+                    final String reparsed = new String(ba); // NOSONAR False positive
+                    log.debug("{} Reparse: {}", port, reparsed);
                 }
                 if (ba.length == 0) {
                     log.warn("{} Empty response to http over SSL. Probably waiting for user to authorize the certificate for {}",
@@ -299,6 +309,15 @@ public class Proxy extends Thread {
             }
             JMeterContextService.getContext().setRecording(false);
         }
+    }
+
+    /**
+     * Set the counter for all registered {@link SamplerCreatorFactory}s
+     *
+     * @param value to be initialized
+     */
+    public static void setCounter(int value) {
+        SAMPLERFACTORY.setCounter(value);
     }
 
     /**
@@ -596,9 +615,15 @@ public class Proxy extends Thread {
         FormCharSetFinder finder = new FormCharSetFinder();
         if (SampleResult.isBinaryType(result.getContentType())) {
             if (log.isDebugEnabled()) {
-                log.debug("Will not guess encoding of url:{} as it's binary", result.getUrlAsString());
+                log.debug("Will not guess encoding of URL: {} as it's binary", result.getUrlAsString());
             }
             return; // no point parsing anything else, e.g. GIF ...
+        }
+        if (isNotHtmlType(result.getContentType())) {
+            if (log.isDebugEnabled()) {
+                log.debug("Will not guess encoding of URL: {} as it's not HTML", result.getUrlAsString());
+            }
+            return; // None HTML types have been crashing JSoup parser, so return here early
         }
         try {
             finder.addFormActionsAndCharSet(result.getResponseDataAsString(), formEncodings, pageEncoding);
@@ -608,6 +633,15 @@ public class Proxy extends Thread {
                 log.debug("{} Unable to parse response, could not find any form character set encodings for url:{}", port, result.getUrlAsString());
             }
         }
+    }
+
+    private boolean isNotHtmlType(String contentType) {
+        for (String mimeType: NOT_HTML_TEXT_TYPES) {
+            if (contentType.startsWith(mimeType)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String getUrlWithoutQuery(URL url) {

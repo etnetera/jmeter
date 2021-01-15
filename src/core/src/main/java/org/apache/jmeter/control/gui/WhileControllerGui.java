@@ -2,41 +2,40 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.control.gui;
 
 import java.awt.BorderLayout;
 
-import javax.swing.Box;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import org.apache.jmeter.control.WhileController;
 import org.apache.jmeter.gui.GUIMenuSortOrder;
+import org.apache.jmeter.gui.TestElementMetadata;
 import org.apache.jmeter.gui.util.JSyntaxTextArea;
 import org.apache.jmeter.gui.util.JTextScrollPane;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.util.JMeterUtils;
 
+import net.miginfocom.swing.MigLayout;
+
 @GUIMenuSortOrder(4)
+@TestElementMetadata(labelResource = "while_controller_title")
 public class WhileControllerGui extends AbstractControllerGui {
 
     private static final long serialVersionUID = 240L;
-
-    private static final String CONDITION_LABEL = "while_controller_label"; // $NON-NLS-1$
 
     /**
      * A field allowing the user to specify the condition (not yet used).
@@ -117,11 +116,7 @@ public class WhileControllerGui extends AbstractControllerGui {
         setLayout(new BorderLayout(0, 5));
         setBorder(makeBorder());
         add(makeTitlePanel(), BorderLayout.NORTH);
-
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.add(createConditionPanel(), BorderLayout.NORTH);
-        add(mainPanel, BorderLayout.CENTER);
-
+        add(createConditionPanel(), BorderLayout.CENTER);
     }
 
     /**
@@ -130,20 +125,15 @@ public class WhileControllerGui extends AbstractControllerGui {
      * @return a GUI panel containing the condition components
      */
     private JPanel createConditionPanel() {
-        JPanel conditionPanel = new JPanel(new BorderLayout(5, 0));
-
-        // Condition LABEL
-        JLabel conditionLabel = new JLabel(JMeterUtils.getResString(CONDITION_LABEL));
-        conditionPanel.add(conditionLabel, BorderLayout.WEST);
+        JPanel conditionPanel = new JPanel(new MigLayout("fillx, wrap 2, insets 0", "[][fill,grow]"));
 
         // Condition
         // This means exit if last sample failed
-        theCondition = JSyntaxTextArea.getInstance(5, 50);  // $NON-NLS-1$
+        theCondition = JSyntaxTextArea.getInstance(5, 50);
+        JTextScrollPane theConditionJSP = JTextScrollPane.getInstance(theCondition);
+        conditionPanel.add(JMeterUtils.labelFor(theConditionJSP, "while_controller_label"));
         theCondition.setName(CONDITION);
-        conditionLabel.setLabelFor(theCondition);
-        conditionPanel.add(JTextScrollPane.getInstance(theCondition), BorderLayout.CENTER);
-
-        conditionPanel.add(Box.createHorizontalGlue(), BorderLayout.NORTH);
+        conditionPanel.add(theConditionJSP);
 
         return conditionPanel;
     }

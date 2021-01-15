@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.smtp.sampler.gui;
@@ -585,7 +584,7 @@ public class SmtpPanel extends JPanel {
          * Server Settings
          */
         JPanel panelServerSettings = new VerticalPanel();
-        panelServerSettings.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+        panelServerSettings.setBorder(BorderFactory.createTitledBorder(
                 JMeterUtils.getResString("smtp_server_settings"))); // $NON-NLS-1$
 
         JPanel panelMailServer = new JPanel(new BorderLayout(5, 0));
@@ -600,7 +599,7 @@ public class SmtpPanel extends JPanel {
         panelServerSettings.add(panelMailServerPort, BorderLayout.SOUTH);
 
         JPanel panelServerTimeoutsSettings = new VerticalPanel();
-        panelServerTimeoutsSettings.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+        panelServerTimeoutsSettings.setBorder(BorderFactory.createTitledBorder(
                 JMeterUtils.getResString("smtp_server_timeouts_settings"))); // $NON-NLS-1$
 
         JPanel panelMailServerConnectionTimeout = new JPanel(new BorderLayout(5, 0));
@@ -626,7 +625,6 @@ public class SmtpPanel extends JPanel {
          */
         JPanel panelMailSettings = new JPanel(new GridBagLayout());
         panelMailSettings.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createEtchedBorder(),
                 JMeterUtils.getResString("smtp_mail_settings"))); // $NON-NLS-1$
 
         gridBagConstraints.gridx = 0;
@@ -678,7 +676,6 @@ public class SmtpPanel extends JPanel {
          */
         JPanel panelAuthSettings = new JPanel(new GridBagLayout());
         panelAuthSettings.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createEtchedBorder(),
                 JMeterUtils.getResString("smtp_auth_settings"))); // $NON-NLS-1$
 
         cbUseAuth.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
@@ -731,7 +728,6 @@ public class SmtpPanel extends JPanel {
          */
         JPanel panelMessageSettings = new JPanel(new GridBagLayout());
         panelMessageSettings.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createEtchedBorder(),
                 JMeterUtils.getResString("smtp_message_settings"))); // $NON-NLS-1$
 
         gridBagConstraints.gridx = 0;
@@ -791,7 +787,6 @@ public class SmtpPanel extends JPanel {
         gridBagConstraints.gridy = 3;
         panelMessageSettings.add(jlMessage, gridBagConstraints);
 
-        taMessage.setBorder(BorderFactory.createBevelBorder(1));
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 3;
         gridBagConstraints.fill = GridBagConstraints.BOTH;
@@ -853,7 +848,6 @@ public class SmtpPanel extends JPanel {
          */
         JPanel panelAdditionalSettings = new JPanel(new GridBagLayout());
         panelAdditionalSettings.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createEtchedBorder(),
                 JMeterUtils.getResString("smtp_additional_settings"))); // $NON-NLS-1$
 
         cbMessageSizeStats.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));

@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.report.processor.graph.impl;
@@ -93,14 +92,14 @@ public class SyntheticResponseTimeDistributionGraphConsumer extends
             if (sample.getSuccess()) {
                 long elapsedTime = sample.getElapsedTime();
                 if (elapsedTime <= satisfiedThreshold) {
-                    return Double.valueOf(0);
+                    return (double) 0;
                 } else if (elapsedTime <= toleratedThreshold) {
-                    return Double.valueOf(1);
+                    return 1d;
                 } else {
-                    return Double.valueOf(2);
+                    return 2d;
                 }
             } else {
-                return Double.valueOf(3);
+                return 3d;
             }
         };
     }
@@ -125,9 +124,9 @@ public class SyntheticResponseTimeDistributionGraphConsumer extends
     protected void initializeExtraResults(MapResultData parentResult) {
         ListResultData listResultData = new ListResultData();
         String[] seriesLabels = new String[]{
-                SATISFIED_LABEL.format(new Object[]{Long.valueOf(getSatisfiedThreshold())}),
-                TOLERATED_LABEL.format(new Object[]{Long.valueOf(getSatisfiedThreshold()), Long.valueOf(getToleratedThreshold())}),
-                UNTOLERATED_LABEL.format(new Object[]{Long.valueOf(getToleratedThreshold())}),
+                SATISFIED_LABEL.format(new Object[]{getSatisfiedThreshold()}),
+                TOLERATED_LABEL.format(new Object[]{getSatisfiedThreshold(), getToleratedThreshold()}),
+                UNTOLERATED_LABEL.format(new Object[]{getToleratedThreshold()}),
                 FAILED_LABEL
         };
         String[] colors = new String[]{
@@ -135,7 +134,7 @@ public class SyntheticResponseTimeDistributionGraphConsumer extends
         };
         for (int i = 0; i < seriesLabels.length; i++) {
             ListResultData array = new ListResultData();
-            array.addResult(new ValueResultData(Integer.valueOf(i)));
+            array.addResult(new ValueResultData(i));
             array.addResult(new ValueResultData(seriesLabels[i]));
             listResultData.addResult(array);
         }
@@ -192,10 +191,10 @@ public class SyntheticResponseTimeDistributionGraphConsumer extends
 
     private void formatLabels() {
         this.satisfiedLabels = Collections.singletonList(
-                SATISFIED_LABEL.format(new Object[]{Long.valueOf(this.satisfiedThreshold)}));
+                SATISFIED_LABEL.format(new Object[]{this.satisfiedThreshold}));
         this.toleratedLabels = Collections.singletonList(
-                TOLERATED_LABEL.format(new Object[]{Long.valueOf(this.satisfiedThreshold), Long.valueOf(this.toleratedThreshold)}));
+                TOLERATED_LABEL.format(new Object[]{this.satisfiedThreshold, this.toleratedThreshold}));
         this.untoleratedLabels = Collections.singletonList(
-                UNTOLERATED_LABEL.format(new Object[]{Long.valueOf(this.toleratedThreshold)}));
+                UNTOLERATED_LABEL.format(new Object[]{this.toleratedThreshold}));
     }
 }

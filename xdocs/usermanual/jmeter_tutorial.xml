@@ -1,20 +1,20 @@
 <?xml version="1.0"?>
 <!--
-   Licensed to the Apache Software Foundation (ASF) under one or more
-   contributor license agreements.  See the NOTICE file distributed with
-   this work for additional information regarding copyright ownership.
-   The ASF licenses this file to You under the Apache License, Version 2.0
-   (the "License"); you may not use this file except in compliance with
-   the License.  You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
--->
+  ~ Licensed to the Apache Software Foundation (ASF) under one or more
+  ~ contributor license agreements.  See the NOTICE file distributed with
+  ~ this work for additional information regarding copyright ownership.
+  ~ The ASF licenses this file to you under the Apache License, Version 2.0
+  ~ (the "License"); you may not use this file except in compliance with
+  ~ the License.  You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
 
 <!DOCTYPE document[
 <!ENTITY sect-num '29'>
@@ -332,7 +332,7 @@ Writing Visualizers is somewhat of a special case, however.
 a look at more up to date components like:
 <ul>
 <li><a href="generating-dashboard.html">Web report</a></li>
-<li><a href="realtime-results.html">Real-Time results</a> with <a href="../api/org/apache/jmeter/visualizers/backend/BackendListenerClient.html">BackendListenerClient</a></li>
+<li><a href="realtime-results.html">Real-Time results</a> with <apilink href="org/apache/jmeter/visualizers/backend/BackendListenerClient.html">BackendListenerClient</apilink></li>
 </ul>
 </note>
 <p>
@@ -366,7 +366,7 @@ The easiest way to write a visualizer is to do the following:
 </ol>
 
 <p>
-<code>AbstractVisualizer</code> provides some common functionality, which most visualizers like 
+<code>AbstractVisualizer</code> provides some common functionality, which most visualizers like
 <code>Graph Results</code> use. The common functionality provided by the abstract class includes:
 </p>
 
@@ -542,7 +542,7 @@ added so that users can save a screen capture of any given visualizer.
 a look at more up to date components like:
 <ul>
 <li><a href="generating-dashboard.html">Web report</a></li>
-<li><a href="realtime-results.html">Real-Time results</a> with <a href="../api/org/apache/jmeter/visualizers/backend/BackendListenerClient.html">BackendListenerClient</a></li>
+<li><a href="realtime-results.html">Real-Time results</a> with <apilink href="org/apache/jmeter/visualizers/backend/BackendListenerClient.html">BackendListenerClient</apilink></li>
 </ul>
 </note>
 <p>
@@ -576,7 +576,7 @@ implement the interface, please look at <code>GraphVisualizer</code>.
 a look at more up to date components like:
 <ul>
 <li><a href="generating-dashboard.html">Web report</a></li>
-<li><a href="realtime-results.html">Real-Time results</a> with <a href="../api/org/apache/jmeter/visualizers/backend/BackendListenerClient.html">BackendListenerClient</a></li>
+<li><a href="realtime-results.html">Real-Time results</a> with <apilink href="org/apache/jmeter/visualizers/backend/BackendListenerClient.html">BackendListenerClient</apilink></li>
 </ul>
 </note>
 <p>

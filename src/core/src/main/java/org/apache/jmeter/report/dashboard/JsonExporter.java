@@ -2,26 +2,26 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.report.dashboard;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,6 +52,7 @@ public class JsonExporter extends AbstractDataExporter {
     public static final String OUTPUT_FILENAME = "statistics.json";
     private static final FileFilter JSON_FILE_FILTER =
             file -> file.isFile() && file.getName().equals(OUTPUT_FILENAME);
+    private final static ObjectWriter OBJECT_WRITER = new ObjectMapper().writerWithDefaultPrettyPrinter();
 
 
     public JsonExporter() {
@@ -79,9 +80,8 @@ public class JsonExporter extends AbstractDataExporter {
 
             File outputFile = new File(outputDir, OUTPUT_FILENAME);
             LOGGER.info("Writing statistics JSON to {}", outputFile);
-            ObjectWriter objectWriter = new ObjectMapper().writerWithDefaultPrettyPrinter();
-            try (FileWriter fileWriter = new FileWriter(outputFile)) {
-                objectWriter.writeValue(fileWriter, statistics);
+            try (Writer fileWriter = Files.newBufferedWriter(outputFile.toPath())) {
+                OBJECT_WRITER.writeValue(fileWriter, statistics);
             } catch (IOException e) {
                 throw new ExportException("Error generating JSON statistics file to " + outputFile +" for "+statistics, e);
             }
@@ -126,12 +126,13 @@ public class JsonExporter extends AbstractDataExporter {
         statistic.setMeanResTime((Double) ((ValueResultData)listResultData.get(4)).getValue());
         statistic.setMinResTime((Long) ((ValueResultData)listResultData.get(5)).getValue());
         statistic.setMaxResTime((Long) ((ValueResultData)listResultData.get(6)).getValue());
-        statistic.setPct1ResTime((Double) ((ValueResultData)listResultData.get(7)).getValue());
-        statistic.setPct2ResTime((Double) ((ValueResultData)listResultData.get(8)).getValue());
-        statistic.setPct3ResTime((Double) ((ValueResultData)listResultData.get(9)).getValue());
-        statistic.setThroughput((Double) ((ValueResultData)listResultData.get(10)).getValue());
-        statistic.setReceivedKBytesPerSec((Double) ((ValueResultData)listResultData.get(11)).getValue());
-        statistic.setSentKBytesPerSec((Double) ((ValueResultData)listResultData.get(12)).getValue());
+        statistic.setMedianResTime((Double) ((ValueResultData)listResultData.get(7)).getValue());
+        statistic.setPct1ResTime((Double) ((ValueResultData)listResultData.get(8)).getValue());
+        statistic.setPct2ResTime((Double) ((ValueResultData)listResultData.get(9)).getValue());
+        statistic.setPct3ResTime((Double) ((ValueResultData)listResultData.get(10)).getValue());
+        statistic.setThroughput((Double) ((ValueResultData)listResultData.get(11)).getValue());
+        statistic.setReceivedKBytesPerSec((Double) ((ValueResultData)listResultData.get(12)).getValue());
+        statistic.setSentKBytesPerSec((Double) ((ValueResultData)listResultData.get(13)).getValue());
         statistics.put(statistic.getTransaction(), statistic);
     }
 }

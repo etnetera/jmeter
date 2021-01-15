@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.system.gui;
@@ -32,6 +31,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.config.Argument;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.config.gui.ArgumentsPanel;
+import org.apache.jmeter.gui.TestElementMetadata;
 import org.apache.jmeter.gui.util.FilePanelEntry;
 import org.apache.jmeter.gui.util.VerticalPanel;
 import org.apache.jmeter.protocol.system.SystemSampler;
@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
 /**
  * GUI for {@link SystemSampler}
  */
+@TestElementMetadata(labelResource = "system_sampler_title")
 public class SystemSamplerGui extends AbstractSamplerGui implements ItemListener {
     private static final Logger log = LoggerFactory.getLogger(SystemSamplerGui.class);
 
@@ -165,7 +166,6 @@ public class SystemSamplerGui extends AbstractSamplerGui implements ItemListener
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
         panel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createEtchedBorder(),
                 JMeterUtils.getResString("return_code_config_box_title"))); // $NON-NLS-1$
         checkReturnCode = new JCheckBox(JMeterUtils.getResString("check_return_code_title")); // $NON-NLS-1$
         checkReturnCode.addItemListener(this);
@@ -185,7 +185,6 @@ public class SystemSamplerGui extends AbstractSamplerGui implements ItemListener
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
         panel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createEtchedBorder(),
                 JMeterUtils.getResString("timeout_config_box_title"))); // $NON-NLS-1$
         timeout = new JLabeledTextField(JMeterUtils.getResString("timeout_title")); // $NON-NLS-1$
         timeout.setSize(timeout.getSize().height, 30);
@@ -207,7 +206,6 @@ public class SystemSamplerGui extends AbstractSamplerGui implements ItemListener
 
         JPanel panel = new VerticalPanel();
         panel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createEtchedBorder(),
                 JMeterUtils.getResString("command_config_box_title"))); // $NON-NLS-1$
         panel.add(cmdPanel, BorderLayout.NORTH);
         panel.add(makeArgumentsPanel(), BorderLayout.CENTER);
@@ -245,7 +243,6 @@ public class SystemSamplerGui extends AbstractSamplerGui implements ItemListener
     private JPanel makeStreamsPanel() {
         JPanel stdPane = new JPanel(new BorderLayout());
         stdPane.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createEtchedBorder(),
                 JMeterUtils.getResString("command_config_std_streams_title"))); // $NON-NLS-1$
         stdPane.add(stdin, BorderLayout.NORTH);
         stdPane.add(stdout, BorderLayout.CENTER);

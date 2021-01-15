@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.testbeans.gui;
@@ -317,6 +316,7 @@ public class GenericTestBeanCustomizer extends JPanel implements SharedCustomize
      * @param pd the descriptor
      * @param pe the propertyEditor
      */
+    @SuppressWarnings("JdkObsolete")
     private static void validateAttributes(PropertyDescriptor pd, PropertyEditor pe) {
         final Object deflt = pd.getValue(DEFAULT);
         if (deflt == null) {
@@ -572,8 +572,7 @@ public class GenericTestBeanCustomizer extends JPanel implements SharedCustomize
                 }
                 currentGroup = g;
                 currentPanel = new JPanel(new GridBagLayout());
-                currentPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
-                        groupDisplayName(g)));
+                currentPanel.setBorder(BorderFactory.createTitledBorder(groupDisplayName(g)));
                 cp.weighty = 0.0;
                 y = 0;
             }
@@ -710,7 +709,7 @@ public class GenericTestBeanCustomizer extends JPanel implements SharedCustomize
         private Integer groupOrder(String group) {
             Integer order = (Integer) beanInfo.getBeanDescriptor().getValue(ORDER(group));
             if (order == null) {
-                order = Integer.valueOf(0);
+                order = 0;
             }
             return order;
         }
@@ -724,7 +723,7 @@ public class GenericTestBeanCustomizer extends JPanel implements SharedCustomize
         private Integer propertyOrder(PropertyDescriptor d) {
             Integer order = (Integer) d.getValue(ORDER);
             if (order == null) {
-                order = Integer.valueOf(0);
+                order = 0;
             }
             return order;
         }

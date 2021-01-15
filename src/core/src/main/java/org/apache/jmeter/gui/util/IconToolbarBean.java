@@ -2,21 +2,23 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.gui.util;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.jmeter.gui.action.ActionNames;
 import org.slf4j.Logger;
@@ -28,6 +30,8 @@ public final class IconToolbarBean {
 
     private static final String ICON_FIELD_SEP = ",";  //$NON-NLS-1$
 
+    private static final Pattern DIMENSIONS = Pattern.compile("(\\d+)x(\\d+)");
+
     private final String i18nKey;
 
     private final String actionName;
@@ -35,6 +39,10 @@ public final class IconToolbarBean {
     private final String iconPath;
 
     private final String iconPathPressed;
+
+    private final int width;
+
+    private final int height;
 
     /**
      * Constructor to transform a line value (from icon set file) to a icon bean for toolbar.
@@ -54,6 +62,16 @@ public final class IconToolbarBean {
         } else {
             throw new IllegalArgumentException("Incorrect argument format - expected at least 2 fields separated by " + ICON_FIELD_SEP);
         }
+        Matcher m = DIMENSIONS.matcher(iconSize);
+        if (m.matches()) {
+            this.width = Integer.parseInt(m.group(1));
+            this.height = Integer.parseInt(m.group(2));
+        } else {
+            log.info("Unable to parse {} as width x height for icon {}. Will default to 22x22", iconSize, actionName);
+            // See JMeterToolBar.DEFAULT_TOOLBAR_ICON_SIZE
+            this.width = 22;
+            this.height = 22;
+        }
     }
 
     /**
@@ -63,7 +81,7 @@ public final class IconToolbarBean {
     public String getActionNameResolve() {
         final String aName;
         try {
-            aName = (String) (ActionNames.class.getField(this.actionName).get(null));
+            aName = (String) ActionNames.class.getField(this.actionName).get(null);
         } catch (Exception e) {
             log.warn("Toolbar icon Action names error: {}, use unknown action.", this.actionName); //$NON-NLS-1$
             return this.actionName; // return unknown action names for display error msg
@@ -99,4 +117,17 @@ public final class IconToolbarBean {
         return iconPathPressed;
     }
 
+    /**
+     * @return desired icon width
+     */
+    public int getWidth() {
+        return width;
+    }
+
+    /**
+     * @return desired icon height
+     */
+    public int getHeight() {
+        return height;
+    }
 }

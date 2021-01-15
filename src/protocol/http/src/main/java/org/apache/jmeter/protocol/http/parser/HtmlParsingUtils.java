@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.http.parser;
@@ -107,7 +106,7 @@ public final class HtmlParsingUtils {
             Argument item = (Argument) argument.getObjectValue();
             final String name = item.getName();
             if (!query.contains(name + "=")) { // $NON-NLS-1$
-                if (!(matcher.contains(query, patternCache.getPattern(name, Perl5Compiler.READ_ONLY_MASK)))) {
+                if (!matcher.contains(query, patternCache.getPattern(name, Perl5Compiler.READ_ONLY_MASK))) {
                     return false;
                 }
             }
@@ -209,7 +208,7 @@ public final class HtmlParsingUtils {
         tidy.setShowWarnings(false);
 
         if (log.isDebugEnabled()) {
-            log.debug("getParser1 : tidy parser created - " + tidy);
+            log.debug("getParser1 : tidy parser created - {}", tidy);
         }
 
         log.debug("End : getParser1");
@@ -233,7 +232,7 @@ public final class HtmlParsingUtils {
                                 text.getBytes(StandardCharsets.UTF_8)), null);
 
         if (log.isDebugEnabled()) {
-            log.debug("node : " + node);
+            log.debug("node : {}", node);
         }
 
         log.debug("End : getDOM1");
@@ -264,7 +263,7 @@ public final class HtmlParsingUtils {
      */
     public static HTTPSamplerBase createUrlFromAnchor(String parsedUrlString, URL context) throws MalformedURLException {
         if (log.isDebugEnabled()) {
-            log.debug("Creating URL from Anchor: " + parsedUrlString + ", base: " + context);
+            log.debug("Creating URL from Anchor: {}, base: {}", parsedUrlString, context);
         }
         URL url = ConversionUtils.makeRelativeURL(context, parsedUrlString);
         HTTPSamplerBase sampler =HTTPSamplerFactory.newInstance();
@@ -277,14 +276,17 @@ public final class HtmlParsingUtils {
         return sampler;
     }
 
+    @SuppressWarnings("JdkObsolete")
     public static List<HTTPSamplerBase> createURLFromForm(Node doc, URL context) {
         String selectName = null;
+        // TODO: migrate to ArrayDequeue
         LinkedList<HTTPSamplerBase> urlConfigs = new LinkedList<>();
         recurseForm(doc, urlConfigs, context, selectName, false);
         return urlConfigs;
     }
 
     // N.B. Since the tags are extracted from an HTML Form, any values must already have been encoded
+    @SuppressWarnings("JdkObsolete")
     private static boolean recurseForm(Node tempNode, LinkedList<HTTPSamplerBase> urlConfigs, URL context, String selectName,
             boolean inForm) {
         NamedNodeMap nodeAtts = tempNode.getAttributes();
@@ -330,7 +332,7 @@ public final class HtmlParsingUtils {
                 }
             }
         } catch (Exception ex) {
-            log.warn("Some bad HTML " + printNode(tempNode), ex);
+            log.warn("Some bad HTML {}", printNode(tempNode), ex);
         }
         NodeList childNodes = tempNode.getChildNodes();
         for (int x = 0; x < childNodes.getLength(); x++) {
@@ -379,7 +381,7 @@ public final class HtmlParsingUtils {
         Pattern pattern = JMeterUtils.getPatternCache().getPattern(
                 "URL\\(\\s*('|\")(.*)('|\")\\s*\\)", // $NON-NLS-1$
                 Perl5Compiler.CASE_INSENSITIVE_MASK | Perl5Compiler.SINGLELINE_MASK | Perl5Compiler.READ_ONLY_MASK);
-        PatternMatcherInput input = null;
+        PatternMatcherInput input;
         input = new PatternMatcherInput(styleTagStr);
         while (matcher.contains(input, pattern)) {
             MatchResult match = matcher.getMatch();

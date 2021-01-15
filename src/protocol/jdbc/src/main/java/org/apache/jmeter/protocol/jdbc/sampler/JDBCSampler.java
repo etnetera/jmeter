@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.jdbc.sampler;
@@ -27,6 +26,7 @@ import java.util.Set;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.engine.util.ConfigMergabilityIndicator;
+import org.apache.jmeter.gui.TestElementMetadata;
 import org.apache.jmeter.protocol.jdbc.AbstractJDBCTestElement;
 import org.apache.jmeter.protocol.jdbc.config.DataSourceElement;
 import org.apache.jmeter.samplers.Entry;
@@ -40,6 +40,7 @@ import org.apache.jorphan.util.JOrphanUtils;
  * A sampler which understands JDBC database requests.
  *
  */
+@TestElementMetadata(labelResource = "displayName")
 public class JDBCSampler extends AbstractJDBCTestElement implements Sampler, TestBean, ConfigMergabilityIndicator {
     private static final Set<String> APPLIABLE_CONFIG_CLASSES = new HashSet<>(
             Arrays.asList("org.apache.jmeter.config.gui.SimpleConfigGui"));
@@ -71,8 +72,8 @@ public class JDBCSampler extends AbstractJDBCTestElement implements Sampler, Tes
         Connection conn = null;
 
         try {
-            if(JOrphanUtils.isBlank(getDataSource())) {
-                throw new IllegalArgumentException("Variable Name must not be null in "+getName());
+            if (JOrphanUtils.isBlank(getDataSource())) {
+                throw new IllegalArgumentException("Name for DataSoure must not be empty in " + getName());
             }
 
             try {
@@ -86,12 +87,14 @@ public class JDBCSampler extends AbstractJDBCTestElement implements Sampler, Tes
             final String errCode = Integer.toString(ex.getErrorCode());
             res.setResponseMessage(ex.toString());
             res.setResponseCode(ex.getSQLState()+ " " +errCode);
-            res.setResponseData(ex.getMessage().getBytes());
+            res.setResponseData(ex.getMessage(), res.getDataEncodingWithDefault());
             res.setSuccessful(false);
         } catch (Exception ex) {
             res.setResponseMessage(ex.toString());
             res.setResponseCode("000");
-            res.setResponseData(ObjectUtils.defaultIfNull(ex.getMessage(), "NO MESSAGE").getBytes());
+            res.setResponseData(
+                    ObjectUtils.defaultIfNull(ex.getMessage(), "NO MESSAGE"),
+                    res.getDataEncodingWithDefault());
             res.setSuccessful(false);
         } finally {
             close(conn);

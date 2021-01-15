@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.save;
@@ -39,7 +38,7 @@ import java.util.List;
 
 import javax.swing.table.DefaultTableModel;
 
-import org.apache.commons.collections.map.LinkedMap;
+import org.apache.commons.collections4.map.LinkedMap;
 import org.apache.commons.lang3.CharUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.reporters.ResultCollector;
@@ -192,6 +191,7 @@ public final class CSVSaveService {
      *
      * @throws JMeterError
      */
+    @SuppressWarnings("JdkObsolete")
     private static SampleEvent makeResultFromDelimitedString(
             final String[] parts,
             final SampleSaveConfiguration saveConfig, // may be updated
@@ -250,7 +250,9 @@ public final class CSVSaveService {
             }
 
             if (saveConfig.saveSampleCount()) {
-                result = new StatisticalSampleResult(timeStamp, elapsed);
+                @SuppressWarnings("deprecation")
+                StatisticalSampleResult sampleResult = new StatisticalSampleResult(timeStamp, elapsed);
+                result = sampleResult;
             } else {
                 result = new SampleResult(timeStamp, elapsed);
             }
@@ -287,7 +289,7 @@ public final class CSVSaveService {
             if (saveConfig.saveSuccess()) {
                 field = SUCCESSFUL;
                 text = parts[i++];
-                result.setSuccessful(Boolean.valueOf(text).booleanValue());
+                result.setSuccessful(Boolean.valueOf(text));
             }
 
             if (saveConfig.saveAssertionResultsFailureMessage()) {
@@ -453,7 +455,7 @@ public final class CSVSaveService {
     }
 
     // Map header names to set() methods
-    private static final LinkedMap headerLabelMethods = new LinkedMap();
+    private static final LinkedMap<String, Functor> headerLabelMethods = new LinkedMap<>();
 
     // These entries must be in the same order as columns are saved/restored.
 
@@ -537,7 +539,7 @@ public final class CSVSaveService {
             if (isVariableName(label)) {
                 varCount++;
             } else {
-                Functor set = (Functor) headerLabelMethods.get(label);
+                Functor set = headerLabelMethods.get(label);
                 set.invoke(saveConfig, new Boolean[]{Boolean.TRUE});
             }
         }
@@ -808,6 +810,7 @@ public final class CSVSaveService {
      *            the separation string
      * @return the separated value representation of the result
      */
+    @SuppressWarnings("JdkObsolete")
     public static String resultToDelimitedString(SampleEvent event,
             SampleResult sample,
             SampleSaveConfiguration saveConfig,

@@ -2,25 +2,23 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.gui;
 
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -57,7 +55,6 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.DropMode;
 import javax.swing.ImageIcon;
 import javax.swing.InputMap;
@@ -75,6 +72,7 @@ import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.MenuElement;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreeModel;
@@ -85,6 +83,7 @@ import org.apache.jmeter.gui.action.ActionNames;
 import org.apache.jmeter.gui.action.ActionRouter;
 import org.apache.jmeter.gui.action.KeyStrokes;
 import org.apache.jmeter.gui.action.LoadDraggedFile;
+import org.apache.jmeter.gui.action.LookAndFeelCommand;
 import org.apache.jmeter.gui.logging.GuiLogEventListener;
 import org.apache.jmeter.gui.logging.LogEventObject;
 import org.apache.jmeter.gui.tree.JMeterCellRenderer;
@@ -103,6 +102,7 @@ import org.apache.jmeter.testelement.TestStateListener;
 import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.gui.ComponentUtil;
+import org.apache.jorphan.gui.JMeterUIDefaults;
 import org.apache.jorphan.util.JOrphanUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -233,8 +233,8 @@ public class MainFrame extends JFrame implements TestStateListener, Remoteable, 
         initTopLevelDndHandler();
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
-        int ctrlShiftMask = (IS_MAC ? InputEvent.META_DOWN_MASK : InputEvent.CTRL_DOWN_MASK) |
-                InputEvent.SHIFT_DOWN_MASK;
+        int ctrlAltMask = (IS_MAC ? InputEvent.META_DOWN_MASK : InputEvent.CTRL_DOWN_MASK) |
+                InputEvent.ALT_DOWN_MASK;
 
         addMouseWheelListener(e -> {
             if (e.getWheelRotation() == 0) {
@@ -244,7 +244,9 @@ public class MainFrame extends JFrame implements TestStateListener, Remoteable, 
                 // See https://github.com/JetBrains/intellij-community/blob/21c99af7c78fc82aefc4d05646389f4991b08b38/bin/idea.properties#L133-L156
                 return;
             }
-            if ((e.getModifiersEx() & ctrlShiftMask) == ctrlShiftMask) {
+            // Shift down means "horizontal scrolling" on macOS, and we need only vertical one
+            if ((e.getModifiersEx() & (ctrlAltMask | InputEvent.SHIFT_DOWN_MASK)) == ctrlAltMask) {
+                e.consume();
                 final float scale = 1.1f;
                 int rotation = e.getWheelRotation();
                 if (rotation > 0) { // DOWN
@@ -252,7 +254,7 @@ public class MainFrame extends JFrame implements TestStateListener, Remoteable, 
                 } else if (rotation < 0) { // UP
                     JMeterUtils.applyScaleOnFonts(scale);
                 }
-                e.consume();
+                JMeterUtils.refreshUI();
             }
         });
     }
@@ -263,7 +265,7 @@ public class MainFrame extends JFrame implements TestStateListener, Remoteable, 
      */
     private void refreshErrors(ActionEvent evt) {
         if (errorOrFatal.get() > 0) {
-            warnIndicator.setForeground(Color.RED);
+            warnIndicator.setForeground(UIManager.getColor(JMeterUIDefaults.BUTTON_ERROR_FOREGROUND));
             warnIndicator.setText(Integer.toString(errorOrFatal.get()));
         }
     }
@@ -586,12 +588,11 @@ public class MainFrame extends JFrame implements TestStateListener, Remoteable, 
      * @return a panel containing the running indicator
      */
     private Component createToolBar() {
-        Box toolPanel = new Box(BoxLayout.X_AXIS);
+        JMeterToolBar toolPanel = JMeterToolBar.createToolbar(true);
         // add the toolbar
-        this.toolbar = JMeterToolBar.createToolbar(true);
+        this.toolbar = toolPanel;
         GuiPackage guiInstance = GuiPackage.getInstance();
         guiInstance.setMainToolbar(toolbar);
-        toolPanel.add(toolbar);
 
         toolPanel.add(Box.createRigidArea(new Dimension(5, 15)));
         toolPanel.add(Box.createGlue());
@@ -668,13 +669,18 @@ public class MainFrame extends JFrame implements TestStateListener, Remoteable, 
                         Object testElement = ((DefaultMutableTreeNode) treeNode).getUserObject();
                         if (testElement instanceof TestElement) {
                             String comment = ((TestElement) testElement).getComment();
-                            if (comment != null && comment.length() > 0) {
-                                return comment;
+                            if (StringUtils.isNotBlank(comment)) {
+                                return StringUtils.abbreviate(comment, 80);
                             }
                         }
                     }
                 }
-                return null;
+                if (LookAndFeelCommand.isDarklafTheme()) {
+                    // See https://github.com/weisJ/darklaf/issues/226#issuecomment-748478418
+                    return "";
+                } else {
+                    return null;
+                }
             }
         };
         treevar.setToolTipText("");
@@ -872,7 +878,7 @@ public class MainFrame extends JFrame implements TestStateListener, Remoteable, 
         public void clearData() {
             errorOrFatal.set(0);
             SwingUtilities.invokeLater(() -> {
-                warnIndicator.setForeground(null);
+                warnIndicator.setForeground(UIManager.getColor("Button.foreground"));
                 warnIndicator.setText(Integer.toString(errorOrFatal.get()));
             });
         }

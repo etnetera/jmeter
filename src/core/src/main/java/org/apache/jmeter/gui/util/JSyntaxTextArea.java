@@ -2,35 +2,45 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.gui.util;
 
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.HeadlessException;
+import java.awt.event.HierarchyEvent;
+import java.awt.event.HierarchyListener;
 import java.io.IOException;
 import java.util.Properties;
 
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.gui.action.LookAndFeelCommand;
 import org.apache.jmeter.util.JMeterUtils;
+import org.apache.jorphan.gui.JFactory;
+import org.apache.jorphan.gui.JMeterUIDefaults;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.Theme;
 import org.fife.ui.rtextarea.RUndoManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.weisj.darklaf.extensions.rsyntaxarea.DarklafRSyntaxTheme;
 
 /**
  * Utility class to handle RSyntaxTextArea code
@@ -40,19 +50,26 @@ import org.slf4j.LoggerFactory;
 public class JSyntaxTextArea extends RSyntaxTextArea {
 
     private static final long serialVersionUID = 211L;
-    private static final Logger log              = LoggerFactory.getLogger(JSyntaxTextArea.class);
+    private static final Logger log = LoggerFactory.getLogger(JSyntaxTextArea.class);
 
-    private static final Theme DARCULA_THEME = initTheme();
+    private static final Theme DEFAULT_THEME = loadTheme(Theme.class, "themes/default.xml");
 
     private final Properties languageProperties = JMeterUtils.loadProperties("org/apache/jmeter/gui/util/textarea.properties"); //$NON-NLS-1$
 
     private final boolean disableUndo;
     private static final boolean WRAP_STYLE_WORD = JMeterUtils.getPropDefault("jsyntaxtextarea.wrapstyleword", true);
-    private static final boolean LINE_WRAP       = JMeterUtils.getPropDefault("jsyntaxtextarea.linewrap", true);
-    private static final boolean CODE_FOLDING    = JMeterUtils.getPropDefault("jsyntaxtextarea.codefolding", true);
-    private static final int MAX_UNDOS           = JMeterUtils.getPropDefault("jsyntaxtextarea.maxundos", 50);
+    private static final boolean LINE_WRAP = JMeterUtils.getPropDefault("jsyntaxtextarea.linewrap", true);
+    private static final boolean CODE_FOLDING = JMeterUtils.getPropDefault("jsyntaxtextarea.codefolding", true);
+    private static final int MAX_UNDOS = JMeterUtils.getPropDefault("jsyntaxtextarea.maxundos", 50);
     private static final String USER_FONT_FAMILY = JMeterUtils.getPropDefault("jsyntaxtextarea.font.family", null);
-    private static final int USER_FONT_SIZE      = JMeterUtils.getPropDefault("jsyntaxtextarea.font.size", -1);
+    private static final int USER_FONT_SIZE = JMeterUtils.getPropDefault("jsyntaxtextarea.font.size", -1);
+
+    private static final HierarchyListener GUTTER_THEME_PATCHER = e -> {
+        if ((e.getChangeFlags() & HierarchyEvent.PARENT_CHANGED) != 0
+                && e.getChanged() instanceof JSyntaxTextArea) {
+            SwingUtilities.invokeLater(() -> applyTheme((JSyntaxTextArea) e.getChanged()));
+        }
+    };
 
     /**
      * Creates the default syntax highlighting text area. The following are set:
@@ -75,7 +92,9 @@ public class JSyntaxTextArea extends RSyntaxTextArea {
     public static JSyntaxTextArea getInstance(int rows, int cols, boolean disableUndo) {
         try {
             JSyntaxTextArea jSyntaxTextArea = new JSyntaxTextArea(rows, cols, disableUndo);
-            applyTheme(jSyntaxTextArea);
+            JFactory.withDynamic(jSyntaxTextArea, JSyntaxTextArea::applyTheme);
+            // Gutter styling is only applied if the text area is contained in a scroll pane.
+            jSyntaxTextArea.addHierarchyListener(GUTTER_THEME_PATCHER);
             return jSyntaxTextArea;
         } catch (HeadlessException e) {
             // Allow override for unit testing only
@@ -113,9 +132,24 @@ public class JSyntaxTextArea extends RSyntaxTextArea {
      * @param jSyntaxTextArea
      */
     private static void applyTheme(JSyntaxTextArea jSyntaxTextArea) {
-        String laf = LookAndFeelCommand.getJMeterLaf();
-        if(JMeterMenuBar.DARCULA_LAF_CLASS.equals(laf)) {
-            DARCULA_THEME.apply(jSyntaxTextArea);
+        final boolean isDarklafTheme = LookAndFeelCommand.isDarklafTheme();
+        final Theme theme = isDarklafTheme ? new DarklafRSyntaxTheme(jSyntaxTextArea) : DEFAULT_THEME;
+        if (theme != null) {
+            theme.apply(jSyntaxTextArea);
+            Font font = jSyntaxTextArea.getFont();
+            float scale = JMeterUIDefaults.INSTANCE.getScale();
+            if (Math.abs(scale - 1.0f) > 0.01) {
+                font = font.deriveFont(font.getSize2D() * scale);
+                jSyntaxTextArea.setFont(font);
+            }
+        }
+        if (!isDarklafTheme) {
+            // Darklaf themes provide a custom background color for editors, so we don't overwrite it.
+            Color color = UIManager.getColor("TextArea.background");
+            if (color != null) {
+                // Pretend syntax textarea theme was designed for the current LaF
+                jSyntaxTextArea.setBackground(color);
+            }
         }
     }
 
@@ -200,7 +234,7 @@ public class JSyntaxTextArea extends RSyntaxTextArea {
         this.disableUndo = disableUndo;
         if (USER_FONT_FAMILY != null) {
             int fontSize = USER_FONT_SIZE > 0 ? USER_FONT_SIZE : getFont().getSize();
-            setFont(new Font(USER_FONT_FAMILY, Font.PLAIN, fontSize));
+            setFont(JMeterUIDefaults.createFont(USER_FONT_FAMILY, Font.PLAIN, fontSize));
             if (log.isDebugEnabled()) {
                 log.debug("Font is set to: {}", getFont());
             }
@@ -256,17 +290,15 @@ public class JSyntaxTextArea extends RSyntaxTextArea {
      *            The initial text to be set
      */
     public void setInitialText(String string) {
-        setText(string);
+        setText(StringUtils.defaultString(string, ""));
         discardAllEdits();
     }
 
-
-    private static final Theme initTheme() {
+    private static Theme loadTheme(Class<?> klass, String name) {
         try {
-            return Theme.load(JSyntaxTextArea.class.getClassLoader().getResourceAsStream(
-                    "org/apache/jmeter/gui/util/theme/darcula_theme.xml"));
+            return Theme.load(klass.getResourceAsStream(name));
         } catch (IOException e) {
-            log.error("Error reading darcula_theme for JSyntaxTextArea", e);
+            log.error("Error reading {} for JSyntaxTextArea", name, e);
             return null;
         }
     }

@@ -2,28 +2,23 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.util;
 
 import java.awt.Component;
-import java.awt.Dialog;
-import java.awt.Font;
-import java.awt.Frame;
 import java.awt.HeadlessException;
-import java.awt.Window;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -35,7 +30,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -45,7 +40,7 @@ import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.Properties;
 import java.util.ResourceBundle;
-import java.util.Vector;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -56,12 +51,11 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
-import javax.swing.UIDefaults;
-import javax.swing.UIManager;
-import javax.swing.plaf.FontUIResource;
 
 import org.apache.jmeter.gui.GuiPackage;
 import org.apache.jmeter.threads.JMeterContextService;
+import org.apache.jorphan.gui.JFactory;
+import org.apache.jorphan.gui.JMeterUIDefaults;
 import org.apache.jorphan.reflect.ClassFinder;
 import org.apache.jorphan.test.UnitTestManager;
 import org.apache.jorphan.util.JMeterError;
@@ -71,6 +65,7 @@ import org.apache.oro.text.PatternCacheLRU;
 import org.apache.oro.text.regex.Pattern;
 import org.apache.oro.text.regex.Perl5Compiler;
 import org.apache.oro.text.regex.Perl5Matcher;
+import org.apiguardian.api.API;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -107,7 +102,8 @@ public class JMeterUtils implements UnitTestManager {
 
     private static volatile Properties appProperties;
 
-    private static final Vector<LocaleChangeListener> localeChangeListeners = new Vector<>();
+    private static final CopyOnWriteArrayList<LocaleChangeListener> localeChangeListeners =
+            new CopyOnWriteArrayList<>();
 
     private static volatile Locale locale;
 
@@ -195,15 +191,11 @@ public class JMeterUtils implements UnitTestManager {
      */
     public static void loadJMeterProperties(String file) {
         Properties p = new Properties(System.getProperties());
-        InputStream is = null;
-        try {
-            File f = new File(file);
-            is = new FileInputStream(f);
+        try (InputStream is = new FileInputStream(new File(file))) {
             p.load(is);
         } catch (IOException e) {
-            try {
-                is = ClassLoader.getSystemResourceAsStream(
-                        "org/apache/jmeter/jmeter.properties"); // $NON-NLS-1$
+            try (InputStream is = ClassLoader.getSystemResourceAsStream(
+                        "org/apache/jmeter/jmeter.properties")) { // $NON-NLS-1$
                 if (is == null) {
                     throw new RuntimeException("Could not read JMeter properties file:" + file);
                 }
@@ -211,8 +203,6 @@ public class JMeterUtils implements UnitTestManager {
             } catch (IOException ex) {
                 throw new RuntimeException("Could not read JMeter properties file:" + file);
             }
-        } finally {
-            JOrphanUtils.closeQuietly(is);
         }
         appProperties = p;
     }
@@ -240,19 +230,15 @@ public class JMeterUtils implements UnitTestManager {
      */
     public static Properties loadProperties(String file, Properties defaultProps) {
         Properties p = new Properties(defaultProps);
-        InputStream is = null;
-        try {
-            File f = new File(file);
-            is = new FileInputStream(f);
+        try (InputStream is = new FileInputStream(new File(file))) {
             p.load(is);
         } catch (IOException e) {
-            try {
-                final URL resource = JMeterUtils.class.getClassLoader().getResource(file);
-                if (resource == null) {
-                    log.warn("Cannot find {}", file);
-                    return defaultProps;
-                }
-                is = resource.openStream();
+            final URL resource = JMeterUtils.class.getClassLoader().getResource(file);
+            if (resource == null) {
+                log.warn("Cannot find {}", file);
+                return defaultProps;
+            }
+            try (InputStream is = resource.openStream()) {
                 if (is == null) {
                     log.warn("Cannot open {}", file);
                     return defaultProps;
@@ -262,8 +248,6 @@ public class JMeterUtils implements UnitTestManager {
                 log.warn("Error reading {} {}", file, ex.toString());
                 return defaultProps;
             }
-        } finally {
-            JOrphanUtils.closeQuietly(is);
         }
         return p;
     }
@@ -432,12 +416,7 @@ public class JMeterUtils implements UnitTestManager {
      */
     private static void notifyLocaleChangeListeners() {
         LocaleChangeEvent event = new LocaleChangeEvent(JMeterUtils.class, locale);
-        @SuppressWarnings("unchecked") // clone will produce correct type
-        // TODO but why do we need to clone the list?
-        // ANS: to avoid possible ConcurrentUpdateException when unsubscribing
-        // Could perhaps avoid need to clone by using a modern concurrent list
-        Vector<LocaleChangeListener> listeners = (Vector<LocaleChangeListener>) localeChangeListeners.clone();
-        for (LocaleChangeListener listener : listeners) {
+        for (LocaleChangeListener listener : localeChangeListeners) {
             listener.localeChanged(event);
         }
     }
@@ -677,9 +656,9 @@ public class JMeterUtils implements UnitTestManager {
         try {
             String lineEnd = System.getProperty("line.separator"); // $NON-NLS-1$
             InputStream is = JMeterUtils.class.getClassLoader().getResourceAsStream(name);
-            if(is != null) {
-                try (Reader in = new InputStreamReader(is);
-                        BufferedReader fileReader = new BufferedReader(in)) {
+            if (is != null) {
+                try (Reader in = new InputStreamReader(is, StandardCharsets.UTF_8);
+                     BufferedReader fileReader = new BufferedReader(in)) {
                     return fileReader.lines()
                             .collect(Collectors.joining(lineEnd, "", lineEnd));
                 }
@@ -766,6 +745,24 @@ public class JMeterUtils implements UnitTestManager {
             return Float.parseFloat(appProperties.getProperty(propName, Float.toString(defaultVal)).trim());
         } catch (Exception e) {
             log.warn("Exception '{}' occurred when fetching float property:'{}', defaulting to: {}", e.getMessage(), propName, defaultVal);
+        }
+        return defaultVal;
+    }
+
+    /**
+     * Get a double value with default if not present.
+     *
+     * @param propName
+     *            the name of the property.
+     * @param defaultVal
+     *            the default value.
+     * @return The PropDefault value
+     */
+    public static double getPropDefault(String propName, double defaultVal) {
+        try {
+            return Float.parseFloat(appProperties.getProperty(propName, Double.toString(defaultVal)).trim());
+        } catch (Exception e) {
+            log.warn("Exception '{}' occurred when fetching double property:'{}', defaulting to: {}", e.getMessage(), propName, defaultVal);
         }
         return defaultVal;
     }
@@ -863,13 +860,13 @@ public class JMeterUtils implements UnitTestManager {
             errorMsg = "Unknown error - see log file";
             log.warn("Unknown error", new Throwable("errorMsg == null"));
         }
+        if (exception != null) {
+            log.error(errorMsg, exception);
+        } else {
+            log.error(errorMsg);
+        }
         GuiPackage instance = GuiPackage.getInstance();
         if (instance == null) {
-            if(exception != null) {
-                log.error(errorMsg, exception);
-            } else {
-                log.error(errorMsg);
-            }
             System.out.println(errorMsg); // NOSONAR intentional
             return; // Done
         }
@@ -925,6 +922,20 @@ public class JMeterUtils implements UnitTestManager {
     public static JLabel labelFor(Component component, String resourceId) {
         JLabel label = new JLabel(getResString(resourceId));
         label.setName(resourceId);
+        label.setLabelFor(component);
+        return label;
+    }
+
+    /**
+     * Creates {@link JLabel} that is associated with a given {@link Component} instance.
+     * @param component component for the label
+     * @param labelValue label text
+     * @param name JLabel name
+     * @return JLabel instance
+     */
+    public static JLabel labelFor(Component component, String labelValue, String name) {
+        JLabel label = new JLabel(labelValue);
+        label.setName(name);
         label.setLabelFor(component);
         return label;
     }
@@ -1187,6 +1198,7 @@ public class JMeterUtils implements UnitTestManager {
      * Provide info, whether we run in HiDPI mode
      * @return {@code true} if we run in HiDPI mode, {@code false} otherwise
      */
+    @API(since = "5.3", status = API.Status.DEPRECATED)
     public static boolean getHiDPIMode() {
         return JMeterUtils.getPropDefault("jmeter.hidpi.mode", false);  // $NON-NLS-1$
     }
@@ -1195,6 +1207,7 @@ public class JMeterUtils implements UnitTestManager {
      * Provide info about the HiDPI scale factor
      * @return the factor by which we should scale elements for HiDPI mode
      */
+    @API(since = "5.3", status = API.Status.DEPRECATED)
     public static double getHiDPIScaleFactor() {
         return Double.parseDouble(JMeterUtils.getPropDefault("jmeter.hidpi.scale.factor", "1.0"));  // $NON-NLS-1$  $NON-NLS-2$
     }
@@ -1203,10 +1216,9 @@ public class JMeterUtils implements UnitTestManager {
      * Apply HiDPI mode management to {@link JTable}
      * @param table the {@link JTable} which should be adapted for HiDPI mode
      */
+    @API(since = "5.3", status = API.Status.DEPRECATED)
     public static void applyHiDPI(JTable table) {
-        if (JMeterUtils.getHiDPIMode()) {
-            table.setRowHeight((int) Math.round(table.getRowHeight() * JMeterUtils.getHiDPIScaleFactor()));
-        }
+        JFactory.singleLineRowHeight(table);
     }
 
     /**
@@ -1229,6 +1241,7 @@ public class JMeterUtils implements UnitTestManager {
     /**
      * Apply HiDPI scale factor on font if HiDPI mode is enabled
      */
+    @API(since = "5.3", status = API.Status.DEPRECATED)
     public static void applyHiDPIOnFonts() {
         if (!getHiDPIMode()) {
             return;
@@ -1240,43 +1253,18 @@ public class JMeterUtils implements UnitTestManager {
      * Apply HiDPI scale factor on fonts
      * @param scale float scale to apply
      */
+    @API(since = "5.3", status = API.Status.DEPRECATED)
     public static void applyScaleOnFonts(final float scale) {
-        log.info("Applying HiDPI scale: {}", scale);
-        SwingUtilities.invokeLater(() -> {
-            UIDefaults defaults = UIManager.getLookAndFeelDefaults();
-            // If I iterate over the entrySet under ubuntu with jre 1.8.0_121
-            // the font objects are missing, so iterate over the keys, only
-            for (Object key : new ArrayList<>(defaults.keySet())) {
-                Object value = defaults.get(key);
-                log.debug("Try key {} with value {}", key, value);
-                if (value instanceof Font) {
-                    Font font = (Font) value;
-                    final float newSize = font.getSize() * scale;
-                    if (font instanceof FontUIResource) {
-                        defaults.put(key, new FontUIResource(font.getName(),
-                                font.getStyle(), Math.round(newSize)));
-                    } else {
-                        defaults.put(key, font.deriveFont(newSize));
-                    }
-                }
-            }
-            JMeterUtils.refreshUI();
-        });
+        JMeterUIDefaults defaults = JMeterUIDefaults.INSTANCE;
+        defaults.setScale(defaults.getScale() * scale);
     }
 
     /**
      * Refresh UI after LAF change or resizing
      */
-    public static final void refreshUI() {
-        for (Window w : Window.getWindows()) {
-            SwingUtilities.updateComponentTreeUI(w);
-            if (w.isDisplayable() &&
-                (w instanceof Frame ? !((Frame)w).isResizable() :
-                w instanceof Dialog ? !((Dialog)w).isResizable() :
-                true)) {
-                w.pack();
-            }
-        }
+    public static void refreshUI() {
+        GuiPackage.getInstance().updateUIForHiddenComponents();
+        JFactory.refreshUI();
     }
 
     /**

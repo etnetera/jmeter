@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.samplers;
@@ -68,6 +67,7 @@ public class DiskStoreSampleSender extends AbstractSampleSender implements Seria
     }
 
     @Override
+    @SuppressWarnings("FutureReturnValueIgnored")
     public void testEnded(String host) {
         log.info("Test Ended on {}", host);
         singleExecutor.submit(() -> {
@@ -122,6 +122,7 @@ public class DiskStoreSampleSender extends AbstractSampleSender implements Seria
     }
 
     @Override
+    @SuppressWarnings("FutureReturnValueIgnored")
     public void sampleOccurred(final SampleEvent e) {
         // sampleOccurred is called from multiple threads; not safe to write from multiple threads.
         // also decouples the file IO from sample generation
@@ -142,6 +143,7 @@ public class DiskStoreSampleSender extends AbstractSampleSender implements Seria
      *             never
      */
     // TODO should errors be thrown back through RMI?
+    @SuppressWarnings("FutureReturnValueIgnored")
     private Object readResolve() throws ObjectStreamException{
         log.info("Using DiskStoreSampleSender for this test run"); // server log file
         singleExecutor = Executors.newSingleThreadExecutor();

@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.gui;
@@ -25,10 +24,9 @@ import java.awt.BorderLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.border.Border;
 
 import org.apache.jmeter.util.JMeterUtils;
+import org.apache.jorphan.gui.JFactory;
 import org.apiguardian.api.API;
 
 /**
@@ -56,13 +54,9 @@ public class CommentPanel extends JPanel {
     private void init() { // WARNING: called from ctor so must not be overridden (i.e. must be private or final)
         setLayout(new BorderLayout(5, 0));
 
-        commentField = new JTextArea();
+        commentField = JFactory.tabMovesFocus(new JTextArea());
         JLabel commentLabel = new JLabel(JMeterUtils.getResString("testplan_comments")); //$NON-NLS-1$
         commentLabel.setLabelFor(commentField);
-        // JTextArea does not have border by default (see https://bugs.openjdk.java.net/browse/JDK-4139076)
-        // However we want it to look like a text field. So we borrow a border from there
-        Border border = new JTextField().getBorder();
-        commentField.setBorder(border);
         commentLabel.setVerticalAlignment(JLabel.TOP);
         add(commentLabel, BorderLayout.WEST);
         add(commentField, BorderLayout.CENTER);

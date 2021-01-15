@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.http.control;
@@ -32,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.collections.map.LRUMap;
+import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -60,10 +59,11 @@ import org.slf4j.LoggerFactory;
  */
 public class CacheManager extends ConfigTestElement implements TestStateListener, TestIterationListener, Serializable {
 
-    private static final long serialVersionUID = 235L;
+    private static final long serialVersionUID = 236L;
 
     private static final Logger log = LoggerFactory.getLogger(CacheManager.class);
 
+    @SuppressWarnings("JdkObsolete")
     private static final Date EXPIRED_DATE = new Date(0L);
     private static final int DEFAULT_MAX_SIZE = 5000;
     private static final long ONE_YEAR_MS = 365*24*60*60*1000L;
@@ -191,8 +191,19 @@ public class CacheManager extends ConfigTestElement implements TestStateListener
             String url = conn.getURL().toString();
             String cacheControl = conn.getHeaderField(HTTPConstants.CACHE_CONTROL);
             String date = conn.getHeaderField(HTTPConstants.DATE);
-            setCache(lastModified, cacheControl, expires, etag, url, date, getVaryHeader(varyHeader, asHeaders(res.getRequestHeaders())));
+            if (anyNotBlank(lastModified, expires, etag, cacheControl)) {
+                setCache(lastModified, cacheControl, expires, etag, url, date, getVaryHeader(varyHeader, asHeaders(res.getRequestHeaders())));
+            }
         }
+    }
+
+    private boolean anyNotBlank(String... values) {
+        for (String value: values) {
+            if (StringUtils.isNotBlank(value)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Pair<String, String> getVaryHeader(String headerName, Header[] reqHeaders) {
@@ -230,9 +241,11 @@ public class CacheManager extends ConfigTestElement implements TestStateListener
             String etag = getHeader(method ,HTTPConstants.ETAG);
             String cacheControl = getHeader(method, HTTPConstants.CACHE_CONTROL);
             String date = getHeader(method, HTTPConstants.DATE);
-            setCache(lastModified, cacheControl, expires, etag,
-                    res.getUrlAsString(), date, getVaryHeader(varyHeader,
-                            asHeaders(res.getRequestHeaders()))); // TODO correct URL?
+            if (anyNotBlank(lastModified, expires, etag, cacheControl)) {
+                setCache(lastModified, cacheControl, expires, etag,
+                        res.getUrlAsString(), date, getVaryHeader(varyHeader,
+                                asHeaders(res.getRequestHeaders()))); // TODO correct URL?
+            }
         }
     }
 
@@ -294,6 +307,7 @@ public class CacheManager extends ConfigTestElement implements TestStateListener
         return expiresDate;
     }
 
+    @SuppressWarnings("JdkObsolete")
     private Date extractExpiresDateFromCacheControl(String lastModified,
             String cacheControl, String expires, String etag, String url,
             String date, final String maxAge, Date defaultExpiresDate) {
@@ -313,6 +327,7 @@ public class CacheManager extends ConfigTestElement implements TestStateListener
         return defaultExpiresDate;
     }
 
+    @SuppressWarnings("JdkObsolete")
     private Date calcExpiresDate(String lastModified, String cacheControl,
             String expires, String etag, String url, String date) {
         if(!StringUtils.isEmpty(lastModified) && !StringUtils.isEmpty(date)) {
@@ -501,6 +516,7 @@ public class CacheManager extends ConfigTestElement implements TestStateListener
 
     }
 
+    @SuppressWarnings("JdkObsolete")
     private boolean entryStillValid(URL url, CacheEntry entry) {
         log.debug("Check if entry {} is still valid for url {}", entry, url);
         if (entry != null && entry.getVaryHeader() == null) {
@@ -597,8 +613,7 @@ public class CacheManager extends ConfigTestElement implements TestStateListener
             @Override
             protected Map<String, CacheEntry> initialValue(){
                 // Bug 51942 - this map may be used from multiple threads
-                @SuppressWarnings("unchecked") // LRUMap is not generic currently
-                Map<String, CacheEntry> map = new LRUMap(getMaxSize());
+                Map<String, CacheEntry> map = new LRUMap<>(getMaxSize());
                 return Collections.synchronizedMap(map);
             }
         };

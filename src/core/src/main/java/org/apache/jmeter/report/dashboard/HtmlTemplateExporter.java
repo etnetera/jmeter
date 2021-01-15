@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.report.dashboard;
@@ -81,7 +80,6 @@ public class HtmlTemplateExporter extends AbstractDataExporter {
     public static final String DATA_CTX_FILTERS_ONLY_SAMPLE_SERIES = "filtersOnlySampleSeries";
 
     public static final String TIMESTAMP_FORMAT_MS = "ms";
-    private static final String INVALID_TEMPLATE_DIRECTORY_FMT = "\"%s\" is not a valid template directory";
 
     // Template directory
     private static final String TEMPLATE_DIR = "template_dir";
@@ -194,7 +192,7 @@ public class HtmlTemplateExporter extends AbstractDataExporter {
         public boolean checkResult(DataContext dataContext, ResultData result) {
             boolean supportsControllerDiscrimination = findValue(Boolean.class,
                     AbstractGraphConsumer.RESULT_SUPPORTS_CONTROLLERS_DISCRIMINATION,
-                    result).booleanValue();
+                    result);
 
             if (supportsControllerDiscrimination
                     && showControllerSeriesOnly
@@ -233,7 +231,7 @@ public class HtmlTemplateExporter extends AbstractDataExporter {
                     // Is the current series a controller series ?
                     boolean isController = findValue(Boolean.class,
                             AbstractGraphConsumer.RESULT_SERIES_IS_CONTROLLER,
-                            seriesData).booleanValue();
+                            seriesData);
 
                     matches = filterPattern.matcher(name).matches();
                     if (matches) {
@@ -312,7 +310,7 @@ public class HtmlTemplateExporter extends AbstractDataExporter {
                 File.class);
         if (!templateDirectory.isDirectory()) {
             String message = String.format(
-                    INVALID_TEMPLATE_DIRECTORY_FMT,
+                    "\"%s\" is not a valid template directory",
                     templateDirectory.getAbsolutePath());
             log.error(message);
             throw new ExportException(message);
@@ -336,7 +334,7 @@ public class HtmlTemplateExporter extends AbstractDataExporter {
         final boolean filtersOnlySampleSeries = exportCfg.filtersOnlySampleSeries();
         addToContext(
                 DATA_CTX_FILTERS_ONLY_SAMPLE_SERIES,
-                Boolean.valueOf(filtersOnlySampleSeries),
+                filtersOnlySampleSeries,
                 dataContext);
 
         // Add the series filter to the context
@@ -355,7 +353,7 @@ public class HtmlTemplateExporter extends AbstractDataExporter {
         final boolean showControllerSeriesOnly = exportCfg.showControllerSeriesOnly();
         addToContext(
                 DATA_CTX_SHOW_CONTROLLERS_ONLY,
-                Boolean.valueOf(showControllerSeriesOnly),
+                showControllerSeriesOnly,
                 dataContext);
 
         JsonizerVisitor jsonizer = new JsonizerVisitor();
@@ -429,7 +427,7 @@ public class HtmlTemplateExporter extends AbstractDataExporter {
         TimeZone timezone = TimeZone.getDefault();
         addToContext(
                 DATA_CTX_TIMEZONE_OFFSET,
-                Integer.valueOf(timezone.getOffset(oldTimestamp)),
+                timezone.getOffset(oldTimestamp),
                 dataContext);
 
         // Add report title to the context
@@ -444,7 +442,7 @@ public class HtmlTemplateExporter extends AbstractDataExporter {
         addToContext(DATA_CTX_OVERALL_FILTER, configuration.getSampleFilter(), dataContext);
 
         // Walk template directory to copy files and process templated ones
-        Configuration templateCfg = new Configuration(Configuration.getVersion());
+        Configuration templateCfg = new Configuration(Configuration.VERSION_2_3_30);
         try {
             templateCfg.setDirectoryForTemplateLoading(templateDirectory);
             templateCfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);

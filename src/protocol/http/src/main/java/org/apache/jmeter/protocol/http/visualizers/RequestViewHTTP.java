@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.http.visualizers;
@@ -27,7 +26,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -182,7 +180,7 @@ public class RequestViewHTTP implements RequestView {
 
             // Parsed request headers
             LinkedHashMap<String, String> lhm = JMeterUtils.parseHeaders(sampleResult.getRequestHeaders());
-            for (Entry<String, String> entry : lhm.entrySet()) {
+            for (Map.Entry<String, String> entry : lhm.entrySet()) {
                 headersModel.addRow(new RowResult(entry.getKey(), entry.getValue()));
             }
 
@@ -197,7 +195,7 @@ public class RequestViewHTTP implements RequestView {
                 int port = hUrl.getPort() == -1 ? hUrl.getDefaultPort() : hUrl.getPort();
                 requestModel.addRow(new RowResult(
                         JMeterUtils.getResString("view_results_table_request_http_port"), //$NON-NLS-1$
-                        Integer.valueOf(port)));
+                        port));
                 requestModel.addRow(new RowResult(
                         JMeterUtils.getResString("view_results_table_request_http_path"), //$NON-NLS-1$
                         hUrl.getPath()));
@@ -215,8 +213,8 @@ public class RequestViewHTTP implements RequestView {
                 }
 
                 if (StringUtils.isNotBlank(queryGet)) {
-                    Set<Entry<String, String[]>> keys = RequestViewHTTP.getQueryMap(queryGet).entrySet();
-                    for (Entry<String, String[]> entry : keys) {
+                    Set<Map.Entry<String, String[]>> keys = RequestViewHTTP.getQueryMap(queryGet).entrySet();
+                    for (Map.Entry<String, String[]> entry : keys) {
                         for (String value : entry.getValue()) {
                             paramsModel.addRow(new RowResult(entry.getKey(), value));
                         }

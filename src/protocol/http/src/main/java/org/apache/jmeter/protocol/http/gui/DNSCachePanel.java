@@ -2,18 +2,17 @@
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
+ * The ASF licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.apache.jmeter.protocol.http.gui;
@@ -35,6 +34,7 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 
 import org.apache.jmeter.config.gui.AbstractConfigGui;
+import org.apache.jmeter.gui.TestElementMetadata;
 import org.apache.jmeter.gui.util.PowerTableModel;
 import org.apache.jmeter.protocol.http.control.DNSCacheManager;
 import org.apache.jmeter.protocol.http.control.StaticHost;
@@ -57,6 +57,7 @@ import org.slf4j.LoggerFactory;
  *
  * @since 2.12
  */
+@TestElementMetadata(labelResource = "dns_cache_manager_title")
 public class DNSCachePanel extends AbstractConfigGui implements ActionListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DNSCachePanel.class);
@@ -223,7 +224,7 @@ public class DNSCachePanel extends AbstractConfigGui implements ActionListener {
         northPanel.setLayout(new VerticalLayout(5, VerticalLayout.BOTH));
         northPanel.add(makeTitlePanel());
         JPanel optionsPane = new JPanel();
-        optionsPane.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), OPTIONS)); // $NON-NLS-1$
+        optionsPane.setBorder(BorderFactory.createTitledBorder(OPTIONS)); // $NON-NLS-1$
         optionsPane.setLayout(new VerticalLayout(5, VerticalLayout.BOTH));
         optionsPane.add(clearEachIteration, BorderLayout.WEST);
         optionsPane.add(createChooseResPanel(), BorderLayout.SOUTH);
@@ -249,7 +250,7 @@ public class DNSCachePanel extends AbstractConfigGui implements ActionListener {
         dnsServersTable.setPreferredScrollableViewportSize(new Dimension(400, 100));
 
         JPanel panel = new JPanel(new BorderLayout(0, 5));
-        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+        panel.setBorder(BorderFactory.createTitledBorder(
                 JMeterUtils.getResString("dns_servers"))); // $NON-NLS-1$
         JScrollPane dnsServScrollPane = GuiUtils.emptyBorder(new JScrollPane(dnsServersTable));
         panel.add(dnsServScrollPane, BorderLayout.CENTER);
@@ -266,7 +267,7 @@ public class DNSCachePanel extends AbstractConfigGui implements ActionListener {
         dnsHostsTable.setPreferredScrollableViewportSize(new Dimension(400, 100));
 
         JPanel panel = new JPanel(new BorderLayout(0, 5));
-        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+        panel.setBorder(BorderFactory.createTitledBorder(
                 JMeterUtils.getResString("dns_hosts"))); // $NON-NLS-1$
         JScrollPane dnsHostsScrollPane = GuiUtils.emptyBorder(new JScrollPane(dnsHostsTable));
         panel.add(dnsHostsScrollPane, BorderLayout.CENTER);
