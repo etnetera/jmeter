@@ -547,11 +547,11 @@ val skipDist: Boolean by rootProject.extra
 
 // Generates distZip, distTar, distZipSource, and distTarSource tasks
 // The archives and checksums are put to build/distributions
-for (type in listOf("binary", "source")) {
+for (type in listOf("binary")) {
     if (skipDist) {
         break
     }
-    for (archive in listOf(Zip::class, Tar::class)) {
+    for (archive in listOf(Zip::class)) {
         val taskName = "dist${archive.simpleName}${type.replace("binary", "").capitalize()}"
         val archiveTask = tasks.register(taskName, archive) {
             val eol = if (archive == Tar::class) LineEndings.LF else LineEndings.CRLF
