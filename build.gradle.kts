@@ -62,7 +62,7 @@ fun Project.boolProp(name: String) =
 
 // Release candidate index
 val String.v: String get() = rootProject.extra["$this.version"] as String
-version = "jmeter".v + releaseParams.snapshotSuffix
+version = "jmeter".v
 
 val displayVersion by extra {
     version.toString() +
@@ -552,7 +552,7 @@ allprojects {
                 useJUnitPlatform()
                 testLogging {
                     exceptionFormat = TestExceptionFormat.FULL
-                    showStandardStreams = true
+                    showStandardStreams = false
                 }
 
                 outputs.cacheIf("test outcomes sometimes depends on third-party systems, so we should not cache it for now") {
